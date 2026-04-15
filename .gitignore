@@ -1,0 +1,6 @@
+.claude/
+.venv/
+__pycache__/
+.idea/
+*.egg-info/
+python-embed/

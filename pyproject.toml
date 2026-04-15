@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "minidsp-linux-qt"
+version = "0.1.0"
+description = "Graphical interface for the t.racks DSP 4x4 Mini"
+requires-python = ">=3.11"
+dependencies = ["PySide6>=6.5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+minidspqt = "minidspqt.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["minidspqt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
