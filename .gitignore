@@ -4,3 +4,11 @@ __pycache__/
 .idea/
 *.egg-info/
 python-embed/
+
+# Generated Qt UI modules (regenerated from forms/*.ui via scripts/build_ui.sh)
+minidspqt/ui/ui_*.py
+
+# Build artifacts
+build/
+dist/
+*.pyc

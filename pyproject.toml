@@ -7,10 +7,16 @@ name = "minidsp-linux-qt"
 version = "0.1.0"
 description = "Graphical interface for the t.racks DSP 4x4 Mini"
 requires-python = ">=3.11"
-dependencies = ["PySide6>=6.5"]
+dependencies = [
+    "PySide6>=6.5",
+    "minidsp-linux",
+]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.0"]
+dev = [
+    "pytest>=7.0",
+    "pytest-qt>=4.4",
+]
 
 [project.scripts]
 minidspqt = "minidspqt.cli:main"
@@ -20,3 +26,6 @@ packages = ["minidspqt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+minidsp-linux = { path = "../miniDSP-Linux/dist/minidsp_linux-0.1.0-py3-none-any.whl" }
