@@ -20,7 +20,7 @@ class RoutingMatrix(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._routing: list[int] = [1 << i for i in range(NUM)]  # 1:1 default
-        self.setMinimumSize(60, 200)
+        self.setMinimumSize(120, 200)
 
     def set_routing(self, masks: list[int]) -> None:
         if len(masks) != NUM:

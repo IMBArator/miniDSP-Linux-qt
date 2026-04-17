@@ -61,22 +61,29 @@ class ChannelStrip(QFrame):
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
-        # Top row: title + gain knob + level meter
-        top = QHBoxLayout()
-        top.setSpacing(6)
         self._title_label = QLabel(title)
-        self._title_label.setStyleSheet("font-weight: 600;")
-        self._title_label.setMinimumWidth(40)
-        top.addWidget(self._title_label)
+        self._title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._title_label.setStyleSheet(
+            "QLabel {"
+            " background-color: #3a3a3e;"
+            " color: #cccccc;"
+            " border: 1px solid #55555a;"
+            " border-radius: 10px;"
+            " padding: 2px 12px;"
+            " font-weight: 600;"
+            " font-size: 11px;"
+            "}"
+        )
+        self._title_label.setFixedHeight(22)
+        root.addWidget(self._title_label)
 
         self._knob = GainKnob()
-        self._knob.setFixedSize(56, 56)
-        top.addWidget(self._knob)
+        self._knob.setFixedSize(64, 76)
+        root.addWidget(self._knob, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self._meter = LevelMeter()
-        self._meter.setMinimumHeight(40)
-        top.addWidget(self._meter, stretch=1)
-        root.addLayout(top)
+        self._meter.setFixedHeight(16)
+        root.addWidget(self._meter)
 
         # Toggle row
         toggle_row = QHBoxLayout()
@@ -130,7 +137,7 @@ class HomeView(QWidget, Ui_Home):
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
     phase_changed = Signal(int, bool)
-    gate_toggled = Signal(int, bool)       # input-only toggle (for now)
+    gate_toggled = Signal(int, bool)  # input-only toggle (for now)
     output_feature_toggled = Signal(int, str, bool)  # xover/peq/comp/delay stubs
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -195,7 +202,9 @@ class HomeView(QWidget, Ui_Home):
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            strip.set_toggle_silent("gate", False)  # gate has no single "on" bit in config
+            strip.set_toggle_silent(
+                "gate", False
+            )  # gate has no single "on" bit in config
 
         for i, ch_state in enumerate(state.outputs):
             strip = self._output_strips[i]
@@ -210,7 +219,9 @@ class HomeView(QWidget, Ui_Home):
         if slot is not None and state.preset_names:
             name = state.preset_names[slot] if slot < len(state.preset_names) else ""
             label = f"U{slot:02d}" if slot > 0 else "F00"
-            self.presetLabel.setText(f"Preset: {label} — {name}" if name else f"Preset: {label}")
+            self.presetLabel.setText(
+                f"Preset: {label} — {name}" if name else f"Preset: {label}"
+            )
         else:
             self.presetLabel.setText("Preset: —")
 

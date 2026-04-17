@@ -11,5 +11,5 @@ for ui in minidspqt/forms/*.ui; do
     base=$(basename "$ui" .ui)
     out="minidspqt/ui/ui_${base}.py"
     echo "Compiling $ui -> $out"
-    pyside6-uic "$ui" -o "$out"
+    uv run pyside6-uic "$ui" -o "$out"
 done
