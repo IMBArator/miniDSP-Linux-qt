@@ -165,13 +165,14 @@ class MainWindow(QMainWindow):
 
     def _on_recall(self) -> None:
         display_names = self._preset_display_names()
-        active = self._state.active_slot or 1
-        active_in_list = active - 1 if len(self._state.preset_names) >= 31 else active
+        active = self._state.active_slot if self._state.active_slot is not None else 1
+        active_in_list = active  # F00=row 0, U01=row 1, … (matches chosen_slot)
         dlg = PresetPickerDialog(
             self, display_names, active_in_list, "recall",
         )
         if dlg.exec() == QDialog.Accepted:
-            self._thread.request_load_preset(dlg.chosen_slot)
+            slot = dlg.chosen_slot
+            self._thread.request_load_preset(slot)
 
     def _on_store(self) -> None:
         if not self._offline:
@@ -185,21 +186,26 @@ class MainWindow(QMainWindow):
                 return
 
         display_names = self._preset_display_names()
-        active = self._state.active_slot or 1
-        active_in_list = active - 1 if len(self._state.preset_names) >= 31 else active
+        active = self._state.active_slot if self._state.active_slot is not None else 1
+        active_in_list = active
         current_name = ""
-        idx = active - 1 if len(self._state.preset_names) >= 31 else active
-        if idx < len(display_names):
-            current_name = display_names[idx]
+        names_30 = display_names
+        if 1 <= active <= 30:
+            idx = active - 1
+            if idx < len(names_30):
+                current_name = names_30[idx]
 
         dlg = PresetPickerDialog(
             self, display_names, active_in_list, "store", current_name,
         )
         if dlg.exec() == QDialog.Accepted:
-            self._thread.request_store_preset(dlg.chosen_slot, dlg.chosen_name)
-            slot_idx = dlg.chosen_slot - 1 if len(self._state.preset_names) >= 31 else dlg.chosen_slot
-            if slot_idx < len(self._state.preset_names):
-                self._state.preset_names[slot_idx] = dlg.chosen_name
+            slot = dlg.chosen_slot
+            self._thread.request_store_preset(slot, dlg.chosen_name)
+            names = self._state.preset_names
+            if len(names) >= 31 and slot < len(names):
+                names[slot] = dlg.chosen_name
+            elif slot < len(names):
+                names[slot] = dlg.chosen_name
             self._home_view.apply_state(self._state)
 
     # --- UI -> DeviceThread ---

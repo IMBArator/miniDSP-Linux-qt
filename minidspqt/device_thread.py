@@ -236,6 +236,9 @@ class DeviceThread(QThread):
                     _, slot = entry
                     config = dsp.load_preset(slot)
                     if config is not None:
+                        config["active_slot"] = slot
+                        if "preset_names" not in config:
+                            config["preset_names"] = []
                         self.config_loaded.emit(config)
                 elif kind == "store":
                     _, slot, name = entry

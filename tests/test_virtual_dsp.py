@@ -88,9 +88,22 @@ def test_load_preset_updates_active_slot():
     assert result["active_slot"] == 3
 
 
+def test_load_preset_f00_factory():
+    dsp = VirtualDSP()
+    dsp.set_gain(0, 100)
+    dsp.mute(2, True)
+    assert dsp.read_config()["gains"][0] == 100
+
+    cfg = dsp.load_preset(0)
+    assert cfg is not None
+    assert cfg["active_slot"] == 0
+    assert cfg["gains"][0] == 280  # factory default
+    assert not cfg["mutes"][2]
+
+
 def test_load_preset_invalid_slot():
     dsp = VirtualDSP()
-    assert dsp.load_preset(0) is None
+    assert dsp.load_preset(0) is not None  # F00 is valid
     assert dsp.load_preset(31) is None
 
 

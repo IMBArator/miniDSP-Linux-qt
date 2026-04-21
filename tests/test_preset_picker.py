@@ -15,9 +15,13 @@ def test_recall_dialog_selects_slot(qtbot):
     dlg = PresetPickerDialog(None, names, active_slot=1, mode="recall")
     qtbot.addWidget(dlg)
 
-    dlg._list.setCurrentRow(4)
+    assert dlg._list.count() == 31  # F00 + 30 user slots
+
+    dlg._list.setCurrentRow(5)
     assert dlg.chosen_slot == 5
-    assert dlg.chosen_name == ""
+
+    dlg._list.setCurrentRow(0)
+    assert dlg.chosen_slot == 0  # F00
 
 
 @pytest.mark.qt_no_exception_capture
@@ -39,8 +43,9 @@ def test_empty_slots_are_disabled_in_recall(qtbot):
     qtbot.addWidget(dlg)
 
     from PySide6.QtCore import Qt
-    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
-    assert not (dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable)
+    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable  # F00 always selectable
+    assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable  # U01 (OnlyOne)
+    assert not (dlg._list.item(2).flags() & Qt.ItemFlag.ItemIsSelectable)  # U02 empty
 
 
 @pytest.mark.qt_no_exception_capture
@@ -51,5 +56,15 @@ def test_empty_slots_are_selectable_in_store(qtbot):
     qtbot.addWidget(dlg)
 
     from PySide6.QtCore import Qt
-    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
-    assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable
+    assert not (dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable)  # F00 disabled in store
+    assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable  # U01
+    assert dlg._list.item(2).flags() & Qt.ItemFlag.ItemIsSelectable  # U02 empty but selectable
+
+
+@pytest.mark.qt_no_exception_capture
+def test_f00_highlighted_when_active(qtbot):
+    names = [f"Slot{i}" for i in range(30)]
+    dlg = PresetPickerDialog(None, names, active_slot=0, mode="recall")
+    qtbot.addWidget(dlg)
+
+    assert dlg._list.item(0).font().bold()

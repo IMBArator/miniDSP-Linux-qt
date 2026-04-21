@@ -1,10 +1,11 @@
-"""PresetPickerDialog — small picker for Recall / Store operations.
+"""PresetPickerDialog — picker for Recall / Store operations.
 
-Lists all 30 user slots (U01–U30) by name.  In *recall* mode empty slots
-are dimmed and non-selectable.  In *store* mode empty slots are selectable
-(shown dimmed) so the user can save to a fresh slot.  An extra
-``QLineEdit`` is shown in store mode pre-filled with the current preset
-name.
+Row 0 is always **F00 — Factory** (the read-only factory default preset).
+Rows 1–30 list user slots U01–U30.  In *recall* mode, empty user slots
+are dimmed and non-selectable (but F00 is always selectable).  In *store*
+mode F00 is disabled (cannot overwrite factory) but empty user slots are
+selectable.  An extra ``QLineEdit`` is shown in store mode pre-filled
+with the current preset name.
 """
 
 from __future__ import annotations
@@ -45,6 +46,19 @@ class PresetPickerDialog(QDialog):
         layout = QVBoxLayout(self)
 
         self._list = QListWidget()
+
+        f00 = QListWidgetItem("F00 \u2014 Factory")
+        if mode == "store":
+            f00.setFlags(f00.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled)
+            fg = f00.foreground()
+            fg.setColor(Qt.GlobalColor.gray)
+            f00.setForeground(fg)
+        if active_slot == 0:
+            font = f00.font()
+            font.setBold(True)
+            f00.setFont(font)
+        self._list.addItem(f00)
+
         for i, name in enumerate(slot_names):
             slot_label = f"U{i + 1:02d}"
             if name:
@@ -96,8 +110,11 @@ class PresetPickerDialog(QDialog):
 
     @property
     def chosen_slot(self) -> int:
-        """Device slot number (1 = U01, …, 30 = U30)."""
-        return self._list.currentRow() + 1
+        """Device slot number (0 = F00, 1 = U01, …, 30 = U30)."""
+        row = self._list.currentRow()
+        if row <= 0:
+            return row  # -1 = nothing selected, 0 = F00
+        return row  # row 1 → slot 1 (U01), row 30 → slot 30 (U30)
 
     @property
     def chosen_name(self) -> str:

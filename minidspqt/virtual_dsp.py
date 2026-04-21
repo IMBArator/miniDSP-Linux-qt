@@ -213,15 +213,21 @@ class VirtualDSP:
     def load_preset(self, slot: int) -> dict | None:
         """Load a preset by device slot number (0=F00, 1=U01, …, 30=U30).
 
-        Returns the full config dict, or *None* if the slot is empty/invalid.
+        Returns the full config dict, or *None* if the user slot is empty.
+        F00 always succeeds — it resets to factory defaults.
         """
+        current_names = list(self._config["preset_names"])
+        if slot == 0:
+            self._config = _default_config()
+            self._config["active_slot"] = 0
+            self._config["preset_names"] = current_names
+            return self._full_config()
         if slot < 1 or slot > 30:
             return None
         idx = slot - 1
         cfg = self._slots[idx]
         if cfg is None:
             return None
-        current_names = list(self._config["preset_names"])
         self._config = copy.deepcopy(cfg)
         self._config["active_slot"] = slot
         self._config["preset_names"] = current_names
