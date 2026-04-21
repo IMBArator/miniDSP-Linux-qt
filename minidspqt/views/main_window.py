@@ -42,7 +42,10 @@ class MainWindow(QMainWindow):
 
         menu = QMenu(self)
         menu.addAction("Load .unt file…").triggered.connect(self._on_load_unt)
-        self._home_view.menu_button.setMenu(menu)
+        btn = self._home_view.menu_button
+        btn.setMenu(menu)
+        # setMenu() adds a dropdown arrow that squishes the ≡ glyph on a 28px button
+        btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
 
     # --- DeviceThread -> UI ---
 
