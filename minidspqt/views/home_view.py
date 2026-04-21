@@ -225,11 +225,9 @@ class HomeView(QWidget, Ui_Home):
             label = f"U{slot:02d}" if slot > 0 else "F00"
             name = ""
             if slot > 0:
-                names = state.preset_names
-                if len(names) >= 31:
-                    name = names[slot] if slot < len(names) else ""
-                else:
-                    name = names[slot - 1] if slot - 1 < len(names) else ""
+                idx = slot - 1
+                if idx < len(state.preset_names):
+                    name = state.preset_names[idx]
             self.presetLabel.setText(
                 f"Preset: {label} \u2014 {name}" if name else f"Preset: {label}"
             )

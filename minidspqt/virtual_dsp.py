@@ -48,7 +48,7 @@ def _default_config() -> dict[str, Any]:
             for _ in range(4)
         ],
         "active_slot": 1,
-        "preset_names": [""] + [f"U{i+1:02d}" for i in range(29)],
+        "preset_names": [f"U{i+1:02d}" for i in range(30)],
     }
 
 
@@ -82,7 +82,7 @@ class VirtualDSP:
         if 0 <= active_slot_0based < 30 and slots[active_slot_0based] is not None:
             self._config = copy.deepcopy(slots[active_slot_0based])
         self._config["active_slot"] = active
-        self._config["preset_names"] = [""] + list(preset_names)
+        self._config["preset_names"] = list(preset_names)
 
     def export_to_unt_args(
         self,
@@ -239,6 +239,6 @@ class VirtualDSP:
             return False
         idx = slot - 1
         self._slots[idx] = self._slot_config()
-        if slot < len(self._preset_names):
-            self._preset_names[slot] = name
+        if idx < len(self._preset_names):
+            self._preset_names[idx] = name
         return True

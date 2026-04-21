@@ -148,11 +148,7 @@ class MainWindow(QMainWindow):
         if not path:
             return
         slots_0based, active_0based, template = vdsp.export_to_unt_args()
-        names = self._state.preset_names
-        if len(names) >= 31:
-            slot_names = names[1:]
-        else:
-            slot_names = names
+        slot_names = self._state.preset_names
         try:
             save_unt(path, slots_0based, slot_names, active_0based, template)
         except Exception as e:
@@ -161,10 +157,7 @@ class MainWindow(QMainWindow):
     # --- Recall / Store ---
 
     def _preset_display_names(self) -> list[str]:
-        names = self._state.preset_names
-        if len(names) >= 31:
-            return names[1:]
-        return names
+        return self._state.preset_names
 
     def _on_recall(self) -> None:
         display_names = self._preset_display_names()
@@ -205,10 +198,9 @@ class MainWindow(QMainWindow):
             slot = dlg.chosen_slot
             self._thread.request_store_preset(slot, dlg.chosen_name)
             names = self._state.preset_names
-            if len(names) >= 31 and slot < len(names):
-                names[slot] = dlg.chosen_name
-            elif slot < len(names):
-                names[slot] = dlg.chosen_name
+            idx = slot - 1
+            if 0 <= idx < len(names):
+                names[idx] = dlg.chosen_name
             self._home_view.apply_state(self._state)
 
     # --- UI -> DeviceThread ---

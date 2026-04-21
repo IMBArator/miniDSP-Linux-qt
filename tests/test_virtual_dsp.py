@@ -77,7 +77,7 @@ def test_store_then_load_roundtrip():
     assert loaded["gains"][0] == 250
     assert loaded["gains"][4] == 180
     assert loaded["mutes"][2] is True
-    assert dsp._preset_names[5] == "TestPreset"
+    assert dsp._preset_names[4] == "TestPreset"
 
 
 def test_load_preset_updates_active_slot():

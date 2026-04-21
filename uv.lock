@@ -50,7 +50,7 @@ dependencies = [
     { name = "tomli-w" },
 ]
 wheels = [
-    { filename = "minidsp_linux-0.1.0-py3-none-any.whl", hash = "sha256:5d170525729807cf1ca52e53c6a043daf1c740b7d8e3efa08ca4e36524c7843f" },
+    { filename = "minidsp_linux-0.1.0-py3-none-any.whl", hash = "sha256:1465221a68f69c78e74f1c4fc5f379c5c803bc1b243d4a81544239720f80f84a" },
 ]
 
 [package.metadata]
