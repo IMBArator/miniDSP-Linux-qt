@@ -224,25 +224,42 @@ class DeviceThread(QThread):
             except Exception:
                 log.exception("Failed dispatching %s(%s)", key, args)
 
-    def _drain_preset_queue(self, dsp) -> None:
+    def _drain_preset_queue(self, dsp) -> bool:
+        """Process pending preset load/store requests.
+
+        Returns True if a preset load was attempted (whether it succeeded or not).
+        """
         with self._lock:
             pending = list(self._preset_queue)
             self._preset_queue.clear()
 
+        did_recall = False
         for entry in pending:
             kind = entry[0]
             try:
                 if kind == "load":
                     _, slot = entry
+                    did_recall = True
+                    log.info("recall: calling dsp.load_preset(slot=%d)", slot)
                     config = dsp.load_preset(slot)
                     if config is not None:
+                        log.info(
+                            "recall: load_preset returned dict keys=%s",
+                            sorted(config.keys()),
+                        )
                         config["active_slot"] = slot
+                        log.info("recall: emitting config_loaded active_slot=%d", slot)
                         self.config_loaded.emit(config)
+                    else:
+                        log.warning("recall: load_preset returned None — UI will NOT update")
                 elif kind == "store":
                     _, slot, name = entry
+                    log.info("store: calling dsp.store_preset(slot=%d, name='%s')", slot, name)
                     dsp.store_preset(slot, name)
+                    log.info("store: done")
             except Exception:
                 log.exception("Preset operation %s failed", entry)
+        return did_recall
 
     def _dispatch(self, dsp, key: tuple, args: tuple) -> None:
         cmd = key[0]

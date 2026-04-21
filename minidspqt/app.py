@@ -52,10 +52,14 @@ def _apply_dark_theme(app: QApplication) -> None:
     app.setPalette(p)
 
 
-def run(*, offline: bool = False) -> None:
+def run(*, offline: bool = False, verbose: int = 0) -> None:
+    level = (logging.DEBUG if verbose >= 2
+             else logging.INFO if verbose >= 1
+             else logging.WARNING)
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        level=level,
+        format="%(asctime)s %(levelname)-5s %(name)s: %(message)s",
+        datefmt="%H:%M:%S",
     )
 
     # Let Ctrl+C work from the terminal

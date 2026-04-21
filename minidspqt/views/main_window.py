@@ -88,6 +88,10 @@ class MainWindow(QMainWindow):
         self._home_view.set_connected(connected)
 
     def _on_config_loaded(self, cfg: dict) -> None:
+        log.info(
+            "config_loaded: keys=%s active_slot=%s preset_names=%d entries",
+            sorted(cfg.keys()), cfg.get("active_slot"), len(cfg.get("preset_names", [])),
+        )
         old_names = list(self._state.preset_names)
         try:
             self._state = DeviceState.from_config(cfg)
@@ -96,6 +100,11 @@ class MainWindow(QMainWindow):
             return
         if not self._state.preset_names and old_names:
             self._state.preset_names = old_names
+        log.info(
+            "config_loaded: state updated, slot=%s gains=%s",
+            self._state.active_slot,
+            [ch.gain_raw for ch in self._state.inputs + self._state.outputs],
+        )
         self._home_view.apply_state(self._state)
 
     def _on_load_unt(self) -> None:
