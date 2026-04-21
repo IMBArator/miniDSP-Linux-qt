@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
-from PySide6.QtWidgets import QMainWindow, QStackedWidget
+from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox, QStackedWidget
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState
+from ..unt_loader import UntParseError, load_unt
 from .home_view import HomeView
 
 log = logging.getLogger(__name__)
@@ -38,6 +40,10 @@ class MainWindow(QMainWindow):
 
         self._thread.start()
 
+        menu = QMenu(self)
+        menu.addAction("Load .unt file…").triggered.connect(self._on_load_unt)
+        self._home_view.menu_button.setMenu(menu)
+
     # --- DeviceThread -> UI ---
 
     def _on_connection_changed(self, connected: bool) -> None:
@@ -51,6 +57,26 @@ class MainWindow(QMainWindow):
             log.exception("Failed to parse config dict")
             return
         self._home_view.apply_state(self._state)
+
+    def _on_load_unt(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load .unt preset", "",
+            "miniDSP preset (*.unt);;All files (*)",
+        )
+        if not path:
+            return
+        try:
+            cfg, active_slot, names = load_unt(path)
+        except (UntParseError, OSError) as e:
+            QMessageBox.critical(self, "Cannot load .unt file", str(e))
+            return
+        cfg["active_slot"] = active_slot
+        cfg["preset_names"] = names
+        self._state = DeviceState.from_config(cfg)
+        self._state.connected = False
+        self._home_view.set_connected(False)
+        self._home_view.apply_state(self._state)
+        self._home_view.show_preview_banner(Path(path).name)
 
     # --- UI -> DeviceThread ---
 

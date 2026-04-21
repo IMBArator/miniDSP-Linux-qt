@@ -234,7 +234,20 @@ class HomeView(QWidget, Ui_Home):
             if i < len(outputs):
                 self._output_strips[i].meter.set_level(outputs[i])
 
+    @property
+    def menu_button(self):
+        return self.menuButton
+
+    def show_preview_banner(self, filename: str) -> None:
+        self.titleLabel.setText(f"Preview — {filename}")
+        self.connectionLabel.setText("Preview")
+        self.connectionLabel.setStyleSheet(
+            "background-color: #8a6d20; color: white; border-radius: 4px;"
+            " padding: 4px 8px; font-weight: 600;"
+        )
+
     def set_connected(self, connected: bool) -> None:
+        self.titleLabel.setText("Home")
         if connected:
             self.connectionLabel.setText("Connected")
             self.connectionLabel.setStyleSheet(
