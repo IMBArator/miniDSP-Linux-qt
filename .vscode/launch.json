@@ -10,7 +10,16 @@
             "type": "debugpy",
             "request": "launch",
             "module": "minidspqt.cli",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": ["-v"]
+        },
+        {
+            "name": "miniDSP-qt OFFLINE",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "minidspqt.cli",
+            "console": "integratedTerminal",
+            "args": ["-v", "--offline"]
         }
     ]
 }

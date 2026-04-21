@@ -7,6 +7,8 @@
 - automatically commit after significant changes.
 - always feel free to suggest improvements to the code and to the process!
 - be more explanative so the humans can learn along the way.
+- always have a look at the protcol documentation of miniDSP-Linux ... it is located in at analysis/protocol.md
+- suggest fixes for the miniDSP-Linux lib if they make sense
 
 ## Project Goal
 
