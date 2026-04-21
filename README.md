@@ -1,9 +1,147 @@
 # miniDSP-Linux-qt
 
-# UI concepts
+> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters) and preset management are functional. Detail view (crossover, PEQ, compressor, delay) not yet wired.
+
+Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
+
+## UI concepts
 
 ![Home](doc/concept-art/miniDSP-home.png)
 
 ![Detail View](doc/concept-art/miniDSP-detailView.png)
 
 ![Detail View PEQ](doc/concept-art/miniDSP-detailViewPEQ.png)
+
+## Features
+
+### Home view
+
+- Per-channel **gain knobs** (−60 to +12 dB) for 4 inputs and 4 outputs
+- **Mute** and **phase invert** toggles per channel
+- **Routing matrix** — visual 4×4 input-to-output mapping
+- **dB-scaled level meters** for all 8 channels
+- Startup **config read** — knobs and toggles reflect device state on connect
+- **Auto-reconnect** on USB disconnect
+
+### Preset management
+
+- **Recall** any of the 30 user presets (U01–U30) or the factory preset (F00)
+- **Store** current settings to any user slot with a custom name
+- Confirmation dialog before writing to device flash
+- Preset name label updates in real time
+
+### Offline mode (`--offline`)
+
+- In-RAM virtual DSP — no hardware required
+- Edit gains, mutes, phases, routing, PEQ, crossovers, compressors, delays
+- **Load and save .unt files** — round-trip with the manufacturer file format
+- Seed from a bundled `blank.unt` template
+
+### .unt file support
+
+- **Load** manufacturer .unt files — parses all 30 preset slots
+- **Save** .unt files with byte-identical round-trip for untouched data
+- Preserves unknown bytes when editing individual fields
+
+## Requirements
+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) — manages the virtual environment and dependencies
+- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed from local wheel)
+- Linux with kernel HID driver — communicates via `/dev/hidraw*`
+- Read/write access to `/dev/hidraw*` (see [Permissions](#permissions))
+
+## Installation
+
+```bash
+git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
+cd miniDSP-Linux-qt
+uv sync              # creates .venv, installs dependencies
+uv sync --extra dev  # also installs pytest for development
+```
+
+## Usage
+
+### Connected mode
+
+```bash
+minidspqt              # connect to hardware (WARNING level)
+minidspqt -v           # info-level logging (recall tracing, config reads)
+minidspqt -vv          # debug-level logging (USB frame traces)
+```
+
+### Offline mode
+
+```bash
+minidspqt --offline    # virtual DSP, no hardware needed
+```
+
+### .unt files
+
+Use the menu button (top-right) to load or save `.unt` preset files. In offline mode, all 30 slots are editable and can be saved back to disk.
+
+## Permissions
+
+The tool communicates via `/dev/hidraw*`. By default this requires root. To allow regular users, create a udev rule:
+
+```bash
+sudo tee /etc/udev/rules.d/99-dspmini.rules << 'EOF'
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0168", ATTRS{idProduct}=="0821", MODE="0666"
+EOF
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+Then reconnect the device.
+
+## Running tests
+
+```bash
+uv run --with pytest --with pytest-qt pytest tests/ -v
+```
+
+43 tests covering the device thread, model, virtual DSP, preset picker, and .unt read/write round-trip.
+
+## Repository structure
+
+```
+minidspqt/                     Main package
+  cli.py                       Entry point: -v/--offline flags
+  app.py                       QApplication setup, dark theme, offline seeding
+  model.py                     Typed device state (DeviceState dataclass)
+  device_thread.py             QThread: poll loop, command coalescing, preset queue
+  virtual_dsp.py               In-RAM DSP implementing DSPmini interface
+  unt_loader.py                Parse .unt files (single-slot and all-slots)
+  unt_writer.py                Write .unt files with field-level overwrites
+  views/
+    main_window.py             Main window: owns thread, state, Recall/Store
+    home_view.py               8 channel strips + routing matrix + level meters
+    preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
+  widgets/                     Custom Qt widgets (GainKnob, LevelMeter, ToggleButton)
+  ui/                          Compiled .ui forms
+  forms/                       Qt Designer .ui sources
+  resources/                   blank.unt template, icons
+
+tests/                         pytest suite (43 tests)
+  conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
+  test_device_thread.py        Command coalescing and queue behaviour
+  test_model.py                DeviceState.from_config parsing
+  test_virtual_dsp.py          State persistence, load/store round-trip
+  test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
+  test_unt_loader.py           .unt parsing and validation
+  test_unt_writer.py           Byte-identical round-trip, field-level edits
+
+doc/
+  concept-art/                 UI mockups (.excalidraw + .png)
+  offline-mode-unt-read-write.md  Implementation plan
+```
+
+## Related projects
+
+- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — Protocol library and CLI tool this project depends on
+- [dsp-408-ui](https://github.com/Aeternitaas/dsp-408-ui) — Same Musicrown protocol over TCP for the DSP 408
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
+Not affiliated with Musicrown, the t.racks, or Thomann. Protocol reverse-engineered for interoperability purposes under applicable law.
