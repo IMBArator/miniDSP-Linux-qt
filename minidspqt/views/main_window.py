@@ -5,13 +5,21 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox, QStackedWidget
+from PySide6.QtWidgets import (
+    QDialog,
+    QFileDialog,
+    QMainWindow,
+    QMenu,
+    QMessageBox,
+    QStackedWidget,
+)
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState
 from ..unt_loader import UntParseError, load_unt
 from ..virtual_dsp import VirtualDSP
 from .home_view import HomeView
+from .preset_picker import PresetPickerDialog
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +55,8 @@ class MainWindow(QMainWindow):
         self._home_view.mute_changed.connect(self._on_mute_changed)
         self._home_view.phase_changed.connect(self._on_phase_changed)
         self._home_view.gate_toggled.connect(self._on_gate_toggled)
+        self._home_view.recall_clicked.connect(self._on_recall)
+        self._home_view.store_clicked.connect(self._on_store)
 
         self._thread.start()
 
@@ -100,6 +110,53 @@ class MainWindow(QMainWindow):
 
     def _on_save_unt(self) -> None:
         pass  # implemented in commit 3
+
+    # --- Recall / Store ---
+
+    def _preset_display_names(self) -> list[str]:
+        names = self._state.preset_names
+        if len(names) >= 31:
+            return names[1:]
+        return names
+
+    def _on_recall(self) -> None:
+        display_names = self._preset_display_names()
+        active = self._state.active_slot or 1
+        active_in_list = active - 1 if len(self._state.preset_names) >= 31 else active
+        dlg = PresetPickerDialog(
+            self, display_names, active_in_list, "recall",
+        )
+        if dlg.exec() == QDialog.Accepted:
+            self._thread.request_load_preset(dlg.chosen_slot)
+
+    def _on_store(self) -> None:
+        if not self._offline:
+            reply = QMessageBox.question(
+                self, "Store Preset",
+                "This writes to the device flash memory.\n\nContinue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
+        display_names = self._preset_display_names()
+        active = self._state.active_slot or 1
+        active_in_list = active - 1 if len(self._state.preset_names) >= 31 else active
+        current_name = ""
+        idx = active - 1 if len(self._state.preset_names) >= 31 else active
+        if idx < len(display_names):
+            current_name = display_names[idx]
+
+        dlg = PresetPickerDialog(
+            self, display_names, active_in_list, "store", current_name,
+        )
+        if dlg.exec() == QDialog.Accepted:
+            self._thread.request_store_preset(dlg.chosen_slot, dlg.chosen_name)
+            slot_idx = dlg.chosen_slot - 1 if len(self._state.preset_names) >= 31 else dlg.chosen_slot
+            if slot_idx < len(self._state.preset_names):
+                self._state.preset_names[slot_idx] = dlg.chosen_name
+            self._home_view.apply_state(self._state)
 
     # --- UI -> DeviceThread ---
 

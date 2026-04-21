@@ -137,8 +137,10 @@ class HomeView(QWidget, Ui_Home):
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
     phase_changed = Signal(int, bool)
-    gate_toggled = Signal(int, bool)  # input-only toggle (for now)
-    output_feature_toggled = Signal(int, str, bool)  # xover/peq/comp/delay stubs
+    gate_toggled = Signal(int, bool)
+    output_feature_toggled = Signal(int, str, bool)
+    recall_clicked = Signal()
+    store_clicked = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -160,6 +162,9 @@ class HomeView(QWidget, Ui_Home):
             self._connect_output(i, strip)
 
         self.set_connected(False)
+
+        self.recallButton.clicked.connect(self.recall_clicked)
+        self.storeButton.clicked.connect(self.store_clicked)
 
     # --- Signal plumbing ---
 
