@@ -32,12 +32,24 @@ def test_store_dialog_has_name_edit(qtbot):
 
 
 @pytest.mark.qt_no_exception_capture
-def test_empty_slots_are_disabled(qtbot):
+def test_empty_slots_are_disabled_in_recall(qtbot):
     names = [""] * 30
     names[0] = "OnlyOne"
     dlg = PresetPickerDialog(None, names, active_slot=1, mode="recall")
     qtbot.addWidget(dlg)
 
-    assert dlg._list.item(0).flags() != 0
     from PySide6.QtCore import Qt
+    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
     assert not (dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable)
+
+
+@pytest.mark.qt_no_exception_capture
+def test_empty_slots_are_selectable_in_store(qtbot):
+    names = [""] * 30
+    names[0] = "OnlyOne"
+    dlg = PresetPickerDialog(None, names, active_slot=1, mode="store", current_name="Test")
+    qtbot.addWidget(dlg)
+
+    from PySide6.QtCore import Qt
+    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
+    assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable

@@ -1,9 +1,10 @@
 """PresetPickerDialog — small picker for Recall / Store operations.
 
-Lists all 30 user slots (U01–U30) by name.  Empty slots are shown dimmed
-and non-selectable.  In *store* mode an extra ``QLineEdit`` is shown
-pre-filled with the current preset name; the user can edit it before
-saving.
+Lists all 30 user slots (U01–U30) by name.  In *recall* mode empty slots
+are dimmed and non-selectable.  In *store* mode empty slots are selectable
+(shown dimmed) so the user can save to a fresh slot.  An extra
+``QLineEdit`` is shown in store mode pre-filled with the current preset
+name.
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ class PresetPickerDialog(QDialog):
 
         title = "Recall Preset" if mode == "recall" else "Store Preset"
         self.setWindowTitle(title)
-        self.setMinimumWidth(320)
+        self.setMinimumSize(400, 500)
 
         layout = QVBoxLayout(self)
 
@@ -53,10 +54,11 @@ class PresetPickerDialog(QDialog):
 
             item = QListWidgetItem(text)
             if not name:
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled)
                 foreground = item.foreground()
                 foreground.setColor(Qt.GlobalColor.gray)
                 item.setForeground(foreground)
+                if mode == "recall":
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled)
             if i + 1 == active_slot and name:
                 font = item.font()
                 font.setBold(True)
