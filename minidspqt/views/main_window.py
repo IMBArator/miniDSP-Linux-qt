@@ -10,16 +10,18 @@ from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox, QSta
 from ..device_thread import DeviceThread
 from ..model import DeviceState
 from ..unt_loader import UntParseError, load_unt
+from ..virtual_dsp import VirtualDSP
 from .home_view import HomeView
 
 log = logging.getLogger(__name__)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, *, dsp_instance=None, offline: bool = False) -> None:
         super().__init__()
         self.setWindowTitle("DSP 4x4 Mini")
         self.setMinimumSize(960, 560)
+        self._offline = offline
 
         self._state = DeviceState()
 
@@ -28,7 +30,15 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._home_view)
         self.setCentralWidget(self._stack)
 
-        self._thread = DeviceThread(parent=self)
+        if dsp_instance is not None:
+            factory = type(dsp_instance)
+        else:
+            from minidsp.device import DSPmini
+            factory = DSPmini
+
+        self._thread = DeviceThread(
+            dsp_factory=factory, dsp_instance=dsp_instance, parent=self,
+        )
         self._thread.levels_updated.connect(self._home_view.update_levels)
         self._thread.connection_changed.connect(self._on_connection_changed)
         self._thread.config_loaded.connect(self._on_config_loaded)
@@ -41,16 +51,23 @@ class MainWindow(QMainWindow):
         self._thread.start()
 
         menu = QMenu(self)
-        menu.addAction("Load .unt file…").triggered.connect(self._on_load_unt)
+        menu.addAction("Load .unt file\u2026").triggered.connect(self._on_load_unt)
+        self._save_action = menu.addAction("Save .unt file\u2026")
+        self._save_action.triggered.connect(self._on_save_unt)
+        self._save_action.setEnabled(False)
         btn = self._home_view.menu_button
         btn.setMenu(menu)
-        # setMenu() adds a dropdown arrow that squishes the ≡ glyph on a 28px button
         btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
+
+        if offline:
+            self._home_view.set_offline_mode()
 
     # --- DeviceThread -> UI ---
 
     def _on_connection_changed(self, connected: bool) -> None:
         self._state.connected = connected
+        if self._offline:
+            return
         self._home_view.set_connected(connected)
 
     def _on_config_loaded(self, cfg: dict) -> None:
@@ -80,6 +97,9 @@ class MainWindow(QMainWindow):
         self._home_view.set_connected(False)
         self._home_view.apply_state(self._state)
         self._home_view.show_preview_banner(Path(path).name)
+
+    def _on_save_unt(self) -> None:
+        pass  # implemented in commit 3
 
     # --- UI -> DeviceThread ---
 

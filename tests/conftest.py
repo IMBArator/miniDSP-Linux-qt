@@ -1,8 +1,11 @@
 """Test fixtures.
 
 FakeDSPmini gives tests a hardware-free stand-in for
-`minidsp.device.DSPmini`: it records every command and returns a
+``minidsp.device.DSPmini``: it records every command and returns a
 canned config / level payload.
+
+The implementation lives in ``minidspqt.virtual_dsp.VirtualDSP``; this
+module thin-wraps it for backward-compat with existing tests.
 """
 
 from __future__ import annotations
@@ -10,6 +13,8 @@ from __future__ import annotations
 import threading
 
 import pytest
+
+from minidspqt.virtual_dsp import VirtualDSP
 
 
 def _make_preset_cfg() -> dict:
@@ -52,63 +57,102 @@ def _make_preset_cfg() -> dict:
     }
 
 
-class FakeDSPmini:
-    """Hardware-free DSPmini substitute.
+class FakeDSPmini(VirtualDSP):
+    """VirtualDSP subclass that also records calls for test assertions.
 
-    Records all incoming calls in `self.calls` (list of `(method, args)`),
-    so tests can assert coalescing behaviour.
+    Records every incoming call in ``self.calls`` (list of ``(method, args)``).
     """
 
     def __init__(self) -> None:
+        super().__init__()
         self.calls: list[tuple] = []
-        self.opened = False
-        self.closed = False
-        self.config = _make_preset_cfg()
-        self.levels = {
+        self.poll_event = threading.Event()
+
+        cfg = _make_preset_cfg()
+        self._config.update(cfg)
+
+    def open(self) -> None:
+        self.calls.append(("open", ()))
+
+    def close(self) -> None:
+        self.calls.append(("close", ()))
+
+    def read_config(self) -> dict:
+        self.calls.append(("read_config", ()))
+        return self._full_config()
+
+    def poll_levels(self) -> dict:
+        self.calls.append(("poll_levels", ()))
+        self.poll_event.set()
+        return {
             "inputs": [100, 150, 50, 200],
             "outputs": [120, 80, 40, 220],
             "limiter_mask": 0,
             "state": 0,
         }
-        self.poll_event = threading.Event()
 
-    def open(self) -> None:
-        self.opened = True
-        self.calls.append(("open", ()))
+    def set_gain(self, channel: int, raw_value: int) -> bool:
+        self.calls.append(("set_gain", (channel, raw_value)))
+        return super().set_gain(channel, raw_value)
 
-    def close(self) -> None:
-        self.closed = True
-        self.calls.append(("close", ()))
+    def mute(self, channel: int, mute: bool) -> bool:
+        self.calls.append(("mute", (channel, mute)))
+        return super().mute(channel, mute)
 
-    def read_config(self) -> dict:
-        self.calls.append(("read_config", ()))
-        return self.config
+    def set_phase(self, channel: int, inverted: bool) -> bool:
+        self.calls.append(("set_phase", (channel, inverted)))
+        return super().set_phase(channel, inverted)
 
-    def poll_levels(self) -> dict:
-        self.calls.append(("poll_levels", ()))
-        self.poll_event.set()
-        return self.levels
+    def set_gate(self, channel: int, attack: int, release: int,
+                 hold: int, threshold: int) -> bool:
+        self.calls.append(("set_gate", (channel, attack, release, hold, threshold)))
+        return super().set_gate(channel, attack, release, hold, threshold)
 
-    # Generic command sinks — one method per DSPmini opcode we invoke.
-    def _record(self, name: str, *args) -> bool:
-        self.calls.append((name, args))
-        return True
+    def set_hipass(self, channel: int, freq_raw: int, slope: int) -> bool:
+        self.calls.append(("set_hipass", (channel, freq_raw, slope)))
+        return super().set_hipass(channel, freq_raw, slope)
 
-    set_gain = lambda self, *a: self._record("set_gain", *a)
-    mute = lambda self, *a: self._record("mute", *a)
-    set_phase = lambda self, *a: self._record("set_phase", *a)
-    set_gate = lambda self, *a: self._record("set_gate", *a)
-    set_hipass = lambda self, *a: self._record("set_hipass", *a)
-    set_lopass = lambda self, *a: self._record("set_lopass", *a)
-    set_compressor = lambda self, *a: self._record("set_compressor", *a)
-    set_delay = lambda self, *a: self._record("set_delay", *a)
-    set_peq_band = lambda self, *a: self._record("set_peq_band", *a)
-    set_peq_channel_bypass = lambda self, *a: self._record("set_peq_channel_bypass", *a)
-    set_matrix_route = lambda self, *a: self._record("set_matrix_route", *a)
-    set_channel_link = lambda self, *a: self._record("set_channel_link", *a)
-    set_channel_name = lambda self, *a: self._record("set_channel_name", *a)
-    load_preset = lambda self, slot: (self.calls.append(("load_preset", (slot,))) or self.config)
-    store_preset = lambda self, *a: self._record("store_preset", *a)
+    def set_lopass(self, channel: int, freq_raw: int, slope: int) -> bool:
+        self.calls.append(("set_lopass", (channel, freq_raw, slope)))
+        return super().set_lopass(channel, freq_raw, slope)
+
+    def set_compressor(self, channel: int, ratio: int, knee: int,
+                       attack: int, release: int, threshold: int) -> bool:
+        self.calls.append(("set_compressor", (channel, ratio, knee, attack, release, threshold)))
+        return super().set_compressor(channel, ratio, knee, attack, release, threshold)
+
+    def set_delay(self, channel: int, samples: int) -> bool:
+        self.calls.append(("set_delay", (channel, samples)))
+        return super().set_delay(channel, samples)
+
+    def set_peq_band(self, channel: int, band: int, gain_raw: int, freq_raw: int,
+                     q_raw: int, filter_type: int, bypass: bool = False) -> bool:
+        self.calls.append(("set_peq_band", (channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass)))
+        return super().set_peq_band(channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass)
+
+    def set_peq_channel_bypass(self, channel: int, bypass: bool) -> bool:
+        self.calls.append(("set_peq_channel_bypass", (channel, bypass)))
+        return super().set_peq_channel_bypass(channel, bypass)
+
+    def set_matrix_route(self, output_ch: int, input_mask: int) -> bool:
+        self.calls.append(("set_matrix_route", (output_ch, input_mask)))
+        return super().set_matrix_route(output_ch, input_mask)
+
+    def set_channel_link(self, channel: int, link_flags: int) -> bool:
+        self.calls.append(("set_channel_link", (channel, link_flags)))
+        return super().set_channel_link(channel, link_flags)
+
+    def set_channel_name(self, channel: int, name: str) -> bool:
+        self.calls.append(("set_channel_name", (channel, name)))
+        return super().set_channel_name(channel, name)
+
+    def load_preset(self, slot: int) -> dict | None:
+        self.calls.append(("load_preset", (slot,)))
+        return super().load_preset(slot)
+
+    def store_preset(self, slot: int, name: str) -> bool:
+        self.calls.append(("store_preset", (slot, name)))
+        return super().store_preset(slot, name)
 
 
 @pytest.fixture

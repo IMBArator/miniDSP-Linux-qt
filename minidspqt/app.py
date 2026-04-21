@@ -9,7 +9,31 @@ import sys
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
+from pathlib import Path
+
 from .views.main_window import MainWindow
+
+BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
+
+
+def _seed_from_blank(dsp) -> None:
+    """Load the bundled blank.unt into a VirtualDSP instance."""
+    if not BLANK_UNT.exists():
+        return
+    from .unt_loader import load_unt
+    cfg, active_slot, names = load_unt(BLANK_UNT)
+    raw = BLANK_UNT.read_bytes()
+    from minidsp.protocol import parse_preset_params
+    from .unt_loader import _slot_blob, SLOT_BASE, SLOT_STRIDE
+    slots = [None] * 30
+    for slot in range(30):
+        offset = SLOT_BASE + slot * SLOT_STRIDE
+        if raw[offset] != 0x64:
+            blob = _slot_blob(raw, slot)
+            parsed = parse_preset_params(blob)
+            if parsed is not None:
+                slots[slot] = parsed
+    dsp.load_from_unt_bytes(raw, slots, active_slot, names)
 
 
 def _apply_dark_theme(app: QApplication) -> None:
@@ -28,7 +52,7 @@ def _apply_dark_theme(app: QApplication) -> None:
     app.setPalette(p)
 
 
-def run() -> None:
+def run(*, offline: bool = False) -> None:
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -40,6 +64,13 @@ def run() -> None:
     app = QApplication(sys.argv)
     _apply_dark_theme(app)
 
-    window = MainWindow()
+    if offline:
+        from .virtual_dsp import VirtualDSP
+        dsp_instance = VirtualDSP()
+        _seed_from_blank(dsp_instance)
+    else:
+        dsp_instance = None
+
+    window = MainWindow(dsp_instance=dsp_instance, offline=offline)
     window.show()
     sys.exit(app.exec())

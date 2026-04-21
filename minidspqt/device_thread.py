@@ -49,9 +49,10 @@ class DeviceThread(QThread):
     RECONNECT_INTERVAL_MS = 2000
     MAX_CONSECUTIVE_FAILURES = 3
 
-    def __init__(self, dsp_factory=DSPmini, parent=None) -> None:
+    def __init__(self, dsp_factory=DSPmini, dsp_instance=None, parent=None) -> None:
         super().__init__(parent)
         self._dsp_factory = dsp_factory
+        self._dsp_instance = dsp_instance
         self._stop = False
         self._lock = threading.Lock()
         self._pending: dict[tuple, tuple] = {}
@@ -146,7 +147,10 @@ class DeviceThread(QThread):
 
     def run(self) -> None:
         while not self._stop:
-            dsp = self._dsp_factory()
+            if self._dsp_instance is not None:
+                dsp = self._dsp_instance
+            else:
+                dsp = self._dsp_factory()
             if not self._try_connect(dsp):
                 continue  # retry or stop
 

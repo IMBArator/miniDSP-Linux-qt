@@ -246,6 +246,16 @@ class HomeView(QWidget, Ui_Home):
             " padding: 4px 8px; font-weight: 600;"
         )
 
+    def set_offline_mode(self) -> None:
+        self.titleLabel.setText("Home")
+        self.connectionLabel.setText("Offline")
+        self.connectionLabel.setStyleSheet(
+            "background-color: #8a6d20; color: white; border-radius: 4px;"
+            " padding: 4px 8px; font-weight: 600;"
+        )
+        for strip in self._input_strips + self._output_strips:
+            strip.set_enabled_state(True)
+
     def set_connected(self, connected: bool) -> None:
         self.titleLabel.setText("Home")
         if connected:
