@@ -16,7 +16,8 @@ from PySide6.QtWidgets import (
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState
-from ..unt_loader import UntParseError, load_unt
+from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
+from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
@@ -71,6 +72,12 @@ class MainWindow(QMainWindow):
 
         if offline:
             self._home_view.set_offline_mode()
+            self._save_action.setEnabled(True)
+
+    @property
+    def _virtual_dsp(self) -> VirtualDSP | None:
+        inst = self._thread._dsp_instance
+        return inst if isinstance(inst, VirtualDSP) else None
 
     # --- DeviceThread -> UI ---
 
@@ -95,6 +102,25 @@ class MainWindow(QMainWindow):
         )
         if not path:
             return
+
+        vdsp = self._virtual_dsp
+        if vdsp is not None:
+            try:
+                slots, active_slot, names, raw = load_unt_all_slots(path)
+            except (UntParseError, OSError) as e:
+                QMessageBox.critical(self, "Cannot load .unt file", str(e))
+                return
+            vdsp.load_from_unt_bytes(raw, slots, active_slot, names)
+            cfg = vdsp.read_config()
+            try:
+                self._state = DeviceState.from_config(cfg)
+            except Exception:
+                log.exception("Failed to parse config from loaded .unt")
+                return
+            self._home_view.apply_state(self._state)
+            self._save_action.setEnabled(True)
+            return
+
         try:
             cfg, active_slot, names = load_unt(path)
         except (UntParseError, OSError) as e:
@@ -109,7 +135,25 @@ class MainWindow(QMainWindow):
         self._home_view.show_preview_banner(Path(path).name)
 
     def _on_save_unt(self) -> None:
-        pass  # implemented in commit 3
+        vdsp = self._virtual_dsp
+        if vdsp is None:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save .unt preset", "",
+            "miniDSP preset (*.unt);;All files (*)",
+        )
+        if not path:
+            return
+        slots_0based, active_0based, template = vdsp.export_to_unt_args()
+        names = self._state.preset_names
+        if len(names) >= 31:
+            slot_names = names[1:]
+        else:
+            slot_names = names
+        try:
+            save_unt(path, slots_0based, slot_names, active_0based, template)
+        except Exception as e:
+            QMessageBox.critical(self, "Cannot save .unt file", str(e))
 
     # --- Recall / Store ---
 

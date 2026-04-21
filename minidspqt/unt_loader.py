@@ -19,6 +19,54 @@ class UntParseError(ValueError):
     """Raised when a .unt file cannot be parsed."""
 
 
+def load_unt_all_slots(
+    path: str | os.PathLike,
+) -> tuple[list[dict | None], int, list[str], bytes]:
+    """Load a .unt file and parse **all** 30 slots.
+
+    Returns ``(slots, active_slot, preset_names, raw_bytes)``.
+
+    *slots*: 30 entries (0-indexed); ``None`` for empty slots.
+    *active_slot*: 0-indexed (0 = U01, …, 29 = U30).
+    *preset_names*: 30 strings.
+    *raw_bytes*: the full 13,010-byte file content.
+    """
+    with open(path, "rb") as f:
+        data = f.read()
+
+    if len(data) != EXPECTED_SIZE:
+        raise UntParseError(
+            f"Expected {EXPECTED_SIZE} bytes, got {len(data)}"
+        )
+    if data[:16] != MAGIC:
+        raise UntParseError("Not a miniDSP .unt file (bad magic header)")
+
+    active_slot_raw = data[ACTIVE_SLOT_OFFSET]
+    if not (1 <= active_slot_raw <= SLOT_COUNT):
+        raise UntParseError(
+            f"Active slot byte {active_slot_raw} out of range [1, {SLOT_COUNT}]"
+        )
+    active_slot = active_slot_raw - 1
+
+    slots: list[dict | None] = [None] * SLOT_COUNT
+    preset_names: list[str] = [""] * SLOT_COUNT
+
+    for slot in range(SLOT_COUNT):
+        offset = SLOT_BASE + slot * SLOT_STRIDE
+        if data[offset] == EMPTY_FILL:
+            continue
+        blob = _slot_blob(data, slot)
+        raw_name = blob[2:16]
+        preset_names[slot] = (
+            raw_name.rstrip(b"\x00").rstrip(b" ").decode("ascii", errors="replace")
+        )
+        parsed = parse_preset_params(blob)
+        if parsed is not None:
+            slots[slot] = parsed
+
+    return slots, active_slot, preset_names, bytes(data)
+
+
 def load_unt(path: str | os.PathLike) -> tuple[dict, int, list[str]]:
     """Load a .unt preset file and return (cfg_dict, active_slot, preset_names).
 
