@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -13,6 +14,15 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QStackedWidget,
 )
+
+
+def _logo_path() -> Path:
+    try:
+        import importlib.resources as ir
+        ref = ir.files("minidspqt.resources").joinpath("logo.svg")
+        return Path(str(ref))
+    except Exception:
+        return Path()
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState
@@ -30,6 +40,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("DSP 4x4 Mini")
         self.setMinimumSize(960, 560)
+        logo = _logo_path()
+        if logo.exists():
+            self.setWindowIcon(QIcon(str(logo)))
         self._offline = offline
 
         self._state = DeviceState()

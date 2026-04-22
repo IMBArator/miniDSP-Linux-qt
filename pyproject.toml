@@ -23,6 +23,7 @@ minidspqt = "minidspqt.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["minidspqt"]
+artifacts = ["minidspqt/resources/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

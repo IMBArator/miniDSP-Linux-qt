@@ -1,0 +1,17 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="90" fill="#2c3e50" />
+  
+  <!-- Stylized Waveform (representing DSP) -->
+  <path d="M40 100 Q 60 40, 80 100 T 120 100 T 160 100" 
+        stroke="#00d2ff" 
+        stroke-width="8" 
+        fill="none" 
+        stroke-linecap="round" />
+  
+  <!-- Four dots representing 4 channels -->
+  <circle cx="40" cy="100" r="6" fill="#ffffff" />
+  <circle cx="80" cy="100" r="6" fill="#ffffff" />
+  <circle cx="120" cy="100" r="6" fill="#ffffff" />
+  <circle cx="160" cy="100" r="6" fill="#ffffff" />
+</svg>
