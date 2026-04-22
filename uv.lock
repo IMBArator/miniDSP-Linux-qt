@@ -50,17 +50,16 @@ dependencies = [
     { name = "tomli-w" },
 ]
 wheels = [
-    { filename = "minidsp_linux-0.1.0-py3-none-any.whl", hash = "sha256:4afa8fd0b9935b368149ab0f3468a4bc8238378eb178569d1c8b1ae8f81eba19" },
+    { filename = "minidsp_linux-0.1.0-py3-none-any.whl", hash = "sha256:70c0c9494327a11e661884ba3972c593130f8ef71ff62ce8e1c1f48857d6225f" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "pyside6", marker = "extra == 'gui'", specifier = ">=6.5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "rich", specifier = ">=13.0" },
     { name = "tomli-w", specifier = ">=1.0" },
 ]
-provides-extras = ["dev", "gui"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "minidsp-linux-qt"
