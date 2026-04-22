@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from minidsp.protocol import decode_link_groups
+from minidsp.protocol import decode_link_groups, decode_routing_matrix
 
 
 @dataclass
@@ -115,6 +115,10 @@ class DeviceState:
         if info["role"] == "master":
             return [ch for ch in info["linked_to"] if ch != channel]
         return []
+
+    @property
+    def routing_info(self) -> list[dict]:
+        return decode_routing_matrix([ch.routing_mask for ch in self.outputs])
 
     @classmethod
     def from_config(cls, cfg: dict) -> DeviceState:

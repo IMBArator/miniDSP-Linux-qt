@@ -4,6 +4,9 @@ Inputs are on the left, outputs on the right. A route is active when
 output `o` has bit `1 << i` set in its `routing_mask`. Active routes
 are drawn in accent colour; inactive are dim.
 
+Uses decode_routing_matrix() from the protocol library for structured
+routing data with source names.
+
 Editing (click-to-toggle) is planned for a later phase.
 """
 
@@ -19,13 +22,15 @@ NUM = 4
 class RoutingMatrix(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self._routing: list[int] = [1 << i for i in range(NUM)]  # 1:1 default
+        self._routing_info: list[dict] = []
         self.setMinimumSize(120, 200)
 
     def set_routing(self, masks: list[int]) -> None:
+        from minidsp.protocol import decode_routing_matrix
+
         if len(masks) != NUM:
             return
-        self._routing = list(masks)
+        self._routing_info = decode_routing_matrix(masks)
         self.update()
 
     def paintEvent(self, event) -> None:
@@ -48,17 +53,11 @@ class RoutingMatrix(QWidget):
                 in_points.append(QPointF(x_in, y))
                 out_points.append(QPointF(x_out, y))
 
-            # Inactive routes first (so active overlay on top)
-            p.setPen(QPen(QColor(70, 70, 74), 1))
-            for o in range(NUM):
-                for i in range(NUM):
-                    if not (self._routing[o] & (1 << i)):
-                        p.drawLine(in_points[i], out_points[o])
-
+            # Active routes
             p.setPen(QPen(QColor(80, 170, 230), 2))
             for o in range(NUM):
                 for i in range(NUM):
-                    if self._routing[o] & (1 << i):
+                    if self._mask(o) & (1 << i):
                         p.drawLine(in_points[i], out_points[o])
 
             # End-caps
@@ -68,3 +67,8 @@ class RoutingMatrix(QWidget):
                 p.drawEllipse(pt, 4.0, 4.0)
         finally:
             p.end()
+
+    def _mask(self, output_idx: int) -> int:
+        if self._routing_info and output_idx < len(self._routing_info):
+            return self._routing_info[output_idx].get("mask", 0)
+        return 1 << output_idx
