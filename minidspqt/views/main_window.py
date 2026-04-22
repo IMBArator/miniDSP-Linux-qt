@@ -180,16 +180,6 @@ class MainWindow(QMainWindow):
             self._thread.request_load_preset(slot)
 
     def _on_store(self) -> None:
-        if not self._offline:
-            reply = QMessageBox.question(
-                self, "Store Preset",
-                "This writes to the device flash memory.\n\nContinue?",
-                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                QMessageBox.StandardButton.No,
-            )
-            if reply != QMessageBox.StandardButton.Yes:
-                return
-
         display_names = self._preset_display_names()
         active = self._state.active_slot if self._state.active_slot is not None else 1
         active_in_list = active
@@ -205,6 +195,14 @@ class MainWindow(QMainWindow):
         )
         if dlg.exec() == QDialog.Accepted:
             slot = dlg.chosen_slot
+            reply = QMessageBox.question(
+                self, "Store Preset",
+                f"Store the current configuration to slot U{slot:02d} \"{dlg.chosen_name}\"?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
             self._thread.request_store_preset(slot, dlg.chosen_name)
             names = self._state.preset_names
             idx = slot - 1
