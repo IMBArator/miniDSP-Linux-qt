@@ -104,7 +104,18 @@ class ChannelStrip(QFrame):
             )
             toggle_row.addWidget(btn)
             self._toggles[feature] = btn
+
+        self._link_label = QLabel("")
+        self._link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._link_label.setStyleSheet(
+            "QLabel { color: #66aaff; font-size: 14px; font-weight: 600;"
+            " background: transparent; }"
+        )
+        self._link_label.hide()
+        self._is_linked_slave = False
+
         toggle_row.addStretch(1)
+        toggle_row.addWidget(self._link_label)
         root.addLayout(toggle_row)
 
         self._knob.valueChanged.connect(self.gain_changed)
@@ -126,11 +137,26 @@ class ChannelStrip(QFrame):
         btn.blockSignals(was)
 
     def set_enabled_state(self, enabled: bool) -> None:
+        if enabled and self._is_linked_slave:
+            return
         self._knob.setEnabled(enabled)
         for btn in self._toggles.values():
             btn.setEnabled(enabled)
         if not enabled:
             self._meter.reset()
+
+    def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
+        self._is_linked_slave = is_slave
+        self._knob.setEnabled(not is_slave)
+        for btn in self._toggles.values():
+            btn.setEnabled(not is_slave)
+        if is_slave:
+            self._link_label.setText("\U0001F517")
+            self._link_label.setToolTip(f"Linked to {master_name}" if master_name else "Linked")
+            self._link_label.show()
+        else:
+            self._link_label.setToolTip("")
+            self._link_label.hide()
 
     @property
     def meter(self) -> LevelMeter:
@@ -206,15 +232,17 @@ class HomeView(QWidget, Ui_Home):
     # --- State application ---
 
     def apply_state(self, state: DeviceState) -> None:
+        self._cached_state = state
+        strips = self._all_strips()
         for i, ch_state in enumerate(state.inputs):
             strip = self._input_strips[i]
             strip.set_title(ch_state.name or f"In {chr(ord('A') + i)}")
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            strip.set_toggle_silent(
-                "gate", False
-            )  # gate has no single "on" bit in config
+            strip.set_toggle_silent("gate", False)
+            master_name = self._master_title(state, i, strips)
+            strip.set_linked_slave(state.is_linked_slave(i), master_name)
 
         for i, ch_state in enumerate(state.outputs):
             strip = self._output_strips[i]
@@ -222,6 +250,8 @@ class HomeView(QWidget, Ui_Home):
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
+            master_name = self._master_title(state, i + 4, strips)
+            strip.set_linked_slave(state.is_linked_slave(i + 4), master_name)
 
         self.routingMatrix.set_routing([ch.routing_mask for ch in state.outputs])
 
@@ -252,6 +282,9 @@ class HomeView(QWidget, Ui_Home):
     def menu_button(self):
         return self.menuButton
 
+    def _all_strips(self) -> list[ChannelStrip]:
+        return self._input_strips + self._output_strips
+
     def show_preview_banner(self, filename: str) -> None:
         self.titleLabel.setText(f"Preview — {filename}")
         self.connectionLabel.setText("Preview")
@@ -269,6 +302,8 @@ class HomeView(QWidget, Ui_Home):
         )
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
+        if self._state:
+            self._apply_link_state(self._state)
 
     def set_connected(self, connected: bool) -> None:
         self.titleLabel.setText("Home")
@@ -290,3 +325,27 @@ class HomeView(QWidget, Ui_Home):
 
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
+        if self._state:
+            self._apply_link_state(self._state)
+
+    def _apply_link_state(self, state: DeviceState) -> None:
+        strips = self._all_strips()
+        for i in range(4):
+            master_name = self._master_title(state, i, strips)
+            self._input_strips[i].set_linked_slave(state.is_linked_slave(i), master_name)
+            master_name = self._master_title(state, i + 4, strips)
+            self._output_strips[i].set_linked_slave(state.is_linked_slave(i + 4), master_name)
+
+    @staticmethod
+    def _master_title(state: DeviceState, channel: int, strips: list[ChannelStrip]) -> str:
+        info = state.link_info[channel] if channel < len(state.link_info) else {}
+        master_ch = info.get("master")
+        if master_ch is not None and 0 <= master_ch < len(strips):
+            return strips[master_ch]._title_label.text()
+        return ""
+
+    @property
+    def _state(self) -> DeviceState | None:
+        return self._cached_state
+
+    _cached_state: DeviceState | None = None

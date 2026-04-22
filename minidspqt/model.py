@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from minidsp.protocol import decode_link_groups
+
 
 @dataclass
 class GateState:
@@ -80,6 +82,39 @@ class DeviceState:
     outputs: list[OutputChannelState] = field(default_factory=list)
     active_slot: int | None = None
     preset_names: list[str] = field(default_factory=list)
+    _link_info_cache: list[dict] | None = field(default=None, repr=False)
+
+    def _link_flags_list(self) -> list[int]:
+        flags = [ch.link_flags for ch in self.inputs]
+        flags += [ch.link_flags for ch in self.outputs]
+        return flags
+
+    @property
+    def link_info(self) -> list[dict]:
+        if self._link_info_cache is None:
+            self._link_info_cache = decode_link_groups(self._link_flags_list())
+        return self._link_info_cache
+
+    def invalidate_link_cache(self) -> None:
+        self._link_info_cache = None
+
+    def is_linked_slave(self, channel: int) -> bool:
+        if channel >= len(self.link_info):
+            return False
+        return self.link_info[channel]["role"] == "slave"
+
+    def is_linked_master(self, channel: int) -> bool:
+        if channel >= len(self.link_info):
+            return False
+        return self.link_info[channel]["role"] == "master"
+
+    def get_linked_slaves(self, channel: int) -> list[int]:
+        if channel >= len(self.link_info):
+            return []
+        info = self.link_info[channel]
+        if info["role"] == "master":
+            return [ch for ch in info["linked_to"] if ch != channel]
+        return []
 
     @classmethod
     def from_config(cls, cfg: dict) -> DeviceState:
@@ -131,10 +166,14 @@ class DeviceState:
                 )
             )
 
-        return cls(
+        state = cls(
             connected=True,
             inputs=inputs,
             outputs=outputs,
             active_slot=cfg.get("active_slot"),
             preset_names=list(cfg.get("preset_names", [])),
         )
+        state._link_info_cache = decode_link_groups(
+            [ch.link_flags for ch in inputs] + [ch.link_flags for ch in outputs]
+        )
+        return state

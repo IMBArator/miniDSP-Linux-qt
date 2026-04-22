@@ -215,21 +215,40 @@ class MainWindow(QMainWindow):
     def _on_gain_changed(self, channel: int, raw: int) -> None:
         self._update_channel_field(channel, "gain_raw", raw)
         self._thread.request_gain(channel, raw)
+        for slave in self._state.get_linked_slaves(channel):
+            self._update_channel_field(slave, "gain_raw", raw)
+            self._thread.request_gain(slave, raw)
+            self._apply_strip_gain(slave, raw)
 
     def _on_mute_changed(self, channel: int, muted: bool) -> None:
         self._update_channel_field(channel, "muted", muted)
         self._thread.request_mute(channel, muted)
+        for slave in self._state.get_linked_slaves(channel):
+            self._update_channel_field(slave, "muted", muted)
+            self._thread.request_mute(slave, muted)
+            self._apply_strip_toggle(slave, "mute", muted)
 
     def _on_phase_changed(self, channel: int, inverted: bool) -> None:
         self._update_channel_field(channel, "phase_inverted", inverted)
         self._thread.request_phase(channel, inverted)
+        for slave in self._state.get_linked_slaves(channel):
+            self._update_channel_field(slave, "phase_inverted", inverted)
+            self._thread.request_phase(slave, inverted)
+            self._apply_strip_toggle(slave, "phase", inverted)
 
     def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
-        # The gate has no simple on/off opcode; toggling is handled by
-        # writing zero-threshold params in Detail View. This stub just
-        # keeps the button responsive until Detail View lands.
         log.info("Gate toggle ch=%d checked=%s (detail view not yet wired)",
                  channel, enabled)
+
+    def _apply_strip_gain(self, channel: int, raw: int) -> None:
+        strips = self._home_view._all_strips()
+        if 0 <= channel < len(strips):
+            strips[channel].set_gain_silent(raw)
+
+    def _apply_strip_toggle(self, channel: int, feature: str, checked: bool) -> None:
+        strips = self._home_view._all_strips()
+        if 0 <= channel < len(strips):
+            strips[channel].set_toggle_silent(feature, checked)
 
     def _update_channel_field(self, channel: int, field: str, value) -> None:
         if not self._state.inputs and not self._state.outputs:
