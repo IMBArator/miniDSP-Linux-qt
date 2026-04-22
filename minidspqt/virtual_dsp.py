@@ -10,6 +10,8 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+from minidsp.protocol import CHANNEL_NAMES
+
 _SLOT_KEYS = frozenset({
     "names", "gains", "mutes", "phases", "link_flags",
     "routings", "gates", "delays", "crossovers", "compressors", "peqs",
@@ -18,7 +20,7 @@ _SLOT_KEYS = frozenset({
 
 def _default_config() -> dict[str, Any]:
     return {
-        "names": ["InA", "InB", "InC", "InD", "Out1", "Out2", "Out3", "Out4"],
+        "names": list(CHANNEL_NAMES.values()),
         "gains": [280, 280, 280, 280, 280, 280, 280, 280],
         "mutes": [False] * 8,
         "phases": [False] * 8,

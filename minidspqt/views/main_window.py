@@ -56,6 +56,7 @@ class MainWindow(QMainWindow):
         self._home_view.mute_changed.connect(self._on_mute_changed)
         self._home_view.phase_changed.connect(self._on_phase_changed)
         self._home_view.gate_toggled.connect(self._on_gate_toggled)
+        self._home_view.name_changed.connect(self._on_name_changed)
         self._home_view.recall_clicked.connect(self._on_recall)
         self._home_view.store_clicked.connect(self._on_store)
 
@@ -239,6 +240,10 @@ class MainWindow(QMainWindow):
     def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
         log.info("Gate toggle ch=%d checked=%s (detail view not yet wired)",
                  channel, enabled)
+
+    def _on_name_changed(self, channel: int, name: str) -> None:
+        self._update_channel_field(channel, "name", name)
+        self._thread.request_channel_name(channel, name)
 
     def _apply_strip_gain(self, channel: int, raw: int) -> None:
         strips = self._home_view._all_strips()

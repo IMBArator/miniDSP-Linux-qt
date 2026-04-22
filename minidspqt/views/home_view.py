@@ -12,10 +12,14 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
+
+from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 from ..ui.ui_home import Ui_Home
@@ -37,12 +41,14 @@ OUTPUT_TOGGLES = [
 class ChannelStrip(QFrame):
     """A single input or output channel row.
 
-    Emits generic `gain_changed(raw)` and `toggle_changed(feature, checked)`
-    signals; HomeView translates them to per-channel input_*/output_* signals.
+    Emits generic `gain_changed(raw)`, `toggle_changed(feature, checked)`
+    and `name_changed(name)` signals; HomeView translates them to per-channel
+    input_*/output_* signals.
     """
 
     gain_changed = Signal(int)
     toggle_changed = Signal(str, bool)
+    name_changed = Signal(str)
 
     def __init__(
         self,
@@ -55,16 +61,16 @@ class ChannelStrip(QFrame):
         self.setStyleSheet(
             "ChannelStrip { background-color: #2d2d31; border: 1px solid #3a3a3e;"
             " border-radius: 6px; } QLabel { background: transparent; }"
+            " QPushButton { background: transparent; }"
         )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
-        self._title_label = QLabel(title)
-        self._title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._title_label.setStyleSheet(
-            "QLabel {"
+        self._title_btn = QPushButton(title)
+        self._title_btn.setStyleSheet(
+            "QPushButton {"
             " background-color: #3a3a3e;"
             " color: #cccccc;"
             " border: 1px solid #55555a;"
@@ -72,10 +78,15 @@ class ChannelStrip(QFrame):
             " padding: 2px 12px;"
             " font-weight: 600;"
             " font-size: 11px;"
+            " text-align: center;"
             "}"
+            "QPushButton:hover { background-color: #4a4a4e; }"
+            "QPushButton:pressed { background-color: #55555a; }"
         )
-        self._title_label.setFixedHeight(22)
-        root.addWidget(self._title_label)
+        self._title_btn.setFixedHeight(22)
+        self._title_btn.setFlat(True)
+        self._title_btn.clicked.connect(self._on_title_clicked)
+        root.addWidget(self._title_btn)
 
         meter_row = QHBoxLayout()
         meter_row.setSpacing(4)
@@ -123,7 +134,18 @@ class ChannelStrip(QFrame):
     # --- Programmatic state sync (no signals emitted) ---
 
     def set_title(self, title: str) -> None:
-        self._title_label.setText(title)
+        self._title_btn.setText(title)
+
+    def _on_title_clicked(self) -> None:
+        current = self._title_btn.text()
+        new_name, ok = QInputDialog.getText(
+            self, "Channel Name", "Name (max 8 chars):",
+            text=current,
+        )
+        if ok and new_name != current:
+            new_name = new_name[:8]
+            self._title_btn.setText(new_name)
+            self.name_changed.emit(new_name)
 
     def set_gain_silent(self, raw: int) -> None:
         self._knob.setValueSilently(raw)
@@ -170,6 +192,7 @@ class HomeView(QWidget, Ui_Home):
     phase_changed = Signal(int, bool)
     gate_toggled = Signal(int, bool)
     output_feature_toggled = Signal(int, str, bool)
+    name_changed = Signal(int, str)
     recall_clicked = Signal()
     store_clicked = Signal()
 
@@ -181,13 +204,13 @@ class HomeView(QWidget, Ui_Home):
         self._output_strips: list[ChannelStrip] = []
 
         for i in range(NUM_CHANNELS):
-            strip = ChannelStrip(f"In {chr(ord('A') + i)}", is_output=False)
+            strip = ChannelStrip(CHANNEL_NAMES[i], is_output=False)
             self._input_strips.append(strip)
             self.inputsLayout.addWidget(strip)
             self._connect_input(i, strip)
 
         for i in range(NUM_CHANNELS):
-            strip = ChannelStrip(f"Out {i + 1}", is_output=True)
+            strip = ChannelStrip(CHANNEL_NAMES[i + 4], is_output=True)
             self._output_strips.append(strip)
             self.outputsLayout.addWidget(strip)
             self._connect_output(i, strip)
@@ -201,6 +224,7 @@ class HomeView(QWidget, Ui_Home):
 
     def _connect_input(self, idx: int, strip: ChannelStrip) -> None:
         strip.gain_changed.connect(lambda raw, ch=idx: self.gain_changed.emit(ch, raw))
+        strip.name_changed.connect(lambda name, ch=idx: self.name_changed.emit(ch, name))
 
         def _on_toggle(feature: str, checked: bool, ch: int = idx) -> None:
             if feature == "mute":
@@ -216,6 +240,9 @@ class HomeView(QWidget, Ui_Home):
         unified_ch = idx + 4
         strip.gain_changed.connect(
             lambda raw, ch=unified_ch: self.gain_changed.emit(ch, raw)
+        )
+        strip.name_changed.connect(
+            lambda name, ch=unified_ch: self.name_changed.emit(ch, name)
         )
 
         def _on_toggle(feature: str, checked: bool, ch: int = unified_ch) -> None:
@@ -236,7 +263,7 @@ class HomeView(QWidget, Ui_Home):
         strips = self._all_strips()
         for i, ch_state in enumerate(state.inputs):
             strip = self._input_strips[i]
-            strip.set_title(ch_state.name or f"In {chr(ord('A') + i)}")
+            strip.set_title(ch_state.name or CHANNEL_NAMES[i])
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
@@ -246,7 +273,7 @@ class HomeView(QWidget, Ui_Home):
 
         for i, ch_state in enumerate(state.outputs):
             strip = self._output_strips[i]
-            strip.set_title(ch_state.name or f"Out {i + 1}")
+            strip.set_title(ch_state.name or CHANNEL_NAMES[i + 4])
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
@@ -341,7 +368,7 @@ class HomeView(QWidget, Ui_Home):
         info = state.link_info[channel] if channel < len(state.link_info) else {}
         master_ch = info.get("master")
         if master_ch is not None and 0 <= master_ch < len(strips):
-            return strips[master_ch]._title_label.text()
+            return strips[master_ch]._title_btn.text()
         return ""
 
     @property
