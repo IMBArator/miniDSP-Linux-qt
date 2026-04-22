@@ -77,13 +77,18 @@ class ChannelStrip(QFrame):
         self._title_label.setFixedHeight(22)
         root.addWidget(self._title_label)
 
+        meter_row = QHBoxLayout()
+        meter_row.setSpacing(4)
+
         self._knob = GainKnob()
         self._knob.setFixedSize(64, 76)
-        root.addWidget(self._knob, alignment=Qt.AlignmentFlag.AlignHCenter)
+        meter_row.addWidget(self._knob)
 
         self._meter = LevelMeter()
-        self._meter.setFixedHeight(16)
-        root.addWidget(self._meter)
+        self._meter.setMinimumWidth(20)
+        meter_row.addWidget(self._meter, stretch=1)
+
+        root.addLayout(meter_row)
 
         # Toggle row
         toggle_row = QHBoxLayout()
