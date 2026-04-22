@@ -195,10 +195,14 @@ class DeviceThread(QThread):
     def _poll_loop(self, dsp) -> None:
         failures = 0
         while not self._stop:
-            self._drain_preset_queue(dsp)
-            self._drain_pending(dsp)
+            try:
+                self._drain_preset_queue(dsp)
+                self._drain_pending(dsp)
+                levels = dsp.poll_levels()
+            except OSError:
+                log.warning("Device disconnected (OSError)")
+                return
 
-            levels = dsp.poll_levels()
             if levels is not None:
                 failures = 0
                 self.levels_updated.emit(levels)
