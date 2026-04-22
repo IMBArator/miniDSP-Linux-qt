@@ -95,9 +95,23 @@ class ChannelStrip(QFrame):
         self._knob.setFixedSize(64, 76)
         meter_row.addWidget(self._knob)
 
+        meter_col = QVBoxLayout()
+        meter_col.setSpacing(1)
+
         self._meter = LevelMeter()
         self._meter.setMinimumWidth(20)
-        meter_row.addWidget(self._meter, stretch=1)
+        meter_col.addWidget(self._meter, stretch=1)
+
+        self._db_label = QLabel("\u2014 dB")
+        self._db_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._db_label.setFixedHeight(16)
+        self._db_label.setStyleSheet(
+            "QLabel { color: #999999; font-size: 11px; font-family: monospace;"
+            " background: transparent; }"
+        )
+        meter_col.addWidget(self._db_label)
+
+        meter_row.addLayout(meter_col, stretch=1)
 
         root.addLayout(meter_row)
 
@@ -166,6 +180,7 @@ class ChannelStrip(QFrame):
             btn.setEnabled(enabled)
         if not enabled:
             self._meter.reset()
+            self._db_label.setText("\u2014 dB")
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         self._is_linked_slave = is_slave
@@ -183,6 +198,14 @@ class ChannelStrip(QFrame):
     @property
     def meter(self) -> LevelMeter:
         return self._meter
+
+    def update_level(self, value: int) -> None:
+        self._meter.set_level(value)
+        db = self._meter.current_db
+        if db == float("-inf"):
+            self._db_label.setText("\u2014 dB")
+        else:
+            self._db_label.setText(f"{db:+.1f} dB")
 
 
 class HomeView(QWidget, Ui_Home):
@@ -301,9 +324,9 @@ class HomeView(QWidget, Ui_Home):
         outputs = payload.get("outputs", [])
         for i in range(NUM_CHANNELS):
             if i < len(inputs):
-                self._input_strips[i].meter.set_level(inputs[i])
+                self._input_strips[i].update_level(inputs[i])
             if i < len(outputs):
-                self._output_strips[i].meter.set_level(outputs[i])
+                self._output_strips[i].update_level(outputs[i])
 
     @property
     def menu_button(self):

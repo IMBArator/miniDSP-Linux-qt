@@ -2,7 +2,13 @@
 
 Draws discrete segments (LEDs) from left to right: green → yellow → red.
 The dB scale is calibrated against the `level_uint16_to_dbu()` conversion
-from the protocol library, so 0 dBu lands at ~75% of the bar width.
+from the protocol library.
+
+Segment layout (20 LEDs):
+  - 15 green : -60 dB  →  0 dB
+  -  4 yellow:   0 dB  → +15 dB   (3.75 dB per segment)
+  -  1 red   : +15 dB              (clip indicator)
+
 A peak-hold indicator is drawn as a bright segment marker.
 """
 
@@ -16,21 +22,30 @@ from minidsp.protocol import level_uint16_to_dbu
 
 PEAK_DECAY = 0.93
 EMA_ALPHA = 0.55
-DB_RANGE = 63.0
 
 NUM_SEGMENTS = 20
-GREEN_SEGMENTS = 12
+GREEN_SEGMENTS = 15
 YELLOW_SEGMENTS = 4
-RED_SEGMENTS = NUM_SEGMENTS - GREEN_SEGMENTS - YELLOW_SEGMENTS
+RED_SEGMENTS = 1
+
+DB_FLOOR = -60.0
+DB_CEIL = 15.0
+
 SEGMENT_GAP = 2
 CORNER_RADIUS = 2
 
 
-def _to_db_fraction(value: float) -> float:
-    db = level_uint16_to_dbu(value)
-    if db == float("-inf"):
-        return 0.0
-    return max(0.0, min(1.0, (db + DB_RANGE) / DB_RANGE))
+def _db_to_segments(db: float) -> int:
+    """Map a dB value to the number of lit segments (0..NUM_SEGMENTS)."""
+    if db == float("-inf") or db <= DB_FLOOR:
+        return 0
+    if db < 0.0:
+        frac = (db - DB_FLOOR) / -DB_FLOOR
+        return min(GREEN_SEGMENTS - 1, int(frac * GREEN_SEGMENTS))
+    if db < DB_CEIL:
+        frac = db / DB_CEIL
+        return GREEN_SEGMENTS + int(frac * YELLOW_SEGMENTS)
+    return NUM_SEGMENTS
 
 
 def _segment_color(index: int) -> QColor:
@@ -40,10 +55,7 @@ def _segment_color(index: int) -> QColor:
     elif index < GREEN_SEGMENTS + YELLOW_SEGMENTS:
         return QColor(210, 200, 0)
     else:
-        r = 180 + int(
-            40 * ((index - GREEN_SEGMENTS - YELLOW_SEGMENTS) / max(1, RED_SEGMENTS - 1))
-        )
-        return QColor(min(255, r), 0, 0)
+        return QColor(255, 0, 0)
 
 
 def _dim(color: QColor) -> QColor:
@@ -74,8 +86,12 @@ class LevelMeter(QProgressBar):
             self._peak = self._smoothed
         else:
             self._peak *= PEAK_DECAY
-        seg = int(_to_db_fraction(self._smoothed) * NUM_SEGMENTS)
+        seg = _db_to_segments(level_uint16_to_dbu(self._smoothed))
         self.setValue(max(0, min(NUM_SEGMENTS, seg)))
+
+    @property
+    def current_db(self) -> float:
+        return level_uint16_to_dbu(self._smoothed)
 
     def reset(self) -> None:
         self._smoothed = 0.0
@@ -96,7 +112,7 @@ class LevelMeter(QProgressBar):
 
             lit = self.value()
 
-            peak_seg = int(_to_db_fraction(self._peak) * NUM_SEGMENTS)
+            peak_seg = _db_to_segments(level_uint16_to_dbu(self._peak))
             peak_seg = max(0, min(NUM_SEGMENTS - 1, peak_seg))
 
             for i in range(NUM_SEGMENTS):
