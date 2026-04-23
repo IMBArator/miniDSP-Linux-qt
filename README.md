@@ -4,6 +4,10 @@
 
 Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
 
+## Home View
+
+![Home View](doc/Home-View.gif)
+
 ## UI concepts
 
 ![Home](doc/concept-art/miniDSP-home.png)
