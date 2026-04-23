@@ -201,7 +201,7 @@ class ChannelStrip(QFrame):
 
     def update_level(self, value: int) -> None:
         self._meter.set_level(value)
-        db = self._meter.current_db
+        db = self._meter.display_db
         if db == float("-inf"):
             self._db_label.setText("\u2014 dB")
         else:
