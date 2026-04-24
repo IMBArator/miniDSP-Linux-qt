@@ -80,6 +80,8 @@ class MainWindow(QMainWindow):
         self._save_action = menu.addAction("Save .unt file\u2026")
         self._save_action.triggered.connect(self._on_save_unt)
         self._save_action.setEnabled(False)
+        menu.addSeparator()
+        menu.addAction("About").triggered.connect(self._on_about)
         btn = self._home_view.menu_button
         btn.setMenu(menu)
         btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
@@ -223,6 +225,26 @@ class MainWindow(QMainWindow):
             if 0 <= idx < len(names):
                 names[idx] = dlg.chosen_name
             self._home_view.apply_state(self._state)
+
+    def _on_about(self) -> None:
+        QMessageBox.about(
+            self,
+            "About DSP 4x4 Mini",
+            "<h3>DSP 4x4 Mini</h3>"
+            "<p>Qt graphical interface for the t.racks DSP 4x4 Mini.</p>"
+            '<p><a href="https://github.com/IMBArator/miniDSP-Linux-qt">'
+            "github.com/IMBArator/miniDSP-Linux-qt</a></p>"
+            "<p>Licensed under the "
+            '<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">'
+            "GNU General Public License v3.0</a>.</p>"
+            "<hr>"
+            "<p>This application uses <b>PySide6</b> (Qt for Python), "
+            "licensed under the "
+            '<a href="https://www.gnu.org/licenses/lgpl-3.0.en.html">'
+            "GNU Lesser General Public License v3</a>. "
+            "PySide6 is dynamically linked; users may replace the library "
+            "with a modified version.</p>",
+        )
 
     # --- UI -> DeviceThread ---
 

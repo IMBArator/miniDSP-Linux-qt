@@ -144,6 +144,17 @@ doc/
 - [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — Protocol library and CLI tool this project depends on
 - [dsp-408-ui](https://github.com/Aeternitaas/dsp-408-ui) — Same Musicrown protocol over TCP for the DSP 408
 
+## Acknowledgments
+
+- [PySide6](https://wiki.qt.io/Qt_for_Python) — GUI framework (Qt for Python, licensed under LGPLv3/GPLv3)
+- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — Protocol library and CLI tool this project depends on
+
+This application uses the PySide6 Qt binding. PySide6 is licensed under the
+[GNU Lesser General Public License v3](https://www.gnu.org/licenses/lgpl-3.0.en.html).
+Users have the right to obtain, modify, and redistribute the Qt/PySide6 library
+source code. The library is dynamically linked; users can replace the PySide6
+version at runtime without modifying this application.
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
