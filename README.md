@@ -139,6 +139,56 @@ doc/
   offline-mode-unt-read-write.md  Implementation plan
 ```
 
+## Roadmap
+
+> Comparison against the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library.
+
+### Done
+
+| Feature | Library API | Notes |
+|---------|------------|-------|
+| Gain control (8 ch) | `set_gain` | Knob, linked-channel sync |
+| Mute (8 ch) | `mute` | Per-channel toggle |
+| Phase invert (8 ch) | `set_phase` | Per-channel toggle |
+| Level meters (8 ch) | `poll_levels` | 150 ms poll, dB-scaled, peak-hold |
+| Channel names | `set_channel_name` | Click-to-edit, max 8 chars |
+| Preset recall | `load_preset` | F00 + U01–U30, slot names |
+| Preset store | `store_preset` | Name entry, flash-write confirm |
+| Config read | `read_config` | Full state on connect |
+| Routing matrix | `set_matrix_route` | Display only (see below) |
+| Auto-reconnect | — | 2 s retry on USB disconnect |
+| Offline mode | — | VirtualDSP, no hardware |
+| .unt load/save | — | 30-slot round-trip |
+| Linked channel display | `decode_link_groups` | Icon + disabled controls on slaves |
+
+### High priority
+
+| Feature | Library API | What's missing |
+|---------|------------|----------------|
+| **Routing matrix editing** | `set_matrix_route` | Click-to-toggle intersections, `routing_changed` signal, MainWindow wiring |
+| **Channel detail view** | `set_hipass`, `set_lopass`, `set_peq_band`, `set_compressor`, `set_delay`, `set_gate` | Generic per-channel canvas for Gate (inputs), Xover / PEQ / Comp / Delay (outputs). Backend fully exists in DeviceThread, VirtualDSP, and model — only the detail-view UI and MainWindow wiring are missing |
+| **PEQ channel bypass** | `set_peq_channel_bypass` | Toggle + per-band bypass checkboxes in PEQ view |
+
+### Medium priority
+
+| Feature | Library API | What's missing |
+|---------|------------|----------------|
+| **Limiter indicator** | `limiter_mask` in `parse_levels` | Data already in `levels_updated` signal — just needs a red LED on output strips |
+| **Channel linking UI** | `prepare_link` + `set_channel_link` | Context menu or link button; `request_prepare_link()` missing from DeviceThread |
+| **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
+| **EQ curve visualisation** | — | QPainter frequency-response graph from PEQ params |
+
+### Low priority
+
+| Feature | Library API | What's missing |
+|---------|------------|----------------|
+| Delay display unit (ms/m/ft) | `set_delay_unit` | Dropdown in delay view |
+| Firmware string display | `cmd_firmware` response | Surface in About dialog |
+| Device lock / PIN | `is_locked`, `submit_pin`, `set_lock_pin` | PIN entry dialog; dangerous feature |
+| Copy channel settings | — | "Copy from…" context menu |
+| PEQ reset button | — | "Reset EQ" sends 7× flat bands |
+| Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
+
 ## Related projects
 
 - [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — Protocol library and CLI tool this project depends on
