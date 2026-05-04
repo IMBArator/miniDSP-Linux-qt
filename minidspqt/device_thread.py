@@ -166,7 +166,13 @@ class DeviceThread(QThread):
             if config is not None:
                 self.config_loaded.emit(config)
             else:
-                log.warning("Config read failed")
+                log.warning("Config read failed, reconnecting...")
+                try:
+                    dsp.close()
+                except Exception:
+                    log.exception("Error closing device")
+                self.connection_changed.emit(False)
+                continue
 
             log.info("Starting poll loop")
             self._poll_loop(dsp)
