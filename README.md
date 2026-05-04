@@ -22,7 +22,7 @@ Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the
 
 - Per-channel **gain knobs** (−60 to +12 dB) for 4 inputs and 4 outputs
 - **Mute** and **phase invert** toggles per channel
-- **Routing matrix** — visual 4×4 input-to-output mapping
+- **Routing matrix** — interactive 4×4 input-to-output mapping (drag to connect, double-click to disconnect)
 - **dB-scaled level meters** for all 8 channels
 - Startup **config read** — knobs and toggles reflect device state on connect
 - **Auto-reconnect** on USB disconnect
@@ -103,7 +103,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-43 tests covering the device thread, model, virtual DSP, preset picker, and .unt read/write round-trip.
+56 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -120,22 +120,24 @@ minidspqt/                     Main package
     main_window.py             Main window: owns thread, state, Recall/Store
     home_view.py               8 channel strips + routing matrix + level meters
     preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
-  widgets/                     Custom Qt widgets (GainKnob, LevelMeter, ToggleButton)
+  widgets/                     Custom Qt widgets (GainKnob, LevelMeter, RoutingMatrix, ToggleButton)
   ui/                          Compiled .ui forms
   forms/                       Qt Designer .ui sources
   resources/                   blank.unt template, icons
 
-tests/                         pytest suite (43 tests)
+tests/                         pytest suite (56 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing and queue behaviour
   test_model.py                DeviceState.from_config parsing
   test_virtual_dsp.py          State persistence, load/store round-trip
   test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
+  test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
   test_unt_loader.py           .unt parsing and validation
   test_unt_writer.py           Byte-identical round-trip, field-level edits
 
 doc/
   concept-art/                 UI mockups (.excalidraw + .png)
+  user-guide.md                End-user documentation
   offline-mode-unt-read-write.md  Implementation plan
 ```
 
@@ -155,7 +157,7 @@ doc/
 | Preset recall | `load_preset` | F00 + U01–U30, slot names |
 | Preset store | `store_preset` | Name entry, flash-write confirm |
 | Config read | `read_config` | Full state on connect |
-| Routing matrix | `set_matrix_route` | Display only (see below) |
+| Routing matrix | `set_matrix_route` | Interactive: drag-to-connect, double-click-to-disconnect |
 | Auto-reconnect | — | 2 s retry on USB disconnect |
 | Offline mode | — | VirtualDSP, no hardware |
 | .unt load/save | — | 30-slot round-trip |
@@ -165,7 +167,6 @@ doc/
 
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
-| **Routing matrix editing** | `set_matrix_route` | Click-to-toggle intersections, `routing_changed` signal, MainWindow wiring |
 | **Channel detail view** | `set_hipass`, `set_lopass`, `set_peq_band`, `set_compressor`, `set_delay`, `set_gate` | Generic per-channel canvas for Gate (inputs), Xover / PEQ / Comp / Delay (outputs). Backend fully exists in DeviceThread, VirtualDSP, and model — only the detail-view UI and MainWindow wiring are missing |
 | **PEQ channel bypass** | `set_peq_channel_bypass` | Toggle + per-band bypass checkboxes in PEQ view |
 

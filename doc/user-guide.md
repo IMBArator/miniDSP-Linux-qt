@@ -1,0 +1,347 @@
+# DSP 4x4 Mini — User Guide
+
+Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
+
+---
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Starting the Application](#starting-the-application)
+- [Home View Layout](#home-view-layout)
+- [Channel Strips](#channel-strips)
+  - [Gain Knob](#gain-knob)
+  - [Level Meter](#level-meter)
+  - [Toggle Buttons](#toggle-buttons)
+  - [Channel Names](#channel-names)
+  - [Linked Channels](#linked-channels)
+- [Routing Matrix](#routing-matrix)
+- [Preset Management](#preset-management)
+  - [Recalling a Preset](#recalling-a-preset)
+  - [Storing a Preset](#storing-a-preset)
+- [Offline Mode](#offline-mode)
+- [.unt Preset Files](#unt-preset-files)
+  - [Loading a .unt File](#loading-a-unt-file)
+  - [Saving a .unt File](#saving-a-unt-file)
+- [Menu](#menu)
+- [USB Permissions](#usb-permissions)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Installation
+
+### Requirements
+
+- Python 3.11 or newer
+- [uv](https://docs.astral.sh/uv/) package manager
+- Linux with kernel HID driver
+- A t.racks DSP 4x4 Mini connected via USB (or use [offline mode](#offline-mode))
+
+### Install
+
+```bash
+git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
+cd miniDSP-Linux-qt
+uv sync
+```
+
+This creates a `.venv` directory and installs all dependencies, including the `minidsp-linux` protocol library.
+
+---
+
+## Starting the Application
+
+```bash
+minidspqt              # connect to hardware (default logging)
+minidspqt -v           # info-level logging
+minidspqt -vv          # debug-level logging (USB frame traces)
+minidspqt --offline    # virtual DSP, no hardware needed
+```
+
+On launch the application attempts to open the DSP via `/dev/hidraw*`. If the device is found, it reads the full configuration (preset data, channel names, gain, routing, mute/phase state) and populates all controls. Level meters begin updating at ~150 ms intervals.
+
+If no device is found, the UI shows **Disconnected** and all controls are disabled. The application will auto-retry every 2 seconds.
+
+---
+
+## Home View Layout
+
+The main window is divided into three columns:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  DSP 4x4 Mini          [Connected]              [≡]      │
+├────────────┬──────────────┬──────────────────────────────┤
+│            │              │                              │
+│  Inputs    │   Routing    │   Outputs                    │
+│            │   Matrix     │                              │
+│  InA  ●───┤   ●────●     ├───●  Out1                    │
+│  InB  ●───┤   ●────●     ├───●  Out2                    │
+│  InC  ●───┤   ●────●     ├───●  Out3                    │
+│  InD  ●───┤   ●────●     ├───●  Out4                    │
+│            │              │                              │
+├────────────┴──────────────┴──────────────────────────────┤
+│  Preset: U01 — My Studio              [Recall] [Store]   │
+└──────────────────────────────────────────────────────────┘
+```
+
+- **Left column** — 4 input channel strips (InA through InD)
+- **Center** — interactive 4x4 routing matrix
+- **Right column** — 4 output channel strips (Out1 through Out4)
+- **Bottom bar** — current preset name, Recall and Store buttons
+
+---
+
+## Channel Strips
+
+Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:
+
+```
+┌──────────┐
+│  InA     │  ← Channel name (click to rename)
+│  ╭───╮   │
+│  │ ◠ │   │  ← Gain knob
+│  ╰───╯   │
+│ +0.0 dB  │  ← dB readout (click to type a value)
+│ ▊▊▊▊▊░░░│  ← Level meter
+│ -12.3 dB │  ← Peak-held dB value
+│Gate Ph M │  ← Toggle buttons (inputs)
+│Xov PEQ Cp│  ← Toggle buttons (outputs)
+│     Ph Dl M│
+└──────────┘
+```
+
+### Gain Knob
+
+The rotary dial controls channel gain from **-60 dB** to **+12 dB**. Internally this maps to raw values 0–400 with dual resolution: coarse steps (0.5 dB) below -20 dB and fine steps (0.1 dB) above.
+
+| Action | Effect |
+|--------|--------|
+| **Click and drag** vertically | Adjust gain — drag up to increase, down to decrease |
+| **Scroll wheel** | Step gain by ±1 raw unit (0.1 dB) |
+| **Arrow keys** (Up/Right, Down/Left) | Step gain by ±1 raw unit (0.1 dB) |
+| **Click the dB label** | Enter an exact dB value via keyboard. Press Enter to apply. Accepts formats like `+3.5`, `-20`, `-inf` |
+
+The arc fills with blue as gain increases from minimum to maximum. The needle indicator shows the current position.
+
+### Level Meter
+
+Each channel has a horizontal LED-style level meter with 20 segments:
+
+- **Green** (15 segments): -60 dB to 0 dB
+- **Yellow** (4 segments): 0 dB to +15 dB
+- **Red** (1 segment): clip indicator (+15 dB)
+
+A white peak-hold marker tracks the highest recent level and decays slowly (~1.5 s half-life). The numeric readout below the meter shows the peak-held dB value with ~1 s hold before decay.
+
+### Toggle Buttons
+
+Toggle buttons are color-coded per feature:
+
+| Button | Color when active | Input | Output |
+|--------|-------------------|-------|--------|
+| **Gate** | Green | Yes | — |
+| **Phase** | Yellow | Yes | Yes |
+| **Mute** | Red | Yes | Yes |
+| **Xover** | Blue | — | Yes |
+| **PEQ** | Purple | — | Yes |
+| **Comp** | Teal | — | Yes |
+| **Delay** | Steel blue | — | Yes |
+
+Click a button to toggle the feature on/off. The active (checked) state shows the feature's color; the inactive state is grey.
+
+> **Note:** The Xover, PEQ, Comp, and Delay buttons on output strips are placeholders for the detail view, which is not yet implemented. They can be toggled but do not yet control DSP parameters.
+
+### Channel Names
+
+Click the channel name button at the top of any strip to rename it. A dialog appears where you can type a new name (up to 8 characters). Press OK to apply — the name is immediately sent to the device.
+
+### Linked Channels
+
+When channels are linked on the device (e.g., stereo pair), the **slave** channel displays a chain icon (🔗) and its controls (gain knob and toggles) are disabled. Adjusting the master channel automatically updates all linked slaves.
+
+---
+
+## Routing Matrix
+
+The routing matrix in the center of the home view shows which inputs are routed to which outputs. It's a 4×4 grid where each input (left side) can be connected to one or more outputs (right side).
+
+Active connections are drawn as blue lines between input and output nodes. A single output can receive a mix of multiple inputs — each output stores a bitmask of its connected inputs.
+
+### Adding a Route
+
+1. **Click and hold** on an input node (left side circle)
+2. **Drag** toward the target output node (right side circle)
+3. A dashed preview line follows your cursor
+4. **Release** on an output node to connect
+
+The input is OR-ed into the output's routing mask. If the output already had that input routed, nothing changes.
+
+### Removing a Route
+
+1. **Double-click** near an existing connection line
+2. The closest connection is removed
+
+The hit detection works within ~8 pixels of the line. The cursor changes to a pointing hand when hovering over nodes or connection lines.
+
+### Visual Feedback
+
+| Element | Appearance |
+|---------|------------|
+| Active connection | Solid blue line |
+| Drag preview | Dashed light-blue line |
+| Hovered node | Blue highlight glow |
+| Hovered connection line | Pointer cursor |
+
+### Examples
+
+| Routing | Description |
+|---------|-------------|
+| InA → Out1, InB → Out2, InC → Out3, InD → Out4 | Default 1:1 diagonal routing |
+| InA → Out1 + Out2 | Mono input split to two outputs |
+| InA + InB → Out1 | Two inputs summed into one output |
+| (none) | Output silenced (no input routed) |
+
+---
+
+## Preset Management
+
+The DSP 4x4 Mini stores 1 factory preset (F00) and 30 user presets (U01–U30). Presets are saved in flash memory and persist across power cycles.
+
+### Recalling a Preset
+
+1. Click **Recall** in the bottom bar
+2. The preset picker dialog appears listing all available presets
+3. Factory (F00) is always available; empty user slots are greyed out
+4. Select a preset and click **Recall**
+5. The device loads the preset and the UI updates to reflect all settings
+
+### Storing a Preset
+
+1. Click **Store** in the bottom bar
+2. The preset picker dialog appears in store mode
+3. Factory (F00) is disabled (cannot overwrite)
+4. Select a user slot (U01–U30) — you can overwrite existing presets
+5. Enter a name (up to 14 characters) in the name field
+6. Click **Store**
+7. A confirmation dialog appears — confirm to write to flash
+
+> **Warning:** Storing a preset writes to the device's flash memory. This operation takes ~2 seconds during which the device is busy. Existing data in the target slot is overwritten.
+
+---
+
+## Offline Mode
+
+Run without hardware using the `--offline` flag:
+
+```bash
+minidspqt --offline
+```
+
+In offline mode:
+
+- An in-RAM virtual DSP simulates the hardware
+- All controls (gain, mute, phase, routing) are fully functional
+- Level meters are idle (no audio signal)
+- The status badge shows **Offline** (amber)
+- You can load and save `.unt` preset files
+
+This is useful for designing presets on the go, testing configurations, or exploring the UI without a device connected.
+
+---
+
+## .unt Preset Files
+
+The `.unt` file format is used by the manufacturer's software. This application can read and write these files, preserving byte-identical data for untouched fields.
+
+### Loading a .unt File
+
+1. Click the **menu button** (≡) in the top-right corner
+2. Select **Load .unt file...**
+3. Choose a `.unt` file from the file dialog
+
+**In offline mode:** All 30 preset slots from the file are loaded into the virtual DSP. You can browse and edit any slot.
+
+**With hardware connected (online mode):** The file is loaded as a read-only preview. Controls are disabled, but you can inspect the settings. The status bar shows the filename being previewed.
+
+### Saving a .unt File
+
+> Only available in **offline mode**.
+
+1. Click the **menu button** (≡)
+2. Select **Save .unt file...**
+3. Choose a location and filename in the file dialog
+4. The current state of all 30 virtual preset slots is written to disk
+
+The saved file is byte-identical to the original for any untouched data, making it safe to round-trip existing `.unt` files.
+
+---
+
+## Menu
+
+Click the **menu button** (≡) in the top-right corner of the window:
+
+| Option | Description |
+|--------|-------------|
+| **Load .unt file...** | Import a manufacturer preset file |
+| **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
+| **About** | Show version, license, and project information |
+
+---
+
+## USB Permissions
+
+The application communicates with the DSP via `/dev/hidraw*` device files. By default, these require root access. To use the application as a regular user, create a udev rule:
+
+```bash
+sudo tee /etc/udev/rules.d/99-dspmini.rules << 'EOF'
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0168", ATTRS{idProduct}=="0821", MODE="0666"
+EOF
+sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+Then disconnect and reconnect the DSP. The device should now be accessible without `sudo`.
+
+---
+
+## Troubleshooting
+
+### "Disconnected" status and controls are greyed out
+
+- Check that the DSP 4x4 Mini is connected via USB
+- Verify USB permissions (see [USB Permissions](#usb-permissions))
+- Try running with `sudo` to rule out permission issues
+- Check kernel logs: `dmesg | tail` for USB/HID errors
+
+### Application crashes on startup
+
+- Ensure Python 3.11+ is installed: `python3 --version`
+- Reinstall dependencies: `uv sync --reinstall`
+- Run with debug logging: `minidspqt -vv`
+
+### Controls don't update the device
+
+- Check the log output for error messages (`-v` or `-vv`)
+- The device may be busy (e.g., writing flash after a store operation) — wait a few seconds
+- USB communication errors trigger automatic reconnection after 2 seconds
+
+### Linked channel controls are disabled
+
+This is expected behavior. When channels are linked, the slave channel's gain and toggles are controlled by the master. Look for the chain icon (🔗) on the slave strip.
+
+### Level meters show no activity
+
+- Ensure audio is actually playing through the DSP
+- Check that the input source and routing matrix are configured correctly
+- In offline mode, meters are always idle (no audio signal is generated)
+
+---
+
+## Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| **Up / Right arrow** | Increase gain (when knob is focused) |
+| **Down / Left arrow** | Decrease gain (when knob is focused) |
+| **Enter** | Apply typed dB value (when dB label is being edited) |
