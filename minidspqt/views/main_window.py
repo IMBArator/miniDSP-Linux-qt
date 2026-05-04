@@ -70,6 +70,7 @@ class MainWindow(QMainWindow):
         self._home_view.phase_changed.connect(self._on_phase_changed)
         self._home_view.gate_toggled.connect(self._on_gate_toggled)
         self._home_view.name_changed.connect(self._on_name_changed)
+        self._home_view.route_changed.connect(self._on_route_changed)
         self._home_view.recall_clicked.connect(self._on_recall)
         self._home_view.store_clicked.connect(self._on_store)
 
@@ -279,6 +280,12 @@ class MainWindow(QMainWindow):
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._update_channel_field(channel, "name", name)
         self._thread.request_channel_name(channel, name)
+
+    def _on_route_changed(self, output_idx: int, input_mask: int) -> None:
+        if output_idx < 0 or output_idx >= len(self._state.outputs):
+            return
+        self._state.outputs[output_idx].routing_mask = input_mask
+        self._thread.request_matrix_route(0x04 + output_idx, input_mask)
 
     def _apply_strip_gain(self, channel: int, raw: int) -> None:
         strips = self._home_view._all_strips()

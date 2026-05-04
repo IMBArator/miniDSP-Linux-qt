@@ -216,6 +216,7 @@ class HomeView(QWidget, Ui_Home):
     gate_toggled = Signal(int, bool)
     output_feature_toggled = Signal(int, str, bool)
     name_changed = Signal(int, str)
+    route_changed = Signal(int, int)
     recall_clicked = Signal()
     store_clicked = Signal()
 
@@ -237,6 +238,10 @@ class HomeView(QWidget, Ui_Home):
             self._output_strips.append(strip)
             self.outputsLayout.addWidget(strip)
             self._connect_output(i, strip)
+
+        self.routingMatrix.set_strips(self._input_strips, self._output_strips)
+
+        self.routingMatrix.routing_changed.connect(self.route_changed)
 
         self.set_connected(False)
 
