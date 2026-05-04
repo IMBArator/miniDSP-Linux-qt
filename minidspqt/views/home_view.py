@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -132,6 +133,9 @@ class ChannelStrip(QFrame):
 
         self._link_label = QLabel("")
         self._link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._link_label.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+        )
         self._link_label.setStyleSheet(
             "QLabel { color: #66aaff; font-size: 14px; font-weight: 600;"
             " background: transparent; }"
