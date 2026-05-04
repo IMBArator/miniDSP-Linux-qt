@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *, dsp_instance=None, offline: bool = False) -> None:
         super().__init__()
         self.setWindowTitle("DSP 4x4 Mini")
-        self.setMinimumSize(960, 560)
+        self.setMinimumWidth(960)
         logo = _logo_path()
         if logo.exists():
             self.setWindowIcon(QIcon(str(logo)))

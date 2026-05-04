@@ -143,6 +143,8 @@ class ChannelStrip(QFrame):
         toggle_row.addWidget(self._link_label)
         root.addLayout(toggle_row)
 
+        root.setSizeConstraint(root.SizeConstraint.SetMinimumSize)
+
         self._knob.valueChanged.connect(self.gain_changed)
 
     # --- Programmatic state sync (no signals emitted) ---
@@ -223,6 +225,10 @@ class HomeView(QWidget, Ui_Home):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+
+        from PySide6.QtWidgets import QLayout
+        for lay in (self.inputsLayout, self.outputsLayout, self.rootLayout):
+            lay.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
         self._input_strips: list[ChannelStrip] = []
         self._output_strips: list[ChannelStrip] = []
