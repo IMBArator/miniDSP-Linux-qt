@@ -24,7 +24,7 @@ from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 from ..ui.ui_home import Ui_Home
-from ..widgets import GainKnob, LevelMeter, ToggleButton
+from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
 
 NUM_CHANNELS = 4
 
@@ -90,11 +90,19 @@ class ChannelStrip(QFrame):
         root.addWidget(self._title_btn)
 
         meter_row = QHBoxLayout()
-        meter_row.setSpacing(4)
+        meter_row.setSpacing(0)
 
         self._knob = GainKnob()
         self._knob.setFixedSize(64, 76)
         meter_row.addWidget(self._knob)
+
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setStyleSheet(
+            "QFrame { color: #3a3a3e; max-width: 1px; }"
+        )
+        meter_row.addWidget(separator)
+        meter_row.addSpacing(4)
 
         meter_col = QVBoxLayout()
         meter_col.setSpacing(1)
@@ -104,13 +112,28 @@ class ChannelStrip(QFrame):
         meter_col.addWidget(self._meter, stretch=1)
 
         self._db_label = QLabel("\u2014 dB")
-        self._db_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._db_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self._db_label.setFixedHeight(16)
         self._db_label.setStyleSheet(
             "QLabel { color: #999999; font-size: 11px; font-family: monospace;"
             " background: transparent; }"
         )
-        meter_col.addWidget(self._db_label)
+
+        self._limiter_led: LedIndicator | None = None
+        db_row = QHBoxLayout()
+        db_row.setSpacing(4)
+        db_row.setContentsMargins(0, 0, 0, 0)
+        db_row.addWidget(self._db_label, stretch=1)
+        if is_output:
+            limiter_label = QLabel("Lim")
+            limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            limiter_label.setStyleSheet(
+                "QLabel { color: #777; font-size: 9px; background: transparent; }"
+            )
+            db_row.addWidget(limiter_label)
+            self._limiter_led = LedIndicator()
+            db_row.addWidget(self._limiter_led)
+        meter_col.addLayout(db_row)
 
         meter_row.addLayout(meter_col, stretch=1)
 
@@ -187,6 +210,12 @@ class ChannelStrip(QFrame):
         if not enabled:
             self._meter.reset()
             self._db_label.setText("\u2014 dB")
+            if self._limiter_led is not None:
+                self._limiter_led.set_active(False)
+
+    def set_limiter_active(self, active: bool) -> None:
+        if self._limiter_led is not None:
+            self._limiter_led.set_active(active)
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         self._is_linked_slave = is_slave
@@ -337,11 +366,13 @@ class HomeView(QWidget, Ui_Home):
     def update_levels(self, payload: dict) -> None:
         inputs = payload.get("inputs", [])
         outputs = payload.get("outputs", [])
+        limiter_mask = payload.get("limiter_mask", 0)
         for i in range(NUM_CHANNELS):
             if i < len(inputs):
                 self._input_strips[i].update_level(inputs[i])
             if i < len(outputs):
                 self._output_strips[i].update_level(outputs[i])
+            self._output_strips[i].set_limiter_active(bool(limiter_mask & (1 << i)))
 
     @property
     def menu_button(self):

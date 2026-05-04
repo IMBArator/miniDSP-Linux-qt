@@ -100,16 +100,22 @@ Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:
 ```
 ┌──────────┐
 │  InA     │  ← Channel name (click to rename)
-│  ╭───╮   │
-│  │ ◠ │   │  ← Gain knob
-│  ╰───╯   │
-│ +0.0 dB  │  ← dB readout (click to type a value)
-│ ▊▊▊▊▊░░░│  ← Level meter
-│ -12.3 dB │  ← Peak-held dB value
-│Gate Ph M │  ← Toggle buttons (inputs)
-│Xov PEQ Cp│  ← Toggle buttons (outputs)
-│     Ph Dl M│
-└──────────┘
+│  ╭───╮ │  ← Gain knob
+│  │ ◠ │ │
+│  ╰───╯ │
+│▊▊▊▊▊░░░│  ← Level meter
+│ -12.3 dB│  ← Peak-held dB value (left-aligned)
+│Gate Ph M│  ← Toggle buttons (inputs)
+
+┌────────────┐
+│  Out1      │  ← Channel name (click to rename)
+│  ╭───╮ │   ← Gain knob
+│  │ ◠ │ │
+│  ╰───╯ │
+│▊▊▊▊▊░░░│   ← Level meter
+│ -12.3 dB Lim ●│  ← dB value + Limiter LED (outputs only)
+│Xov PEQ Cp Ph Dl M│  ← Toggle buttons (outputs)
+└────────────┘
 ```
 
 ### Gain Knob
@@ -134,6 +140,15 @@ Each channel has a horizontal LED-style level meter with 20 segments:
 - **Red** (1 segment): clip indicator (+15 dB)
 
 A white peak-hold marker tracks the highest recent level and decays slowly (~1.5 s half-life). The numeric readout below the meter shows the peak-held dB value with ~1 s hold before decay.
+
+### Limiter Indicator (Outputs Only)
+
+Output channel strips display a small red LED labeled **Lim** to the right of the dB readout. This indicator lights up when the compressor/limiter on that output channel is actively limiting the signal. The data comes from the device's `limiter_mask` bitmask in the level polling response (~150 ms update rate).
+
+| LED State | Meaning |
+|-----------|---------|
+| Dim (dark red) | Limiter inactive — signal is below the compressor threshold |
+| Bright red | Limiter active — the compressor is attenuating the signal |
 
 ### Toggle Buttons
 

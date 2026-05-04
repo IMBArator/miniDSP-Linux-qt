@@ -120,7 +120,7 @@ minidspqt/                     Main package
     main_window.py             Main window: owns thread, state, Recall/Store
     home_view.py               8 channel strips + routing matrix + level meters
     preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
-  widgets/                     Custom Qt widgets (GainKnob, LevelMeter, RoutingMatrix, ToggleButton)
+  widgets/                     Custom Qt widgets (GainKnob, LedIndicator, LevelMeter, RoutingMatrix, ToggleButton)
   ui/                          Compiled .ui forms
   forms/                       Qt Designer .ui sources
   resources/                   blank.unt template, icons
@@ -162,6 +162,7 @@ doc/
 | Offline mode | — | VirtualDSP, no hardware |
 | .unt load/save | — | 30-slot round-trip |
 | Linked channel display | `decode_link_groups` | Icon + disabled controls on slaves |
+| Limiter indicator | `limiter_mask` in `poll_levels` | Red LED + "Lim" label on output strips, bitmask-driven |
 
 ### High priority
 
@@ -174,7 +175,6 @@ doc/
 
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
-| **Limiter indicator** | `limiter_mask` in `parse_levels` | Data already in `levels_updated` signal — just needs a red LED on output strips |
 | **Channel linking UI** | `prepare_link` + `set_channel_link` | Context menu or link button; `request_prepare_link()` missing from DeviceThread |
 | **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
 | **EQ curve visualisation** | — | QPainter frequency-response graph from PEQ params |
