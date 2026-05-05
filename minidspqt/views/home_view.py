@@ -335,10 +335,14 @@ class HomeView(QWidget, Ui_Home):
         pad_x = s(8)
         self.rootLayout.setContentsMargins(s(10), s(10), s(10), s(10))
         self.rootLayout.setSpacing(s(8))
+        self.titleLabel.setStyleSheet(
+            f"font-size: {s(16)}pt; font-weight: 600;"
+        )
         self.connectionLabel.setMinimumSize(s(110), s(28))
         self.connectionLabel.setStyleSheet(
             f"background-color: #8a2020; color: white; border-radius: {cr}px;"
             f" padding: {pad}px {pad_x}px; font-weight: 600;"
+            f" font-size: {s(12)}px;"
         )
         mb_sz = s(28)
         self.menuButton.setMinimumSize(mb_sz, mb_sz)
@@ -347,7 +351,7 @@ class HomeView(QWidget, Ui_Home):
             "QPushButton {"
             f" border: {br}px solid #55555a;"
             f" border-radius: {s(3)}px;"
-            " background-color: #3a3a3e; color: #dddddd; font-size: 14pt;"
+            f" background-color: #3a3a3e; color: #dddddd; font-size: {s(14)}pt;"
             " }"
             " QPushButton:hover { background-color: #48484d; }"
             " QPushButton::menu-indicator { width: 0px; }"
@@ -511,6 +515,7 @@ class HomeView(QWidget, Ui_Home):
         self.connectionLabel.setStyleSheet(
             f"background-color: {bg}; color: white; border-radius: {cr}px;"
             f" padding: {pad}px {pad_x}px; font-weight: 600;"
+            f" font-size: {s(12)}px;"
         )
 
     def _apply_link_state(self, state: DeviceState) -> None:
