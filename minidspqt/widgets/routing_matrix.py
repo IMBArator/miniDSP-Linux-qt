@@ -17,11 +17,19 @@ from PySide6.QtCore import QLineF, QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QCursor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
+from ..scale import s, sf
+
 NUM = 4
 
-NODE_RADIUS = 7.0
-LINE_HIT_TOLERANCE = 8.0
-PAD_X = 12.0
+_BASE_NODE_RADIUS = 7.0
+_BASE_LINE_HIT_TOLERANCE = 8.0
+_BASE_PAD_X = 12.0
+_BASE_MIN_W = 160
+_BASE_MIN_H = 200
+_BASE_ACTIVE_PEN = 2.5
+_BASE_DRAG_PEN = 2.0
+_BASE_HIT_EXTRA = 4.0
+_BASE_HIGHLIGHT_EXTRA = 10.0
 
 COLOR_ACTIVE = QColor(80, 170, 230)
 COLOR_DRAG = QColor(120, 200, 255, 180)
@@ -46,7 +54,6 @@ class RoutingMatrix(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._masks: list[int] = [1 << i for i in range(NUM)]
-        self.setMinimumSize(80, 200)
         self.setMouseTracking(True)
 
         self._input_strips: list[QWidget] = []
@@ -68,6 +75,10 @@ class RoutingMatrix(QWidget):
         self._input_strips = list(inputs)
         self._output_strips = list(outputs)
 
+    def apply_scale(self) -> None:
+        self.setMinimumSize(s(_BASE_MIN_W), s(_BASE_MIN_H))
+        self.update()
+
     # ---- geometry helpers ----
 
     def _strip_y(self, strip: QWidget) -> float | None:
@@ -80,8 +91,8 @@ class RoutingMatrix(QWidget):
 
     def _node_positions(self) -> tuple[list[QPointF], list[QPointF]]:
         w, h = self.width(), self.height()
-        x_in = PAD_X
-        x_out = w - PAD_X
+        x_in = sf(_BASE_PAD_X)
+        x_out = w - sf(_BASE_PAD_X)
 
         ins: list[QPointF] = []
         outs: list[QPointF] = []
@@ -102,12 +113,12 @@ class RoutingMatrix(QWidget):
 
     def _hit_node(self, pos: QPointF, nodes: list[QPointF]) -> int:
         for i, pt in enumerate(nodes):
-            if QLineF(pos, pt).length() <= NODE_RADIUS + 4:
+            if QLineF(pos, pt).length() <= sf(_BASE_NODE_RADIUS) + sf(_BASE_HIT_EXTRA):
                 return i
         return -1
 
     def _hit_connection(self, pos: QPointF, ins: list[QPointF], outs: list[QPointF]) -> tuple[int, int] | None:
-        best_dist = LINE_HIT_TOLERANCE
+        best_dist = sf(_BASE_LINE_HIT_TOLERANCE)
         best: tuple[int, int] | None = None
         for o in range(NUM):
             for i in range(NUM):
@@ -128,13 +139,15 @@ class RoutingMatrix(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             ins, outs = self._node_positions()
 
+            nr = sf(_BASE_NODE_RADIUS)
             for o in range(NUM):
                 if self._hover_output == o:
                     p.setPen(Qt.PenStyle.NoPen)
                     p.setBrush(COLOR_HIGHLIGHT)
-                    p.drawEllipse(outs[o], NODE_RADIUS + 10, NODE_RADIUS + 10)
+                    hl_extra = sf(_BASE_HIGHLIGHT_EXTRA)
+                    p.drawEllipse(outs[o], nr + hl_extra, nr + hl_extra)
 
-            pen_active = QPen(COLOR_ACTIVE, 2.5)
+            pen_active = QPen(COLOR_ACTIVE, sf(_BASE_ACTIVE_PEN))
             for o in range(NUM):
                 for i in range(NUM):
                     if self._masks[o] & (1 << i):
@@ -142,7 +155,7 @@ class RoutingMatrix(QWidget):
                         p.drawLine(ins[i], outs[o])
 
             if self._dragging and 0 <= self._drag_input < NUM:
-                pen_drag = QPen(COLOR_DRAG, 2, Qt.PenStyle.DashLine)
+                pen_drag = QPen(COLOR_DRAG, sf(_BASE_DRAG_PEN), Qt.PenStyle.DashLine)
                 p.setPen(pen_drag)
                 p.drawLine(ins[self._drag_input], self._drag_pos)
 
@@ -150,11 +163,11 @@ class RoutingMatrix(QWidget):
             for i in range(NUM):
                 fill = COLOR_ACTIVE if self._hover_input == i else COLOR_NODE_FILL
                 p.setBrush(fill)
-                p.drawEllipse(ins[i], NODE_RADIUS, NODE_RADIUS)
+                p.drawEllipse(ins[i], nr, nr)
             for o in range(NUM):
                 fill = COLOR_ACTIVE if self._hover_output == o else COLOR_NODE_FILL
                 p.setBrush(fill)
-                p.drawEllipse(outs[o], NODE_RADIUS, NODE_RADIUS)
+                p.drawEllipse(outs[o], nr, nr)
         finally:
             p.end()
 

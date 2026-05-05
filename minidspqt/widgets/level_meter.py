@@ -20,6 +20,8 @@ from PySide6.QtWidgets import QProgressBar
 
 from minidsp.protocol import level_uint16_to_dbu
 
+from ..scale import s, sf
+
 EMA_ALPHA = 0.55           # Exponential moving average smoothing for the raw level
                            #   1.0 = no smoothing, 0.0 = frozen
 LED_PEAK_DECAY = 0.93      # LED peak indicator: multiplicative decay per 150 ms frame
@@ -39,8 +41,10 @@ RED_SEGMENTS = 1
 DB_FLOOR = -60.0
 DB_CEIL = 15.0
 
-SEGMENT_GAP = 2
-CORNER_RADIUS = 2
+_BASE_SEGMENT_GAP = 2
+_BASE_CORNER_RADIUS = 2
+_BASE_MIN_WIDTH = 80
+_BASE_MIN_HEIGHT = 14
 
 
 def _db_to_segments(db: float) -> int:
@@ -103,13 +107,7 @@ class LevelMeter(QProgressBar):
         self.setRange(0, NUM_SEGMENTS)
         self.setValue(0)
         self.setTextVisible(False)
-        self.setMinimumWidth(80)
-        self.setMinimumHeight(14)
-        self.setStyleSheet(
-            "QProgressBar { background: #1c1c1e; border: 1px solid #333336;"
-            " border-radius: 3px; }"
-            "QProgressBar::chunk { background: transparent; }"
-        )
+        self.apply_scale()
 
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.
@@ -176,6 +174,19 @@ class LevelMeter(QProgressBar):
         self._db_hold = 0
         self.setValue(0)
 
+    def apply_scale(self) -> None:
+        """Re-apply fixed sizes and stylesheet using the current scale factor."""
+        self.setMinimumWidth(s(_BASE_MIN_WIDTH))
+        self.setMinimumHeight(s(_BASE_MIN_HEIGHT))
+        br = s(1)
+        cr = s(3)
+        self.setStyleSheet(
+            "QProgressBar { background: #1c1c1e;"
+            f" border: {br}px solid #333336; border-radius: {cr}px; }}"
+            "QProgressBar::chunk { background: transparent; }"
+        )
+        self.update()
+
     def paintEvent(self, event) -> None:
         """Custom paint: draw dim/lit LED segments and the peak-hold marker."""
         p = QPainter()
@@ -185,9 +196,12 @@ class LevelMeter(QProgressBar):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             w, h = self.width(), self.height()
 
-            total_gap = SEGMENT_GAP * (NUM_SEGMENTS - 1)
+            seg_gap = sf(_BASE_SEGMENT_GAP)
+            cr = sf(_BASE_CORNER_RADIUS)
+            total_gap = seg_gap * (NUM_SEGMENTS - 1)
             seg_w = (w - total_gap) / NUM_SEGMENTS
-            seg_h = h - 2
+            y_off = sf(1)
+            seg_h = h - sf(2)
 
             lit = self.value()
 
@@ -195,29 +209,23 @@ class LevelMeter(QProgressBar):
             peak_seg = max(0, min(NUM_SEGMENTS - 1, peak_seg))
 
             for i in range(NUM_SEGMENTS):
-                x = i * (seg_w + SEGMENT_GAP)
+                x = i * (seg_w + seg_gap)
                 color = _segment_color(i) if i < lit else _dim(_segment_color(i))
                 p.setPen(Qt.PenStyle.NoPen)
                 p.setBrush(color)
                 p.drawRoundedRect(
-                    int(x),
-                    1,
-                    max(1, int(seg_w)),
-                    int(seg_h),
-                    CORNER_RADIUS,
-                    CORNER_RADIUS,
+                    int(x), int(y_off),
+                    max(1, int(seg_w)), int(seg_h),
+                    cr, cr,
                 )
 
             if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
-                x = peak_seg * (seg_w + SEGMENT_GAP)
+                x = peak_seg * (seg_w + seg_gap)
                 p.setBrush(QColor(255, 255, 255, 160))
                 p.drawRoundedRect(
-                    int(x),
-                    1,
-                    max(1, int(seg_w)),
-                    int(seg_h),
-                    CORNER_RADIUS,
-                    CORNER_RADIUS,
+                    int(x), int(y_off),
+                    max(1, int(seg_w)), int(seg_h),
+                    cr, cr,
                 )
         finally:
             p.end()

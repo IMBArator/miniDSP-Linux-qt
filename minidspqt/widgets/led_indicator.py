@@ -11,7 +11,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QWidget
 
-LED_SIZE = 14
+from ..scale import s, sf
+
+_BASE_SIZE = 14
 
 _COLOR_ACTIVE = QColor(255, 40, 40)
 _COLOR_DIM = QColor(80, 15, 15)
@@ -28,11 +30,16 @@ class LedIndicator(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._active = False
-        self.setFixedSize(LED_SIZE, LED_SIZE)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setStyleSheet("background: transparent;")
         self.setToolTip("Limiter")
+        self.apply_scale()
+
+    def apply_scale(self) -> None:
+        sz = s(_BASE_SIZE)
+        self.setFixedSize(sz, sz)
+        self.update()
 
     def set_active(self, active: bool) -> None:
         if self._active == active:
@@ -52,9 +59,12 @@ class LedIndicator(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             p.setPen(Qt.PenStyle.NoPen)
 
+            inset = sf(1)
+            shrink = sf(2)
             color = _COLOR_ACTIVE if self._active else _COLOR_DIM
             p.setBrush(color)
-            p.drawEllipse(1, 1, self.width() - 2, self.height() - 2)
+            p.drawEllipse(int(inset), int(inset),
+                          int(self.width() - shrink), int(self.height() - shrink))
 
             if self._active:
                 p.setBrush(_COLOR_GLOW)

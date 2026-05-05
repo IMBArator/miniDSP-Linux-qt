@@ -13,11 +13,8 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPen
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
-    QDoubleSpinBox,
-    QHBoxLayout,
-    QLabel,
     QLineEdit,
     QVBoxLayout,
     QWidget,
@@ -25,13 +22,18 @@ from PySide6.QtWidgets import (
 
 from minidsp.protocol import raw_to_db
 
+from ..scale import s, sf
+
 GAIN_RAW_MIN = 0  # −60 dB
 GAIN_RAW_MAX = 400  # +12 dB
 GAIN_RAW_DEFAULT = 280  # 0 dB
 
 _ARC_START_DEG = 225.0
 _ARC_SWEEP_DEG = -270.0
-_DRAG_PIXELS_PER_STEP = 1.5
+_BASE_DRAG_PIXELS_PER_STEP = 1.5
+_BASE_ARC_MIN_SIZE = 56
+_BASE_VALUE_EDIT_WIDTH = 68
+_BASE_ARC_INSET = 4
 
 
 def _format_db(raw: int) -> str:
@@ -61,28 +63,16 @@ class GainKnob(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(s(2))
 
         self._arc_widget = _ArcWidget(self)
-        self._arc_widget.setMinimumSize(56, 56)
+        self._arc_widget.setMinimumSize(s(_BASE_ARC_MIN_SIZE), s(_BASE_ARC_MIN_SIZE))
         layout.addWidget(self._arc_widget, stretch=1)
 
         self._value_edit = QLineEdit(_format_db_full(self._value))
         self._value_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._value_edit.setFixedWidth(68)
-        self._value_edit.setStyleSheet(
-            "QLineEdit {"
-            " background: transparent;"
-            " color: #cccccc;"
-            " border: none;"
-            " font-size: 10px;"
-            "}"
-            "QLineEdit:focus {"
-            " border: 1px solid #5090d0;"
-            " border-radius: 2px;"
-            " background: #1e1e22;"
-            "}"
-        )
+        self._value_edit.setFixedWidth(s(_BASE_VALUE_EDIT_WIDTH))
+        self._apply_edit_style()
         self._value_edit.setReadOnly(True)
         self._value_edit.returnPressed.connect(self._apply_edit)
         self._value_edit.editingFinished.connect(self._apply_edit)
@@ -120,6 +110,30 @@ class GainKnob(QWidget):
             self._value = clamped
             self._arc_widget.update()
             self._value_edit.setText(_format_db_full(self._value))
+
+    def _apply_edit_style(self) -> None:
+        fs = s(10)
+        br = s(1)
+        cr = s(2)
+        self._value_edit.setStyleSheet(
+            "QLineEdit {"
+            " background: transparent;"
+            " color: #cccccc;"
+            " border: none;"
+            f" font-size: {fs}px;"
+            "}"
+            "QLineEdit:focus {"
+            f" border: {br}px solid #5090d0;"
+            f" border-radius: {cr}px;"
+            " background: #1e1e22;"
+            "}"
+        )
+
+    def apply_scale(self) -> None:
+        self._arc_widget.setMinimumSize(s(_BASE_ARC_MIN_SIZE), s(_BASE_ARC_MIN_SIZE))
+        self._value_edit.setFixedWidth(s(_BASE_VALUE_EDIT_WIDTH))
+        self._apply_edit_style()
+        self._arc_widget.update()
 
     # --- Edit handling ---
 
@@ -166,7 +180,7 @@ class GainKnob(QWidget):
             super().mouseMoveEvent(event)
             return
         dy = self._drag_anchor_y - event.position().y()
-        step = int(dy / _DRAG_PIXELS_PER_STEP)
+        step = int(dy / sf(_BASE_DRAG_PIXELS_PER_STEP))
         self.setValue(self._drag_anchor_value + step)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -210,7 +224,8 @@ class _ArcWidget(QWidget):
             side = min(self.width(), self.height())
             cx = self.width() / 2
             cy = self.height() / 2
-            radius = side / 2 - 4
+            inset = sf(_BASE_ARC_INSET)
+            radius = side / 2 - inset
             rect = QRectF(cx - radius, cy - radius, 2 * radius, 2 * radius)
 
             pen_bg = QPen(QColor(60, 60, 64), max(2.0, radius * 0.10))

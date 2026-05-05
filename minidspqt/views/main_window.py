@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -26,6 +27,7 @@ def _logo_path() -> Path:
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState
+from ..scale import s, zoom_in, zoom_out, zoom_reset
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
@@ -39,7 +41,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *, dsp_instance=None, offline: bool = False) -> None:
         super().__init__()
         self.setWindowTitle("DSP 4x4 Mini")
-        self.setMinimumWidth(960)
+        self.setMinimumWidth(s(960))
         logo = _logo_path()
         if logo.exists():
             self.setWindowIcon(QIcon(str(logo)))
@@ -74,6 +76,10 @@ class MainWindow(QMainWindow):
         self._home_view.recall_clicked.connect(self._on_recall)
         self._home_view.store_clicked.connect(self._on_store)
 
+        QShortcut(QKeySequence(QKeySequence.StandardKey.ZoomIn), self).activated.connect(self._on_zoom_in)
+        QShortcut(QKeySequence(QKeySequence.StandardKey.ZoomOut), self).activated.connect(self._on_zoom_out)
+        QShortcut(QKeySequence("Ctrl+0"), self).activated.connect(self._on_zoom_reset)
+
         self._thread.start()
 
         menu = QMenu(self)
@@ -85,7 +91,7 @@ class MainWindow(QMainWindow):
         menu.addAction("About").triggered.connect(self._on_about)
         btn = self._home_view.menu_button
         btn.setMenu(menu)
-        btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
+        btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0px; }")
 
         if offline:
             self._home_view.set_offline_mode()
@@ -304,6 +310,25 @@ class MainWindow(QMainWindow):
             setattr(self._state.inputs[channel], field, value)
         elif channel >= 4 and (channel - 4) < len(self._state.outputs):
             setattr(self._state.outputs[channel - 4], field, value)
+
+    # --- Zoom ---
+
+    def _on_zoom_in(self) -> None:
+        zoom_in()
+        self._apply_zoom()
+
+    def _on_zoom_out(self) -> None:
+        zoom_out()
+        self._apply_zoom()
+
+    def _on_zoom_reset(self) -> None:
+        zoom_reset()
+        self._apply_zoom()
+
+    def _apply_zoom(self) -> None:
+        self.setMinimumWidth(s(960))
+        self._home_view.apply_scale()
+        QTimer.singleShot(0, lambda: (self.resize(self.sizeHint()), self.adjustSize()))
 
     # --- Lifecycle ---
 

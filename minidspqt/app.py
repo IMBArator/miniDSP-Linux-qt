@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication
 from pathlib import Path
 
 from .views.main_window import MainWindow
+from .scale import load_settings
 
 BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
 
@@ -66,6 +67,7 @@ def run(*, offline: bool = False, verbose: int = 0) -> None:
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = QApplication(sys.argv)
+    load_settings()
     _apply_dark_theme(app)
 
     if offline:

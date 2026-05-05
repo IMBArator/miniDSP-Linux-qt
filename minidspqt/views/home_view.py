@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
+from ..scale import s, apply_scale_recursive
 from ..ui.ui_home import Ui_Home
 from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
 
@@ -59,32 +60,13 @@ class ChannelStrip(QFrame):
     ) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet(
-            "ChannelStrip { background-color: #2d2d31; border: 1px solid #3a3a3e;"
-            " border-radius: 6px; } QLabel { background: transparent; }"
-            " QPushButton { background: transparent; }"
-        )
+        self._is_output = is_output
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(8, 6, 8, 6)
-        root.setSpacing(4)
+        root.setContentsMargins(s(8), s(6), s(8), s(6))
+        root.setSpacing(s(4))
 
         self._title_btn = QPushButton(title)
-        self._title_btn.setStyleSheet(
-            "QPushButton {"
-            " background-color: #3a3a3e;"
-            " color: #cccccc;"
-            " border: 1px solid #55555a;"
-            " border-radius: 10px;"
-            " padding: 2px 12px;"
-            " font-weight: 600;"
-            " font-size: 11px;"
-            " text-align: center;"
-            "}"
-            "QPushButton:hover { background-color: #4a4a4e; }"
-            "QPushButton:pressed { background-color: #55555a; }"
-        )
-        self._title_btn.setFixedHeight(22)
         self._title_btn.setFlat(True)
         self._title_btn.clicked.connect(self._on_title_clicked)
         root.addWidget(self._title_btn)
@@ -93,44 +75,33 @@ class ChannelStrip(QFrame):
         meter_row.setSpacing(0)
 
         self._knob = GainKnob()
-        self._knob.setFixedSize(64, 76)
         meter_row.addWidget(self._knob)
 
-        separator = QFrame()
-        separator.setFrameShape(QFrame.Shape.VLine)
-        separator.setStyleSheet(
-            "QFrame { color: #3a3a3e; max-width: 1px; }"
-        )
-        meter_row.addWidget(separator)
-        meter_row.addSpacing(4)
+        self._separator = QFrame()
+        self._separator.setFrameShape(QFrame.Shape.VLine)
+        meter_row.addWidget(self._separator)
+        meter_row.addSpacing(s(4))
 
         meter_col = QVBoxLayout()
-        meter_col.setSpacing(1)
+        meter_col.setSpacing(s(1))
 
         self._meter = LevelMeter()
-        self._meter.setMinimumWidth(20)
+        self._meter.setMinimumWidth(s(20))
         meter_col.addWidget(self._meter, stretch=1)
 
         self._db_label = QLabel("\u2014 dB")
         self._db_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        self._db_label.setFixedHeight(16)
-        self._db_label.setStyleSheet(
-            "QLabel { color: #999999; font-size: 11px; font-family: monospace;"
-            " background: transparent; }"
-        )
 
+        self._limiter_label: QLabel | None = None
         self._limiter_led: LedIndicator | None = None
         db_row = QHBoxLayout()
-        db_row.setSpacing(4)
+        db_row.setSpacing(s(4))
         db_row.setContentsMargins(0, 0, 0, 0)
         db_row.addWidget(self._db_label, stretch=1)
         if is_output:
-            limiter_label = QLabel("Lim")
-            limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            limiter_label.setStyleSheet(
-                "QLabel { color: #777; font-size: 9px; background: transparent; }"
-            )
-            db_row.addWidget(limiter_label)
+            self._limiter_label = QLabel("Lim")
+            self._limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            db_row.addWidget(self._limiter_label)
             self._limiter_led = LedIndicator()
             db_row.addWidget(self._limiter_led)
         meter_col.addLayout(db_row)
@@ -139,9 +110,8 @@ class ChannelStrip(QFrame):
 
         root.addLayout(meter_row)
 
-        # Toggle row
         toggle_row = QHBoxLayout()
-        toggle_row.setSpacing(4)
+        toggle_row.setSpacing(s(4))
         self._toggles: dict[str, ToggleButton] = {}
         specs = OUTPUT_TOGGLES if is_output else INPUT_TOGGLES
         for label, feature in specs:
@@ -159,10 +129,6 @@ class ChannelStrip(QFrame):
         self._link_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
         )
-        self._link_label.setStyleSheet(
-            "QLabel { color: #66aaff; font-size: 14px; font-weight: 600;"
-            " background: transparent; }"
-        )
         self._link_label.hide()
         self._is_linked_slave = False
 
@@ -173,6 +139,8 @@ class ChannelStrip(QFrame):
         root.setSizeConstraint(root.SizeConstraint.SetMinimumSize)
 
         self._knob.valueChanged.connect(self.gain_changed)
+
+        self.apply_scale()
 
     # --- Programmatic state sync (no signals emitted) ---
 
@@ -242,6 +210,76 @@ class ChannelStrip(QFrame):
         else:
             self._db_label.setText(f"{db:+.1f} dB")
 
+    def apply_scale(self) -> None:
+        bw = s(1)
+        cr = s(6)
+        self.setStyleSheet(
+            "ChannelStrip { background-color: #2d2d31;"
+            f" border: {bw}px solid #3a3a3e;"
+            f" border-radius: {cr}px;"
+            " }"
+            " QLabel { background: transparent; }"
+            " QPushButton { background: transparent; }"
+        )
+
+        tb_bw = s(1)
+        tb_cr = s(10)
+        tb_px = s(2)
+        tb_py = s(12)
+        tb_fs = s(11)
+        self._title_btn.setStyleSheet(
+            "QPushButton {"
+            " background-color: #3a3a3e;"
+            " color: #cccccc;"
+            f" border: {tb_bw}px solid #55555a;"
+            f" border-radius: {tb_cr}px;"
+            f" padding: {tb_px}px {tb_py}px;"
+            " font-weight: 600;"
+            f" font-size: {tb_fs}px;"
+            " text-align: center;"
+            "}"
+            "QPushButton:hover { background-color: #4a4a4e; }"
+            "QPushButton:pressed { background-color: #55555a; }"
+        )
+        self._title_btn.setFixedHeight(s(22))
+
+        self._knob.setFixedSize(s(64), s(76))
+
+        sep_w = max(1, s(1))
+        self._separator.setStyleSheet(
+            "QFrame { color: #3a3a3e;"
+            f" max-width: {sep_w}px;"
+            " }"
+        )
+
+        db_fs = s(11)
+        self._db_label.setFixedHeight(s(16))
+        self._db_label.setStyleSheet(
+            "QLabel { color: #999999;"
+            f" font-size: {db_fs}px;"
+            " font-family: monospace;"
+            " background: transparent;"
+            " }"
+        )
+
+        if self._limiter_label is not None:
+            lim_fs = s(9)
+            self._limiter_label.setStyleSheet(
+                "QLabel { color: #777;"
+                f" font-size: {lim_fs}px;"
+                " background: transparent;"
+                " }"
+            )
+
+        link_fs = s(14)
+        self._link_label.setStyleSheet(
+            "QLabel { color: #66aaff;"
+            f" font-size: {link_fs}px;"
+            " font-weight: 600;"
+            " background: transparent;"
+            " }"
+        )
+
 
 class HomeView(QWidget, Ui_Home):
     # (channel, value) — channel is the unified index: 0..3 inputs, 4..7 outputs
@@ -286,6 +324,60 @@ class HomeView(QWidget, Ui_Home):
 
         self.recallButton.clicked.connect(self.recall_clicked)
         self.storeButton.clicked.connect(self.store_clicked)
+
+        self.apply_scale()
+
+    def apply_scale(self) -> None:
+        from PySide6.QtWidgets import QLayout
+        br = s(1)
+        cr = s(4)
+        pad = s(4)
+        pad_x = s(8)
+        self.rootLayout.setContentsMargins(s(10), s(10), s(10), s(10))
+        self.rootLayout.setSpacing(s(8))
+        self.connectionLabel.setMinimumSize(s(110), s(28))
+        self.connectionLabel.setStyleSheet(
+            f"background-color: #8a2020; color: white; border-radius: {cr}px;"
+            f" padding: {pad}px {pad_x}px; font-weight: 600;"
+        )
+        mb_sz = s(28)
+        self.menuButton.setMinimumSize(mb_sz, mb_sz)
+        self.menuButton.setMaximumSize(mb_sz, mb_sz)
+        self.menuButton.setStyleSheet(
+            "QPushButton {"
+            f" border: {br}px solid #55555a;"
+            f" border-radius: {s(3)}px;"
+            " background-color: #3a3a3e; color: #dddddd; font-size: 14pt;"
+            " }"
+            " QPushButton:hover { background-color: #48484d; }"
+            " QPushButton::menu-indicator { width: 0px; }"
+        )
+        self.routingMatrix.setMinimumWidth(s(160))
+        self.routingMatrix.setMaximumWidth(s(240))
+        self.presetLabel.setStyleSheet(
+            f"padding: {pad}px {pad_x}px; background-color: #2a2a2e;"
+            f" border-radius: {cr}px;"
+            f" font-size: {s(12)}px;"
+        )
+        btn_style = (
+            "QPushButton {"
+            f" border: {br}px solid #55555a;"
+            f" border-radius: {cr}px;"
+            f" padding: {pad}px {pad_x}px;"
+            " background-color: #3a3a3e; color: #dddddd;"
+            f" font-size: {s(12)}px;"
+            " font-weight: 600;"
+            "}"
+            "QPushButton:hover { background-color: #48484d; }"
+            "QPushButton:pressed { background-color: #55555a; }"
+        )
+        self.storeButton.setStyleSheet(btn_style)
+        self.recallButton.setStyleSheet(btn_style)
+        self.inputsLayout.setSpacing(s(6))
+        self.outputsLayout.setSpacing(s(6))
+        for lay in (self.inputsLayout, self.outputsLayout, self.rootLayout):
+            lay.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        apply_scale_recursive(self)
 
     # --- Signal plumbing ---
 
@@ -384,18 +476,12 @@ class HomeView(QWidget, Ui_Home):
     def show_preview_banner(self, filename: str) -> None:
         self.titleLabel.setText(f"Preview — {filename}")
         self.connectionLabel.setText("Preview")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_style("#8a6d20")
 
     def set_offline_mode(self) -> None:
         self.titleLabel.setText("Home")
         self.connectionLabel.setText("Offline")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_style("#8a6d20")
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
         if self._state:
@@ -405,16 +491,10 @@ class HomeView(QWidget, Ui_Home):
         self.titleLabel.setText("Home")
         if connected:
             self.connectionLabel.setText("Connected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #2fa84a; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_style("#2fa84a")
         else:
             self.connectionLabel.setText("Disconnected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #8a2020; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_style("#8a2020")
             for strip in self._input_strips + self._output_strips:
                 strip.set_enabled_state(False)
             return
@@ -423,6 +503,15 @@ class HomeView(QWidget, Ui_Home):
             strip.set_enabled_state(True)
         if self._state:
             self._apply_link_state(self._state)
+
+    def _set_connection_style(self, bg: str) -> None:
+        cr = s(4)
+        pad = s(4)
+        pad_x = s(8)
+        self.connectionLabel.setStyleSheet(
+            f"background-color: {bg}; color: white; border-radius: {cr}px;"
+            f" padding: {pad}px {pad_x}px; font-weight: 600;"
+        )
 
     def _apply_link_state(self, state: DeviceState) -> None:
         strips = self._all_strips()

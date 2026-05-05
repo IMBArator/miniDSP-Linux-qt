@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..scale import s
+
 
 class PresetPickerDialog(QDialog):
     def __init__(
@@ -41,7 +43,7 @@ class PresetPickerDialog(QDialog):
 
         title = "Recall Preset" if mode == "recall" else "Store Preset"
         self.setWindowTitle(title)
-        self.setMinimumSize(400, 500)
+        self.setMinimumSize(s(400), s(500))
 
         layout = QVBoxLayout(self)
 

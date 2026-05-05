@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QPushButton, QWidget
 
+from ..scale import s
+
 # active-background, active-border
 _FEATURE_COLORS: dict[str, tuple[str, str]] = {
     "mute": ("#cc2424", "#801515"),
@@ -39,19 +41,29 @@ class ToggleButton(QPushButton):
         active_bg, active_border = _FEATURE_COLORS.get(
             self._feature, ("#5a7ab0", "#344a6b")
         )
+        bw = s(1)
+        cr = s(3)
+        px = s(3)
+        py = s(6)
+        fs = s(11)
         self.setStyleSheet(
             "ToggleButton {"
             " background-color: #3a3a3e;"
             " color: #dddddd;"
-            " border: 1px solid #55555a;"
-            " border-radius: 3px;"
-            " padding: 3px 6px;"
+            f" border: {bw}px solid #55555a;"
+            f" border-radius: {cr}px;"
+            f" padding: {px}px {py}px;"
             " font-weight: 600;"
+            f" font-size: {fs}px;"
             "}"
             "ToggleButton:hover { background-color: #48484d; }"
-            f"ToggleButton:checked {{"
+            "ToggleButton:checked {"
             f" background-color: {active_bg};"
-            f" color: white;"
-            f" border: 1px solid {active_border};"
+            " color: white;"
+            f" border: {bw}px solid {active_border};"
             "}"
         )
+
+    def apply_scale(self) -> None:
+        self._refresh_style()
+
