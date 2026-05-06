@@ -14,8 +14,10 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLayout,
     QPushButton,
     QSizePolicy,
+    QSpacerItem,
     QVBoxLayout,
     QWidget,
 )
@@ -23,8 +25,7 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
-from ..ui.ui_home import Ui_Home
-from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
+from ..widgets import GainKnob, LedIndicator, LevelMeter, RoutingMatrix, ToggleButton
 
 NUM_CHANNELS = 4
 
@@ -243,7 +244,7 @@ class ChannelStrip(QFrame):
             self._db_label.setText(f"{db:+.1f} dB")
 
 
-class HomeView(QWidget, Ui_Home):
+class HomeView(QWidget):
     # (channel, value) — channel is the unified index: 0..3 inputs, 4..7 outputs
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
@@ -257,9 +258,8 @@ class HomeView(QWidget, Ui_Home):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setupUi(self)
+        self._build_ui()
 
-        from PySide6.QtWidgets import QLayout
         for lay in (self.inputsLayout, self.outputsLayout, self.rootLayout):
             lay.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
@@ -286,6 +286,96 @@ class HomeView(QWidget, Ui_Home):
 
         self.recallButton.clicked.connect(self.recall_clicked)
         self.storeButton.clicked.connect(self.store_clicked)
+
+    # --- UI construction ---
+
+    def _build_ui(self) -> None:
+        self.setObjectName("Home")
+        self.resize(980, 640)
+        self.setWindowTitle("Home")
+
+        self.rootLayout = QVBoxLayout(self)
+        self.rootLayout.setContentsMargins(10, 10, 10, 10)
+        self.rootLayout.setSpacing(8)
+
+        # Header: spacer | title | spacer | connection badge | menu button
+        header = QHBoxLayout()
+        header.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        )
+
+        self.titleLabel = QLabel("Home")
+        self.titleLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.titleLabel.setStyleSheet("font-size: 16pt; font-weight: 600;")
+        header.addWidget(self.titleLabel)
+
+        header.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        )
+
+        self.connectionLabel = QLabel("Disconnected")
+        self.connectionLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.connectionLabel.setMinimumSize(110, 28)
+        self.connectionLabel.setStyleSheet(
+            "background-color: #8a2020; color: white; border-radius: 4px;"
+            " padding: 4px 8px; font-weight: 600;"
+        )
+        header.addWidget(self.connectionLabel)
+
+        self.menuButton = QPushButton("≡")
+        self.menuButton.setFixedSize(28, 28)
+        self.menuButton.setStyleSheet(
+            "QPushButton { border: 1px solid #55555a; border-radius: 3px;"
+            " background-color: #3a3a3e; color: #dddddd; font-size: 14pt; }"
+            " QPushButton:hover { background-color: #48484d; }"
+        )
+        header.addWidget(self.menuButton)
+
+        self.rootLayout.addLayout(header)
+
+        # Center: inputs column | routing matrix | outputs column
+        center = QHBoxLayout()
+        center.setSpacing(8)
+
+        inputs_container = QWidget()
+        self.inputsLayout = QVBoxLayout(inputs_container)
+        self.inputsLayout.setContentsMargins(0, 0, 0, 0)
+        self.inputsLayout.setSpacing(6)
+        center.addWidget(inputs_container)
+
+        self.routingMatrix = RoutingMatrix()
+        self.routingMatrix.setMinimumWidth(160)
+        self.routingMatrix.setMaximumWidth(240)
+        center.addWidget(self.routingMatrix)
+
+        outputs_container = QWidget()
+        self.outputsLayout = QVBoxLayout(outputs_container)
+        self.outputsLayout.setContentsMargins(0, 0, 0, 0)
+        self.outputsLayout.setSpacing(6)
+        center.addWidget(outputs_container)
+
+        self.rootLayout.addLayout(center)
+
+        # Footer: preset label | spacer | store | recall
+        footer = QHBoxLayout()
+
+        self.presetLabel = QLabel("Preset: —")
+        self.presetLabel.setStyleSheet(
+            "padding: 4px 8px; background-color: #2a2a2e; border-radius: 4px;"
+        )
+        footer.addWidget(self.presetLabel)
+
+        footer.addItem(
+            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        )
+
+        self.storeButton = QPushButton("Store")
+        footer.addWidget(self.storeButton)
+
+        self.recallButton = QPushButton("Recall")
+        footer.addWidget(self.recallButton)
+
+        self.rootLayout.addLayout(footer)
 
     # --- Signal plumbing ---
 
