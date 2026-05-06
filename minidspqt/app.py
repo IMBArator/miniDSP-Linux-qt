@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from pathlib import Path
 
+from .unt_loader import load_unt_all_slots
 from .views.main_window import MainWindow
 
 BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
@@ -26,19 +27,7 @@ def _seed_from_blank(dsp) -> None:
     """Load the bundled blank.unt into a VirtualDSP instance."""
     if not BLANK_UNT.exists():
         return
-    from .unt_loader import load_unt
-    cfg, active_slot, names = load_unt(BLANK_UNT)
-    raw = BLANK_UNT.read_bytes()
-    from minidsp.protocol import parse_preset_params
-    from .unt_loader import _slot_blob, SLOT_BASE, SLOT_STRIDE
-    slots = [None] * 30
-    for slot in range(30):
-        offset = SLOT_BASE + slot * SLOT_STRIDE
-        if raw[offset] != 0x64:
-            blob = _slot_blob(raw, slot)
-            parsed = parse_preset_params(blob)
-            if parsed is not None:
-                slots[slot] = parsed
+    slots, active_slot, names, raw = load_unt_all_slots(BLANK_UNT)
     dsp.load_from_unt_bytes(raw, slots, active_slot, names)
 
 
