@@ -14,8 +14,10 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
     QLabel,
+    QLayout,
     QPushButton,
     QSizePolicy,
+    QSpacerItem,
     QVBoxLayout,
     QWidget,
 )
@@ -23,8 +25,7 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
-from ..ui.ui_home import Ui_Home
-from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
+from ..widgets import GainKnob, LedIndicator, LevelMeter, RoutingMatrix, ToggleButton
 
 NUM_CHANNELS = 4
 
@@ -59,31 +60,13 @@ class ChannelStrip(QFrame):
     ) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet(
-            "ChannelStrip { background-color: #2d2d31; border: 1px solid #3a3a3e;"
-            " border-radius: 6px; } QLabel { background: transparent; }"
-            " QPushButton { background: transparent; }"
-        )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
         self._title_btn = QPushButton(title)
-        self._title_btn.setStyleSheet(
-            "QPushButton {"
-            " background-color: #3a3a3e;"
-            " color: #cccccc;"
-            " border: 1px solid #55555a;"
-            " border-radius: 10px;"
-            " padding: 2px 12px;"
-            " font-weight: 600;"
-            " font-size: 11px;"
-            " text-align: center;"
-            "}"
-            "QPushButton:hover { background-color: #4a4a4e; }"
-            "QPushButton:pressed { background-color: #55555a; }"
-        )
+        self._title_btn.setObjectName("channelTitle")
         self._title_btn.setFixedHeight(22)
         self._title_btn.setFlat(True)
         self._title_btn.clicked.connect(self._on_title_clicked)
@@ -97,10 +80,8 @@ class ChannelStrip(QFrame):
         meter_row.addWidget(self._knob)
 
         separator = QFrame()
+        separator.setObjectName("channelSeparator")
         separator.setFrameShape(QFrame.Shape.VLine)
-        separator.setStyleSheet(
-            "QFrame { color: #3a3a3e; max-width: 1px; }"
-        )
         meter_row.addWidget(separator)
         meter_row.addSpacing(4)
 
@@ -112,12 +93,11 @@ class ChannelStrip(QFrame):
         meter_col.addWidget(self._meter, stretch=1)
 
         self._db_label = QLabel("\u2014 dB")
-        self._db_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        self._db_label.setFixedHeight(16)
-        self._db_label.setStyleSheet(
-            "QLabel { color: #999999; font-size: 11px; font-family: monospace;"
-            " background: transparent; }"
+        self._db_label.setObjectName("channelDbLabel")
+        self._db_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         )
+        self._db_label.setFixedHeight(16)
 
         self._limiter_led: LedIndicator | None = None
         db_row = QHBoxLayout()
@@ -126,9 +106,9 @@ class ChannelStrip(QFrame):
         db_row.addWidget(self._db_label, stretch=1)
         if is_output:
             limiter_label = QLabel("Lim")
-            limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            limiter_label.setStyleSheet(
-                "QLabel { color: #777; font-size: 9px; background: transparent; }"
+            limiter_label.setObjectName("channelLimLabel")
+            limiter_label.setAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
             )
             db_row.addWidget(limiter_label)
             self._limiter_led = LedIndicator()
@@ -155,13 +135,10 @@ class ChannelStrip(QFrame):
             self._toggles[feature] = btn
 
         self._link_label = QLabel("")
+        self._link_label.setObjectName("channelLinkLabel")
         self._link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._link_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-        )
-        self._link_label.setStyleSheet(
-            "QLabel { color: #66aaff; font-size: 14px; font-weight: 600;"
-            " background: transparent; }"
         )
         self._link_label.hide()
         self._is_linked_slave = False
@@ -182,7 +159,9 @@ class ChannelStrip(QFrame):
     def _on_title_clicked(self) -> None:
         current = self._title_btn.text()
         new_name, ok = QInputDialog.getText(
-            self, "Channel Name", "Name (max 8 chars):",
+            self,
+            "Channel Name",
+            "Name (max 8 chars):",
             text=current,
         )
         if ok and new_name != current:
@@ -223,8 +202,10 @@ class ChannelStrip(QFrame):
         for btn in self._toggles.values():
             btn.setEnabled(not is_slave)
         if is_slave:
-            self._link_label.setText("\U0001F517")
-            self._link_label.setToolTip(f"Linked to {master_name}" if master_name else "Linked")
+            self._link_label.setText("\U0001f517")
+            self._link_label.setToolTip(
+                f"Linked to {master_name}" if master_name else "Linked"
+            )
             self._link_label.show()
         else:
             self._link_label.setToolTip("")
@@ -243,7 +224,7 @@ class ChannelStrip(QFrame):
             self._db_label.setText(f"{db:+.1f} dB")
 
 
-class HomeView(QWidget, Ui_Home):
+class HomeView(QWidget):
     # (channel, value) — channel is the unified index: 0..3 inputs, 4..7 outputs
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
@@ -257,9 +238,8 @@ class HomeView(QWidget, Ui_Home):
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setupUi(self)
+        self._build_ui()
 
-        from PySide6.QtWidgets import QLayout
         for lay in (self.inputsLayout, self.outputsLayout, self.rootLayout):
             lay.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
@@ -287,11 +267,101 @@ class HomeView(QWidget, Ui_Home):
         self.recallButton.clicked.connect(self.recall_clicked)
         self.storeButton.clicked.connect(self.store_clicked)
 
+    # --- UI construction ---
+
+    def _build_ui(self) -> None:
+        self.setObjectName("Home")
+        self.resize(980, 640)
+        self.setWindowTitle("Home")
+
+        self.rootLayout = QVBoxLayout(self)
+        self.rootLayout.setContentsMargins(10, 10, 10, 10)
+        self.rootLayout.setSpacing(8)
+
+        # Header: spacer | title | spacer | connection badge | menu button
+        header = QHBoxLayout()
+        header.addItem(
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
+        )
+
+        self.titleLabel = QLabel("Home")
+        self.titleLabel.setObjectName("titleLabel")
+        self.titleLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header.addWidget(self.titleLabel)
+
+        header.addItem(
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
+        )
+
+        self.connectionLabel = QLabel("Disconnected")
+        self.connectionLabel.setObjectName("connectionLabel")
+        self.connectionLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.connectionLabel.setMinimumSize(110, 28)
+        self._set_connection_state("disconnected")
+        header.addWidget(self.connectionLabel)
+
+        self.menuButton = QPushButton("≡")
+        self.menuButton.setObjectName("menuButton")
+        self.menuButton.setFixedSize(28, 28)
+        header.addWidget(self.menuButton)
+
+        self.rootLayout.addLayout(header)
+
+        # Center: inputs column | routing matrix | outputs column
+        center = QHBoxLayout()
+        center.setSpacing(8)
+
+        inputs_container = QWidget()
+        self.inputsLayout = QVBoxLayout(inputs_container)
+        self.inputsLayout.setContentsMargins(0, 0, 0, 0)
+        self.inputsLayout.setSpacing(6)
+        center.addWidget(inputs_container)
+
+        self.routingMatrix = RoutingMatrix()
+        self.routingMatrix.setMinimumWidth(160)
+        self.routingMatrix.setMaximumWidth(240)
+        center.addWidget(self.routingMatrix)
+
+        outputs_container = QWidget()
+        self.outputsLayout = QVBoxLayout(outputs_container)
+        self.outputsLayout.setContentsMargins(0, 0, 0, 0)
+        self.outputsLayout.setSpacing(6)
+        center.addWidget(outputs_container)
+
+        self.rootLayout.addLayout(center)
+
+        # Footer: preset label | spacer | store | recall
+        footer = QHBoxLayout()
+
+        self.presetLabel = QLabel("Preset: —")
+        self.presetLabel.setObjectName("presetLabel")
+        footer.addWidget(self.presetLabel)
+
+        footer.addItem(
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
+        )
+
+        self.storeButton = QPushButton("Store")
+        footer.addWidget(self.storeButton)
+
+        self.recallButton = QPushButton("Recall")
+        footer.addWidget(self.recallButton)
+
+        self.rootLayout.addLayout(footer)
+
     # --- Signal plumbing ---
 
     def _connect_input(self, idx: int, strip: ChannelStrip) -> None:
         strip.gain_changed.connect(lambda raw, ch=idx: self.gain_changed.emit(ch, raw))
-        strip.name_changed.connect(lambda name, ch=idx: self.name_changed.emit(ch, name))
+        strip.name_changed.connect(
+            lambda name, ch=idx: self.name_changed.emit(ch, name)
+        )
 
         def _on_toggle(feature: str, checked: bool, ch: int = idx) -> None:
             if feature == "mute":
@@ -381,21 +451,22 @@ class HomeView(QWidget, Ui_Home):
     def _all_strips(self) -> list[ChannelStrip]:
         return self._input_strips + self._output_strips
 
+    def _set_connection_state(self, state: str) -> None:
+        # Drives the QSS selector QLabel#connectionLabel[state="..."]; valid
+        # values: disconnected, connected, offline, preview.
+        self.connectionLabel.setProperty("state", state)
+        self.connectionLabel.style().unpolish(self.connectionLabel)
+        self.connectionLabel.style().polish(self.connectionLabel)
+
     def show_preview_banner(self, filename: str) -> None:
         self.titleLabel.setText(f"Preview — {filename}")
         self.connectionLabel.setText("Preview")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_state("preview")
 
     def set_offline_mode(self) -> None:
         self.titleLabel.setText("Home")
         self.connectionLabel.setText("Offline")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_state("offline")
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
         if self._state:
@@ -405,16 +476,10 @@ class HomeView(QWidget, Ui_Home):
         self.titleLabel.setText("Home")
         if connected:
             self.connectionLabel.setText("Connected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #2fa84a; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_state("connected")
         else:
             self.connectionLabel.setText("Disconnected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #8a2020; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_state("disconnected")
             for strip in self._input_strips + self._output_strips:
                 strip.set_enabled_state(False)
             return
@@ -428,12 +493,18 @@ class HomeView(QWidget, Ui_Home):
         strips = self._all_strips()
         for i in range(4):
             master_name = self._master_title(state, i, strips)
-            self._input_strips[i].set_linked_slave(state.is_linked_slave(i), master_name)
+            self._input_strips[i].set_linked_slave(
+                state.is_linked_slave(i), master_name
+            )
             master_name = self._master_title(state, i + 4, strips)
-            self._output_strips[i].set_linked_slave(state.is_linked_slave(i + 4), master_name)
+            self._output_strips[i].set_linked_slave(
+                state.is_linked_slave(i + 4), master_name
+            )
 
     @staticmethod
-    def _master_title(state: DeviceState, channel: int, strips: list[ChannelStrip]) -> str:
+    def _master_title(
+        state: DeviceState, channel: int, strips: list[ChannelStrip]
+    ) -> str:
         info = state.link_info[channel] if channel < len(state.link_info) else {}
         master_ch = info.get("master")
         if master_ch is not None and 0 <= master_ch < len(strips):

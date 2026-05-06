@@ -20,16 +20,16 @@ from PySide6.QtWidgets import QProgressBar
 
 from minidsp.protocol import level_uint16_to_dbu
 
-EMA_ALPHA = 0.55           # Exponential moving average smoothing for the raw level
-                           #   1.0 = no smoothing, 0.0 = frozen
-LED_PEAK_DECAY = 0.93      # LED peak indicator: multiplicative decay per 150 ms frame
-                           #   half-life ≈ 150 ms × log(0.5)/log(0.93) ≈ 1.5 s
-LED_PEAK_HOLD = 7          # LED peak indicator: frames to hold before decaying
-                           #   at 150 ms polling → ≈ 1.05 s hold
-DB_DISPLAY_HOLD = 7        # Numeric dB readout: frames to hold the peak before decaying
-                           #   at 150 ms polling → ≈ 1.05 s hold
-DB_DISPLAY_DECAY = 0.93    # Numeric dB readout: multiplicative decay per frame after hold
-                           #   same factor as LED peak → same visual decay rate
+EMA_ALPHA = 0.55  # Exponential moving average smoothing for the raw level
+#   1.0 = no smoothing, 0.0 = frozen
+LED_PEAK_DECAY = 0.93  # LED peak indicator: multiplicative decay per 150 ms frame
+#   half-life ≈ 150 ms × log(0.5)/log(0.93) ≈ 1.5 s
+LED_PEAK_HOLD = 7  # LED peak indicator: frames to hold before decaying
+#   at 150 ms polling → ≈ 1.05 s hold
+DB_DISPLAY_HOLD = 7  # Numeric dB readout: frames to hold the peak before decaying
+#   at 150 ms polling → ≈ 1.05 s hold
+DB_DISPLAY_DECAY = 0.93  # Numeric dB readout: multiplicative decay per frame after hold
+#   same factor as LED peak → same visual decay rate
 
 NUM_SEGMENTS = 20
 GREEN_SEGMENTS = 15
@@ -105,11 +105,6 @@ class LevelMeter(QProgressBar):
         self.setTextVisible(False)
         self.setMinimumWidth(80)
         self.setMinimumHeight(14)
-        self.setStyleSheet(
-            "QProgressBar { background: #1c1c1e; border: 1px solid #333336;"
-            " border-radius: 3px; }"
-            "QProgressBar::chunk { background: transparent; }"
-        )
 
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.

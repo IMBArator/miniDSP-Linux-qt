@@ -9,10 +9,10 @@ from minidsp.protocol import parse_preset_params
 MAGIC = b"***4x4MINIV010**"
 EXPECTED_SIZE = 13010
 SLOT_COUNT = 30
-SLOT_STRIDE = 432       # 1 slot-number byte + 429 config bytes + 2-byte CRLF
-SLOT_BASE = 0x32        # file offset of slot 0 (U01)
-ACTIVE_SLOT_OFFSET = 0x11   # header byte: 1-indexed active slot (1=U01 ... 30=U30)
-EMPTY_FILL = 0x64       # 'd' — byte used to fill unused slots
+SLOT_STRIDE = 432  # 1 slot-number byte + 429 config bytes + 2-byte CRLF
+SLOT_BASE = 0x32  # file offset of slot 0 (U01)
+ACTIVE_SLOT_OFFSET = 0x11  # header byte: 1-indexed active slot (1=U01 ... 30=U30)
+EMPTY_FILL = 0x64  # 'd' — byte used to fill unused slots
 
 
 class UntParseError(ValueError):
@@ -35,9 +35,7 @@ def load_unt_all_slots(
         data = f.read()
 
     if len(data) != EXPECTED_SIZE:
-        raise UntParseError(
-            f"Expected {EXPECTED_SIZE} bytes, got {len(data)}"
-        )
+        raise UntParseError(f"Expected {EXPECTED_SIZE} bytes, got {len(data)}")
     if data[:16] != MAGIC:
         raise UntParseError("Not a miniDSP .unt file (bad magic header)")
 
@@ -78,9 +76,7 @@ def load_unt(path: str | os.PathLike) -> tuple[dict, int, list[str]]:
         data = f.read()
 
     if len(data) != EXPECTED_SIZE:
-        raise UntParseError(
-            f"Expected {EXPECTED_SIZE} bytes, got {len(data)}"
-        )
+        raise UntParseError(f"Expected {EXPECTED_SIZE} bytes, got {len(data)}")
     if data[:16] != MAGIC:
         raise UntParseError("Not a miniDSP .unt file (bad magic header)")
 
@@ -100,7 +96,9 @@ def load_unt(path: str | os.PathLike) -> tuple[dict, int, list[str]]:
         blob = _slot_blob(data, slot)
         # Preset name: bytes 2–15 of blob (after FF FF marker), space-padded ASCII
         raw_name = blob[2:16]
-        preset_names.append(raw_name.rstrip(b"\x00").rstrip(b" ").decode("ascii", errors="replace"))
+        preset_names.append(
+            raw_name.rstrip(b"\x00").rstrip(b" ").decode("ascii", errors="replace")
+        )
 
     cfg = parse_preset_params(_slot_blob(data, active_slot))
     if cfg is None:

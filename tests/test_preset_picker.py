@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from PySide6.QtWidgets import QDialog
 
 from minidspqt.views.preset_picker import PresetPickerDialog
 
@@ -28,7 +27,9 @@ def test_recall_dialog_selects_slot(qtbot):
 def test_store_dialog_has_name_edit(qtbot):
     names = [""] * 30
     names[2] = "Existing"
-    dlg = PresetPickerDialog(None, names, active_slot=3, mode="store", current_name="TestName")
+    dlg = PresetPickerDialog(
+        None, names, active_slot=3, mode="store", current_name="TestName"
+    )
     qtbot.addWidget(dlg)
 
     assert dlg._name_edit is not None
@@ -43,7 +44,10 @@ def test_empty_slots_are_disabled_in_recall(qtbot):
     qtbot.addWidget(dlg)
 
     from PySide6.QtCore import Qt
-    assert dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable  # F00 always selectable
+
+    assert (
+        dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
+    )  # F00 always selectable
     assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable  # U01 (OnlyOne)
     assert not (dlg._list.item(2).flags() & Qt.ItemFlag.ItemIsSelectable)  # U02 empty
 
@@ -52,13 +56,20 @@ def test_empty_slots_are_disabled_in_recall(qtbot):
 def test_empty_slots_are_selectable_in_store(qtbot):
     names = [""] * 30
     names[0] = "OnlyOne"
-    dlg = PresetPickerDialog(None, names, active_slot=1, mode="store", current_name="Test")
+    dlg = PresetPickerDialog(
+        None, names, active_slot=1, mode="store", current_name="Test"
+    )
     qtbot.addWidget(dlg)
 
     from PySide6.QtCore import Qt
-    assert not (dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable)  # F00 disabled in store
+
+    assert not (
+        dlg._list.item(0).flags() & Qt.ItemFlag.ItemIsSelectable
+    )  # F00 disabled in store
     assert dlg._list.item(1).flags() & Qt.ItemFlag.ItemIsSelectable  # U01
-    assert dlg._list.item(2).flags() & Qt.ItemFlag.ItemIsSelectable  # U02 empty but selectable
+    assert (
+        dlg._list.item(2).flags() & Qt.ItemFlag.ItemIsSelectable
+    )  # U02 empty but selectable
 
 
 @pytest.mark.qt_no_exception_capture

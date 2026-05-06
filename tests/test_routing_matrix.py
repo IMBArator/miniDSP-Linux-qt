@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QApplication
 from minidspqt.widgets.routing_matrix import (
     _point_to_segment_dist,
     RoutingMatrix,
-    NUM,
 )
 
 
@@ -107,9 +106,13 @@ class TestRoutingMatrixSignals:
         click_pos = QPointF(mid_x, ins[0].y())
 
         with qtbot.waitSignal(widget.routing_changed, timeout=1000) as sig:
-            QApplication.sendEvent(widget, _mouse_event(
-                QMouseEvent.Type.MouseButtonDblClick, click_pos,
-            ))
+            QApplication.sendEvent(
+                widget,
+                _mouse_event(
+                    QMouseEvent.Type.MouseButtonDblClick,
+                    click_pos,
+                ),
+            )
 
         assert sig.args == [0, 0x02]
 
@@ -126,9 +129,13 @@ class TestRoutingMatrixSignals:
         mid_x = (ins[1].x() + outs[1].x()) / 2
         click_pos = QPointF(mid_x, ins[1].y())
 
-        QApplication.sendEvent(widget, _mouse_event(
-            QMouseEvent.Type.MouseButtonDblClick, click_pos,
-        ))
+        QApplication.sendEvent(
+            widget,
+            _mouse_event(
+                QMouseEvent.Type.MouseButtonDblClick,
+                click_pos,
+            ),
+        )
         qtbot.wait(100)
         assert widget._masks[1] == 0x00
 

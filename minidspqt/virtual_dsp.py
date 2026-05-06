@@ -12,10 +12,21 @@ from typing import Any
 
 from minidsp.protocol import CHANNEL_NAMES
 
-_SLOT_KEYS = frozenset({
-    "names", "gains", "mutes", "phases", "link_flags",
-    "routings", "gates", "delays", "crossovers", "compressors", "peqs",
-})
+_SLOT_KEYS = frozenset(
+    {
+        "names",
+        "gains",
+        "mutes",
+        "phases",
+        "link_flags",
+        "routings",
+        "gates",
+        "delays",
+        "crossovers",
+        "compressors",
+        "peqs",
+    }
+)
 
 
 def _default_config() -> dict[str, Any]:
@@ -50,7 +61,7 @@ def _default_config() -> dict[str, Any]:
             for _ in range(4)
         ],
         "active_slot": 1,
-        "preset_names": [f"U{i+1:02d}" for i in range(30)],
+        "preset_names": [f"U{i + 1:02d}" for i in range(30)],
     }
 
 
@@ -169,13 +180,21 @@ class VirtualDSP:
         return True
 
     def set_compressor(
-        self, channel: int, ratio: int, knee: int,
-        attack: int, release: int, threshold: int,
+        self,
+        channel: int,
+        ratio: int,
+        knee: int,
+        attack: int,
+        release: int,
+        threshold: int,
     ) -> bool:
         out_idx = channel - 4
         self._config["compressors"][out_idx] = {
-            "ratio": ratio, "knee": knee, "attack": attack,
-            "release": release, "threshold": threshold,
+            "ratio": ratio,
+            "knee": knee,
+            "attack": attack,
+            "release": release,
+            "threshold": threshold,
         }
         return True
 
@@ -184,13 +203,22 @@ class VirtualDSP:
         return True
 
     def set_peq_band(
-        self, channel: int, band: int, gain_raw: int, freq_raw: int,
-        q_raw: int, filter_type: int, bypass: bool = False,
+        self,
+        channel: int,
+        band: int,
+        gain_raw: int,
+        freq_raw: int,
+        q_raw: int,
+        filter_type: int,
+        bypass: bool = False,
     ) -> bool:
         out_idx = channel - 4
         self._config["peqs"][out_idx]["bands"][band] = {
-            "gain": gain_raw, "freq": freq_raw, "q": q_raw,
-            "type": filter_type, "bypass": bypass,
+            "gain": gain_raw,
+            "freq": freq_raw,
+            "q": q_raw,
+            "type": filter_type,
+            "bypass": bypass,
         }
         return True
 

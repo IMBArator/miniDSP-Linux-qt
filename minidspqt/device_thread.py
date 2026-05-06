@@ -17,9 +17,14 @@ from enum import Enum, auto
 
 from PySide6.QtCore import QThread, Signal
 
-from minidsp.device import DSPmini
+from minidsp.device import DeviceLockedError, DSPmini
 
 log = logging.getLogger(__name__)
+
+# Errors expected from the device/transport layer. Anything else raised from
+# inside the poll loop or a command dispatch is a programming bug and should
+# propagate to surface in logs/test failures rather than being swallowed.
+DEVICE_ERRORS: tuple[type[BaseException], ...] = (OSError, DeviceLockedError)
 
 
 class CommandType(Enum):
@@ -72,9 +77,7 @@ class DeviceThread(QThread):
     def request_gate(
         self, channel: int, attack: int, release: int, hold: int, threshold: int
     ) -> None:
-        self._enqueue(
-            (CommandType.GATE, channel), (attack, release, hold, threshold)
-        )
+        self._enqueue((CommandType.GATE, channel), (attack, release, hold, threshold))
 
     def request_hipass(self, channel: int, freq_raw: int, slope: int) -> None:
         self._enqueue((CommandType.HIPASS, channel), (freq_raw, slope))
@@ -160,7 +163,7 @@ class DeviceThread(QThread):
             log.info("Reading device config...")
             try:
                 config = dsp.read_config()
-            except Exception:
+            except DEVICE_ERRORS:
                 log.exception("read_config failed")
                 config = None
             if config is not None:
@@ -169,7 +172,7 @@ class DeviceThread(QThread):
                 log.warning("Config read failed, reconnecting...")
                 try:
                     dsp.close()
-                except Exception:
+                except DEVICE_ERRORS:
                     log.exception("Error closing device")
                 self.connection_changed.emit(False)
                 continue
@@ -179,7 +182,7 @@ class DeviceThread(QThread):
             log.info("Poll loop exited, closing device")
             try:
                 dsp.close()
-            except Exception:
+            except DEVICE_ERRORS:
                 log.exception("Error closing device")
             self.connection_changed.emit(False)
 
@@ -205,8 +208,8 @@ class DeviceThread(QThread):
                 self._drain_preset_queue(dsp)
                 self._drain_pending(dsp)
                 levels = dsp.poll_levels()
-            except OSError:
-                log.warning("Device disconnected (OSError)")
+            except DEVICE_ERRORS:
+                log.warning("Device disconnected", exc_info=True)
                 return
 
             if levels is not None:
@@ -231,7 +234,7 @@ class DeviceThread(QThread):
         for key, args in batch.items():
             try:
                 self._dispatch(dsp, key, args)
-            except Exception:
+            except DEVICE_ERRORS:
                 log.exception("Failed dispatching %s(%s)", key, args)
 
     def _drain_preset_queue(self, dsp) -> bool:
@@ -261,13 +264,19 @@ class DeviceThread(QThread):
                         log.info("recall: emitting config_loaded active_slot=%d", slot)
                         self.config_loaded.emit(config)
                     else:
-                        log.warning("recall: load_preset returned None — UI will NOT update")
+                        log.warning(
+                            "recall: load_preset returned None — UI will NOT update"
+                        )
                 elif kind == "store":
                     _, slot, name = entry
-                    log.info("store: calling dsp.store_preset(slot=%d, name='%s')", slot, name)
+                    log.info(
+                        "store: calling dsp.store_preset(slot=%d, name='%s')",
+                        slot,
+                        name,
+                    )
                     dsp.store_preset(slot, name)
                     log.info("store: done")
-            except Exception:
+            except DEVICE_ERRORS:
                 log.exception("Preset operation %s failed", entry)
         return did_recall
 

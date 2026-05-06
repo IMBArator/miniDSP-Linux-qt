@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from minidspqt.unt_loader import EXPECTED_SIZE, MAGIC, UntParseError, load_unt
+from minidspqt.unt_loader import EXPECTED_SIZE, UntParseError, load_unt
 
 FIXTURE_PATH = "/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt"
 

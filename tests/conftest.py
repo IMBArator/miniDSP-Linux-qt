@@ -21,8 +21,14 @@ def _make_preset_cfg() -> dict:
     """Canned dict in the shape of parse_preset_params() + read_config()'s extras."""
     return {
         "names": [
-            "InA", "InB", "InC", "InD",
-            "Out1", "Out2", "Out3", "Out4",
+            "InA",
+            "InB",
+            "InC",
+            "InD",
+            "Out1",
+            "Out2",
+            "Out3",
+            "Out4",
         ],
         "gains": [280, 281, 282, 283, 100, 101, 102, 103],
         "mutes": [False, True, False, False, False, False, True, False],
@@ -103,8 +109,9 @@ class FakeDSPmini(VirtualDSP):
         self.calls.append(("set_phase", (channel, inverted)))
         return super().set_phase(channel, inverted)
 
-    def set_gate(self, channel: int, attack: int, release: int,
-                 hold: int, threshold: int) -> bool:
+    def set_gate(
+        self, channel: int, attack: int, release: int, hold: int, threshold: int
+    ) -> bool:
         self.calls.append(("set_gate", (channel, attack, release, hold, threshold)))
         return super().set_gate(channel, attack, release, hold, threshold)
 
@@ -116,19 +123,43 @@ class FakeDSPmini(VirtualDSP):
         self.calls.append(("set_lopass", (channel, freq_raw, slope)))
         return super().set_lopass(channel, freq_raw, slope)
 
-    def set_compressor(self, channel: int, ratio: int, knee: int,
-                       attack: int, release: int, threshold: int) -> bool:
-        self.calls.append(("set_compressor", (channel, ratio, knee, attack, release, threshold)))
+    def set_compressor(
+        self,
+        channel: int,
+        ratio: int,
+        knee: int,
+        attack: int,
+        release: int,
+        threshold: int,
+    ) -> bool:
+        self.calls.append(
+            ("set_compressor", (channel, ratio, knee, attack, release, threshold))
+        )
         return super().set_compressor(channel, ratio, knee, attack, release, threshold)
 
     def set_delay(self, channel: int, samples: int) -> bool:
         self.calls.append(("set_delay", (channel, samples)))
         return super().set_delay(channel, samples)
 
-    def set_peq_band(self, channel: int, band: int, gain_raw: int, freq_raw: int,
-                     q_raw: int, filter_type: int, bypass: bool = False) -> bool:
-        self.calls.append(("set_peq_band", (channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass)))
-        return super().set_peq_band(channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass)
+    def set_peq_band(
+        self,
+        channel: int,
+        band: int,
+        gain_raw: int,
+        freq_raw: int,
+        q_raw: int,
+        filter_type: int,
+        bypass: bool = False,
+    ) -> bool:
+        self.calls.append(
+            (
+                "set_peq_band",
+                (channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass),
+            )
+        )
+        return super().set_peq_band(
+            channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
+        )
 
     def set_peq_channel_bypass(self, channel: int, bypass: bool) -> bool:
         self.calls.append(("set_peq_channel_bypass", (channel, bypass)))

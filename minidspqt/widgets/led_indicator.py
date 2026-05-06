@@ -31,6 +31,10 @@ class LedIndicator(QWidget):
         self.setFixedSize(LED_SIZE, LED_SIZE)
         self.setAutoFillBackground(False)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        # Kept inline (not in style.qss) as paint-plumbing for the custom
+        # paintEvent: WA_TranslucentBackground stops Qt from auto-filling, and
+        # an explicit transparent background prevents inherited QSS rules
+        # (e.g. ChannelStrip's frame fill) from painting underneath the LED.
         self.setStyleSheet("background: transparent;")
         self.setToolTip("Limiter")
 

@@ -15,15 +15,6 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-
-def _logo_path() -> Path:
-    try:
-        import importlib.resources as ir
-        ref = ir.files("minidspqt.resources").joinpath("logo.svg")
-        return Path(str(ref))
-    except Exception:
-        return Path()
-
 from ..device_thread import DeviceThread
 from ..model import DeviceState
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
@@ -33,6 +24,16 @@ from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
 
 log = logging.getLogger(__name__)
+
+
+def _logo_path() -> Path:
+    try:
+        import importlib.resources as ir
+
+        ref = ir.files("minidspqt.resources").joinpath("logo.svg")
+        return Path(str(ref))
+    except Exception:
+        return Path()
 
 
 class MainWindow(QMainWindow):
@@ -56,10 +57,13 @@ class MainWindow(QMainWindow):
             factory = type(dsp_instance)
         else:
             from minidsp.device import DSPmini
+
             factory = DSPmini
 
         self._thread = DeviceThread(
-            dsp_factory=factory, dsp_instance=dsp_instance, parent=self,
+            dsp_factory=factory,
+            dsp_instance=dsp_instance,
+            parent=self,
         )
         self._thread.levels_updated.connect(self._home_view.update_levels)
         self._thread.connection_changed.connect(self._on_connection_changed)
@@ -85,7 +89,6 @@ class MainWindow(QMainWindow):
         menu.addAction("About").triggered.connect(self._on_about)
         btn = self._home_view.menu_button
         btn.setMenu(menu)
-        btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
 
         if offline:
             self._home_view.set_offline_mode()
@@ -107,7 +110,9 @@ class MainWindow(QMainWindow):
     def _on_config_loaded(self, cfg: dict) -> None:
         log.info(
             "config_loaded: keys=%s active_slot=%s preset_names=%d entries",
-            sorted(cfg.keys()), cfg.get("active_slot"), len(cfg.get("preset_names", [])),
+            sorted(cfg.keys()),
+            cfg.get("active_slot"),
+            len(cfg.get("preset_names", [])),
         )
         old_names = list(self._state.preset_names)
         try:
@@ -126,7 +131,9 @@ class MainWindow(QMainWindow):
 
     def _on_load_unt(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load .unt preset", "",
+            self,
+            "Load .unt preset",
+            "",
             "miniDSP preset (*.unt);;All files (*)",
         )
         if not path:
@@ -168,7 +175,9 @@ class MainWindow(QMainWindow):
         if vdsp is None:
             return
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save .unt preset", "",
+            self,
+            "Save .unt preset",
+            "",
             "miniDSP preset (*.unt);;All files (*)",
         )
         if not path:
@@ -190,7 +199,10 @@ class MainWindow(QMainWindow):
         active = self._state.active_slot if self._state.active_slot is not None else 1
         active_in_list = active  # F00=row 0, U01=row 1, … (matches chosen_slot)
         dlg = PresetPickerDialog(
-            self, display_names, active_in_list, "recall",
+            self,
+            display_names,
+            active_in_list,
+            "recall",
         )
         if dlg.exec() == QDialog.Accepted:
             slot = dlg.chosen_slot
@@ -208,13 +220,18 @@ class MainWindow(QMainWindow):
                 current_name = names_30[idx]
 
         dlg = PresetPickerDialog(
-            self, display_names, active_in_list, "store", current_name,
+            self,
+            display_names,
+            active_in_list,
+            "store",
+            current_name,
         )
         if dlg.exec() == QDialog.Accepted:
             slot = dlg.chosen_slot
             reply = QMessageBox.question(
-                self, "Store Preset",
-                f"Store the current configuration to slot U{slot:02d} \"{dlg.chosen_name}\"?",
+                self,
+                "Store Preset",
+                f'Store the current configuration to slot U{slot:02d} "{dlg.chosen_name}"?',
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -250,35 +267,30 @@ class MainWindow(QMainWindow):
     # --- UI -> DeviceThread ---
 
     def _on_gain_changed(self, channel: int, raw: int) -> None:
-        self._update_channel_field(channel, "gain_raw", raw)
-        self._thread.request_gain(channel, raw)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "gain_raw", raw)
-            self._thread.request_gain(slave, raw)
-            self._apply_strip_gain(slave, raw)
+        for ch in self._state.set_field_with_links(channel, "gain_raw", raw):
+            self._thread.request_gain(ch, raw)
+            if ch != channel:
+                self._apply_strip_gain(ch, raw)
 
     def _on_mute_changed(self, channel: int, muted: bool) -> None:
-        self._update_channel_field(channel, "muted", muted)
-        self._thread.request_mute(channel, muted)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "muted", muted)
-            self._thread.request_mute(slave, muted)
-            self._apply_strip_toggle(slave, "mute", muted)
+        for ch in self._state.set_field_with_links(channel, "muted", muted):
+            self._thread.request_mute(ch, muted)
+            if ch != channel:
+                self._apply_strip_toggle(ch, "mute", muted)
 
     def _on_phase_changed(self, channel: int, inverted: bool) -> None:
-        self._update_channel_field(channel, "phase_inverted", inverted)
-        self._thread.request_phase(channel, inverted)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "phase_inverted", inverted)
-            self._thread.request_phase(slave, inverted)
-            self._apply_strip_toggle(slave, "phase", inverted)
+        for ch in self._state.set_field_with_links(channel, "phase_inverted", inverted):
+            self._thread.request_phase(ch, inverted)
+            if ch != channel:
+                self._apply_strip_toggle(ch, "phase", inverted)
 
     def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
-        log.info("Gate toggle ch=%d checked=%s (detail view not yet wired)",
-                 channel, enabled)
+        log.info(
+            "Gate toggle ch=%d checked=%s (detail view not yet wired)", channel, enabled
+        )
 
     def _on_name_changed(self, channel: int, name: str) -> None:
-        self._update_channel_field(channel, "name", name)
+        self._state.set_field(channel, "name", name)
         self._thread.request_channel_name(channel, name)
 
     def _on_route_changed(self, output_idx: int, input_mask: int) -> None:
@@ -296,14 +308,6 @@ class MainWindow(QMainWindow):
         strips = self._home_view._all_strips()
         if 0 <= channel < len(strips):
             strips[channel].set_toggle_silent(feature, checked)
-
-    def _update_channel_field(self, channel: int, field: str, value) -> None:
-        if not self._state.inputs and not self._state.outputs:
-            return
-        if channel < 4 and channel < len(self._state.inputs):
-            setattr(self._state.inputs[channel], field, value)
-        elif channel >= 4 and (channel - 4) < len(self._state.outputs):
-            setattr(self._state.outputs[channel - 4], field, value)
 
     # --- Lifecycle ---
 
