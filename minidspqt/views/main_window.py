@@ -249,35 +249,29 @@ class MainWindow(QMainWindow):
     # --- UI -> DeviceThread ---
 
     def _on_gain_changed(self, channel: int, raw: int) -> None:
-        self._update_channel_field(channel, "gain_raw", raw)
-        self._thread.request_gain(channel, raw)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "gain_raw", raw)
-            self._thread.request_gain(slave, raw)
-            self._apply_strip_gain(slave, raw)
+        for ch in self._state.set_field_with_links(channel, "gain_raw", raw):
+            self._thread.request_gain(ch, raw)
+            if ch != channel:
+                self._apply_strip_gain(ch, raw)
 
     def _on_mute_changed(self, channel: int, muted: bool) -> None:
-        self._update_channel_field(channel, "muted", muted)
-        self._thread.request_mute(channel, muted)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "muted", muted)
-            self._thread.request_mute(slave, muted)
-            self._apply_strip_toggle(slave, "mute", muted)
+        for ch in self._state.set_field_with_links(channel, "muted", muted):
+            self._thread.request_mute(ch, muted)
+            if ch != channel:
+                self._apply_strip_toggle(ch, "mute", muted)
 
     def _on_phase_changed(self, channel: int, inverted: bool) -> None:
-        self._update_channel_field(channel, "phase_inverted", inverted)
-        self._thread.request_phase(channel, inverted)
-        for slave in self._state.get_linked_slaves(channel):
-            self._update_channel_field(slave, "phase_inverted", inverted)
-            self._thread.request_phase(slave, inverted)
-            self._apply_strip_toggle(slave, "phase", inverted)
+        for ch in self._state.set_field_with_links(channel, "phase_inverted", inverted):
+            self._thread.request_phase(ch, inverted)
+            if ch != channel:
+                self._apply_strip_toggle(ch, "phase", inverted)
 
     def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
         log.info("Gate toggle ch=%d checked=%s (detail view not yet wired)",
                  channel, enabled)
 
     def _on_name_changed(self, channel: int, name: str) -> None:
-        self._update_channel_field(channel, "name", name)
+        self._state.set_field(channel, "name", name)
         self._thread.request_channel_name(channel, name)
 
     def _on_route_changed(self, output_idx: int, input_mask: int) -> None:
@@ -295,14 +289,6 @@ class MainWindow(QMainWindow):
         strips = self._home_view._all_strips()
         if 0 <= channel < len(strips):
             strips[channel].set_toggle_silent(feature, checked)
-
-    def _update_channel_field(self, channel: int, field: str, value) -> None:
-        if not self._state.inputs and not self._state.outputs:
-            return
-        if channel < 4 and channel < len(self._state.inputs):
-            setattr(self._state.inputs[channel], field, value)
-        elif channel >= 4 and (channel - 4) < len(self._state.outputs):
-            setattr(self._state.outputs[channel - 4], field, value)
 
     # --- Lifecycle ---
 

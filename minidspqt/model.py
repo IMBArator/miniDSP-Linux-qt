@@ -116,6 +116,35 @@ class DeviceState:
             return [ch for ch in info["linked_to"] if ch != channel]
         return []
 
+    def _channel_obj(self, channel: int) -> InputChannelState | OutputChannelState | None:
+        if 0 <= channel < 4 and channel < len(self.inputs):
+            return self.inputs[channel]
+        if 4 <= channel < 8 and (channel - 4) < len(self.outputs):
+            return self.outputs[channel - 4]
+        return None
+
+    def set_field(self, channel: int, field: str, value) -> bool:
+        """Mutate one field on one channel. Returns True if the channel exists."""
+        obj = self._channel_obj(channel)
+        if obj is None:
+            return False
+        setattr(obj, field, value)
+        return True
+
+    def set_field_with_links(self, channel: int, field: str, value) -> list[int]:
+        """Mutate `field` on `channel` and every channel linked to it as a slave.
+
+        Returns the list of affected channels (originating channel first), so
+        the caller can fan out to the device thread and UI in one pass.
+        """
+        if not self.set_field(channel, field, value):
+            return []
+        affected = [channel]
+        for slave in self.get_linked_slaves(channel):
+            if self.set_field(slave, field, value):
+                affected.append(slave)
+        return affected
+
     @property
     def routing_info(self) -> list[dict]:
         return decode_routing_matrix([ch.routing_mask for ch in self.outputs])
