@@ -64,6 +64,7 @@ def test_edit_mute_touches_footer_bitmask():
         saved = out.read_bytes()
 
     from minidspqt.unt_loader import SLOT_BASE, SLOT_STRIDE
+
     blob_start = SLOT_BASE + active * SLOT_STRIDE + 1
     input_mute_lo = saved[blob_start + 408]
     input_mute_hi = saved[blob_start + 409]
@@ -73,12 +74,13 @@ def test_edit_mute_touches_footer_bitmask():
 
 def test_save_without_template_uses_blank():
     from minidspqt.virtual_dsp import VirtualDSP
+
     dsp = VirtualDSP()
 
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "blank_out.unt"
         slots_0, active_0, _ = dsp.export_to_unt_args()
-        names_30 = [f"U{i+1:02d}" for i in range(30)]
+        names_30 = [f"U{i + 1:02d}" for i in range(30)]
         save_unt(out, slots_0, names_30, active_0, template=None)
 
         saved = out.read_bytes()

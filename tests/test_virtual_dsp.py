@@ -56,7 +56,13 @@ def test_set_compressor_persists():
     dsp = VirtualDSP()
     dsp.set_compressor(0x04, 5, 6, 100, 500, 60)
     comp = dsp.read_config()["compressors"][0]
-    assert comp == {"ratio": 5, "knee": 6, "attack": 100, "release": 500, "threshold": 60}
+    assert comp == {
+        "ratio": 5,
+        "knee": 6,
+        "attack": 100,
+        "release": 500,
+        "threshold": 60,
+    }
 
 
 def test_store_then_load_roundtrip():
@@ -149,9 +155,24 @@ def test_load_from_unt_bytes():
         "routings": [0x01, 0x02, 0x04, 0x08],
         "gates": [{"attack": 50, "release": 100, "hold": 200, "threshold": 20}] * 4,
         "delays": [0, 0, 0, 0],
-        "crossovers": [{"hipass_freq": 0, "hipass_slope": 0, "lopass_freq": 0, "lopass_slope": 0}] * 4,
-        "compressors": [{"ratio": 0, "knee": 0, "attack": 0, "release": 0, "threshold": 0}] * 4,
-        "peqs": [{"bands": [{"gain": 120, "freq": 150, "q": 40, "type": 0, "bypass": False}] * 7, "channel_bypass": False}] * 4,
+        "crossovers": [
+            {"hipass_freq": 0, "hipass_slope": 0, "lopass_freq": 0, "lopass_slope": 0}
+        ]
+        * 4,
+        "compressors": [
+            {"ratio": 0, "knee": 0, "attack": 0, "release": 0, "threshold": 0}
+        ]
+        * 4,
+        "peqs": [
+            {
+                "bands": [
+                    {"gain": 120, "freq": 150, "q": 40, "type": 0, "bypass": False}
+                ]
+                * 7,
+                "channel_bypass": False,
+            }
+        ]
+        * 4,
     }
     raw = b"\x00" * 13010
     slots = [None] * 30

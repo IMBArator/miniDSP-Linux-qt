@@ -77,9 +77,7 @@ class DeviceThread(QThread):
     def request_gate(
         self, channel: int, attack: int, release: int, hold: int, threshold: int
     ) -> None:
-        self._enqueue(
-            (CommandType.GATE, channel), (attack, release, hold, threshold)
-        )
+        self._enqueue((CommandType.GATE, channel), (attack, release, hold, threshold))
 
     def request_hipass(self, channel: int, freq_raw: int, slope: int) -> None:
         self._enqueue((CommandType.HIPASS, channel), (freq_raw, slope))
@@ -266,10 +264,16 @@ class DeviceThread(QThread):
                         log.info("recall: emitting config_loaded active_slot=%d", slot)
                         self.config_loaded.emit(config)
                     else:
-                        log.warning("recall: load_preset returned None — UI will NOT update")
+                        log.warning(
+                            "recall: load_preset returned None — UI will NOT update"
+                        )
                 elif kind == "store":
                     _, slot, name = entry
-                    log.info("store: calling dsp.store_preset(slot=%d, name='%s')", slot, name)
+                    log.info(
+                        "store: calling dsp.store_preset(slot=%d, name='%s')",
+                        slot,
+                        name,
+                    )
                     dsp.store_preset(slot, name)
                     log.info("store: done")
             except DEVICE_ERRORS:

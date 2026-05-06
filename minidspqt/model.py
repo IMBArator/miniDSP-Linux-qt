@@ -116,7 +116,9 @@ class DeviceState:
             return [ch for ch in info["linked_to"] if ch != channel]
         return []
 
-    def _channel_obj(self, channel: int) -> InputChannelState | OutputChannelState | None:
+    def _channel_obj(
+        self, channel: int
+    ) -> InputChannelState | OutputChannelState | None:
         if 0 <= channel < 4 and channel < len(self.inputs):
             return self.inputs[channel]
         if 4 <= channel < 8 and (channel - 4) < len(self.outputs):

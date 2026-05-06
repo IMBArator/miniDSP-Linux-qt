@@ -10,7 +10,10 @@ from .app import run
 def main() -> None:
     parser = argparse.ArgumentParser(prog="minidspqt")
     parser.add_argument(
-        "-v", "--verbose", action="count", default=0,
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
         help="Increase verbosity (-v: info, -vv: debug)",
     )
     parser.add_argument(

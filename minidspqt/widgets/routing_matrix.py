@@ -87,8 +87,16 @@ class RoutingMatrix(QWidget):
         outs: list[QPointF] = []
 
         for i in range(NUM):
-            y_in = self._strip_y(self._input_strips[i]) if i < len(self._input_strips) else None
-            y_out = self._strip_y(self._output_strips[i]) if i < len(self._output_strips) else None
+            y_in = (
+                self._strip_y(self._input_strips[i])
+                if i < len(self._input_strips)
+                else None
+            )
+            y_out = (
+                self._strip_y(self._output_strips[i])
+                if i < len(self._output_strips)
+                else None
+            )
 
             if y_in is None:
                 y_in = h / (NUM + 1) * (i + 1)
@@ -106,7 +114,9 @@ class RoutingMatrix(QWidget):
                 return i
         return -1
 
-    def _hit_connection(self, pos: QPointF, ins: list[QPointF], outs: list[QPointF]) -> tuple[int, int] | None:
+    def _hit_connection(
+        self, pos: QPointF, ins: list[QPointF], outs: list[QPointF]
+    ) -> tuple[int, int] | None:
         best_dist = LINE_HIT_TOLERANCE
         best: tuple[int, int] | None = None
         for o in range(NUM):

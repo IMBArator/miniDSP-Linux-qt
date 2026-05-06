@@ -79,8 +79,18 @@ def test_preset_queue_does_not_coalesce(thread, fake_dsp):
 def test_command_type_enum_is_exhaustive():
     # Guard against silently dropping a command when expanding the enum.
     expected = {
-        "GAIN", "MUTE", "PHASE", "GATE", "HIPASS", "LOPASS",
-        "COMPRESSOR", "DELAY", "PEQ_BAND", "PEQ_CHANNEL_BYPASS",
-        "MATRIX_ROUTE", "CHANNEL_LINK", "CHANNEL_NAME",
+        "GAIN",
+        "MUTE",
+        "PHASE",
+        "GATE",
+        "HIPASS",
+        "LOPASS",
+        "COMPRESSOR",
+        "DELAY",
+        "PEQ_BAND",
+        "PEQ_CHANNEL_BYPASS",
+        "MATRIX_ROUTE",
+        "CHANNEL_LINK",
+        "CHANNEL_NAME",
     }
     assert {c.name for c in CommandType} == expected

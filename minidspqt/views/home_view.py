@@ -94,7 +94,9 @@ class ChannelStrip(QFrame):
 
         self._db_label = QLabel("\u2014 dB")
         self._db_label.setObjectName("channelDbLabel")
-        self._db_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._db_label.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
         self._db_label.setFixedHeight(16)
 
         self._limiter_led: LedIndicator | None = None
@@ -105,7 +107,9 @@ class ChannelStrip(QFrame):
         if is_output:
             limiter_label = QLabel("Lim")
             limiter_label.setObjectName("channelLimLabel")
-            limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            limiter_label.setAlignment(
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
             db_row.addWidget(limiter_label)
             self._limiter_led = LedIndicator()
             db_row.addWidget(self._limiter_led)
@@ -155,7 +159,9 @@ class ChannelStrip(QFrame):
     def _on_title_clicked(self) -> None:
         current = self._title_btn.text()
         new_name, ok = QInputDialog.getText(
-            self, "Channel Name", "Name (max 8 chars):",
+            self,
+            "Channel Name",
+            "Name (max 8 chars):",
             text=current,
         )
         if ok and new_name != current:
@@ -196,8 +202,10 @@ class ChannelStrip(QFrame):
         for btn in self._toggles.values():
             btn.setEnabled(not is_slave)
         if is_slave:
-            self._link_label.setText("\U0001F517")
-            self._link_label.setToolTip(f"Linked to {master_name}" if master_name else "Linked")
+            self._link_label.setText("\U0001f517")
+            self._link_label.setToolTip(
+                f"Linked to {master_name}" if master_name else "Linked"
+            )
             self._link_label.show()
         else:
             self._link_label.setToolTip("")
@@ -273,7 +281,9 @@ class HomeView(QWidget):
         # Header: spacer | title | spacer | connection badge | menu button
         header = QHBoxLayout()
         header.addItem(
-            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
         )
 
         self.titleLabel = QLabel("Home")
@@ -282,7 +292,9 @@ class HomeView(QWidget):
         header.addWidget(self.titleLabel)
 
         header.addItem(
-            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
         )
 
         self.connectionLabel = QLabel("Disconnected")
@@ -330,7 +342,9 @@ class HomeView(QWidget):
         footer.addWidget(self.presetLabel)
 
         footer.addItem(
-            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
         )
 
         self.storeButton = QPushButton("Store")
@@ -345,7 +359,9 @@ class HomeView(QWidget):
 
     def _connect_input(self, idx: int, strip: ChannelStrip) -> None:
         strip.gain_changed.connect(lambda raw, ch=idx: self.gain_changed.emit(ch, raw))
-        strip.name_changed.connect(lambda name, ch=idx: self.name_changed.emit(ch, name))
+        strip.name_changed.connect(
+            lambda name, ch=idx: self.name_changed.emit(ch, name)
+        )
 
         def _on_toggle(feature: str, checked: bool, ch: int = idx) -> None:
             if feature == "mute":
@@ -477,12 +493,18 @@ class HomeView(QWidget):
         strips = self._all_strips()
         for i in range(4):
             master_name = self._master_title(state, i, strips)
-            self._input_strips[i].set_linked_slave(state.is_linked_slave(i), master_name)
+            self._input_strips[i].set_linked_slave(
+                state.is_linked_slave(i), master_name
+            )
             master_name = self._master_title(state, i + 4, strips)
-            self._output_strips[i].set_linked_slave(state.is_linked_slave(i + 4), master_name)
+            self._output_strips[i].set_linked_slave(
+                state.is_linked_slave(i + 4), master_name
+            )
 
     @staticmethod
-    def _master_title(state: DeviceState, channel: int, strips: list[ChannelStrip]) -> str:
+    def _master_title(
+        state: DeviceState, channel: int, strips: list[ChannelStrip]
+    ) -> str:
         info = state.link_info[channel] if channel < len(state.link_info) else {}
         master_ch = info.get("master")
         if master_ch is not None and 0 <= master_ch < len(strips):

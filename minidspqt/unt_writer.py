@@ -85,7 +85,10 @@ def save_unt(
         data = bytearray(template)
     else:
         from importlib.resources import files
-        data = bytearray(files("minidspqt.resources").joinpath("blank.unt").read_bytes())
+
+        data = bytearray(
+            files("minidspqt.resources").joinpath("blank.unt").read_bytes()
+        )
 
     if len(data) != EXPECTED_SIZE:
         raise ValueError(f"Template must be {EXPECTED_SIZE} bytes, got {len(data)}")
@@ -101,7 +104,10 @@ def save_unt(
 
 
 def _write_slot(
-    data: bytearray, slot: int, cfg: dict, name: str,
+    data: bytearray,
+    slot: int,
+    cfg: dict,
+    name: str,
 ) -> None:
     base = SLOT_BASE + slot * SLOT_STRIDE
     data[base] = slot + 1  # 1-indexed slot number byte

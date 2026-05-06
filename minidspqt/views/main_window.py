@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 def _logo_path() -> Path:
     try:
         import importlib.resources as ir
+
         ref = ir.files("minidspqt.resources").joinpath("logo.svg")
         return Path(str(ref))
     except Exception:
@@ -56,10 +57,13 @@ class MainWindow(QMainWindow):
             factory = type(dsp_instance)
         else:
             from minidsp.device import DSPmini
+
             factory = DSPmini
 
         self._thread = DeviceThread(
-            dsp_factory=factory, dsp_instance=dsp_instance, parent=self,
+            dsp_factory=factory,
+            dsp_instance=dsp_instance,
+            parent=self,
         )
         self._thread.levels_updated.connect(self._home_view.update_levels)
         self._thread.connection_changed.connect(self._on_connection_changed)
@@ -106,7 +110,9 @@ class MainWindow(QMainWindow):
     def _on_config_loaded(self, cfg: dict) -> None:
         log.info(
             "config_loaded: keys=%s active_slot=%s preset_names=%d entries",
-            sorted(cfg.keys()), cfg.get("active_slot"), len(cfg.get("preset_names", [])),
+            sorted(cfg.keys()),
+            cfg.get("active_slot"),
+            len(cfg.get("preset_names", [])),
         )
         old_names = list(self._state.preset_names)
         try:
@@ -125,7 +131,9 @@ class MainWindow(QMainWindow):
 
     def _on_load_unt(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Load .unt preset", "",
+            self,
+            "Load .unt preset",
+            "",
             "miniDSP preset (*.unt);;All files (*)",
         )
         if not path:
@@ -167,7 +175,9 @@ class MainWindow(QMainWindow):
         if vdsp is None:
             return
         path, _ = QFileDialog.getSaveFileName(
-            self, "Save .unt preset", "",
+            self,
+            "Save .unt preset",
+            "",
             "miniDSP preset (*.unt);;All files (*)",
         )
         if not path:
@@ -189,7 +199,10 @@ class MainWindow(QMainWindow):
         active = self._state.active_slot if self._state.active_slot is not None else 1
         active_in_list = active  # F00=row 0, U01=row 1, … (matches chosen_slot)
         dlg = PresetPickerDialog(
-            self, display_names, active_in_list, "recall",
+            self,
+            display_names,
+            active_in_list,
+            "recall",
         )
         if dlg.exec() == QDialog.Accepted:
             slot = dlg.chosen_slot
@@ -207,13 +220,18 @@ class MainWindow(QMainWindow):
                 current_name = names_30[idx]
 
         dlg = PresetPickerDialog(
-            self, display_names, active_in_list, "store", current_name,
+            self,
+            display_names,
+            active_in_list,
+            "store",
+            current_name,
         )
         if dlg.exec() == QDialog.Accepted:
             slot = dlg.chosen_slot
             reply = QMessageBox.question(
-                self, "Store Preset",
-                f"Store the current configuration to slot U{slot:02d} \"{dlg.chosen_name}\"?",
+                self,
+                "Store Preset",
+                f'Store the current configuration to slot U{slot:02d} "{dlg.chosen_name}"?',
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
@@ -267,8 +285,9 @@ class MainWindow(QMainWindow):
                 self._apply_strip_toggle(ch, "phase", inverted)
 
     def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
-        log.info("Gate toggle ch=%d checked=%s (detail view not yet wired)",
-                 channel, enabled)
+        log.info(
+            "Gate toggle ch=%d checked=%s (detail view not yet wired)", channel, enabled
+        )
 
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._state.set_field(channel, "name", name)

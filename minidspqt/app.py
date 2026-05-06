@@ -48,9 +48,13 @@ def _apply_dark_theme(app: QApplication) -> None:
 
 
 def run(*, offline: bool = False, verbose: int = 0) -> None:
-    level = (logging.DEBUG if verbose >= 2
-             else logging.INFO if verbose >= 1
-             else logging.WARNING)
+    level = (
+        logging.DEBUG
+        if verbose >= 2
+        else logging.INFO
+        if verbose >= 1
+        else logging.WARNING
+    )
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)-5s %(name)s: %(message)s",
@@ -66,6 +70,7 @@ def run(*, offline: bool = False, verbose: int = 0) -> None:
 
     if offline:
         from .virtual_dsp import VirtualDSP
+
         dsp_instance = VirtualDSP()
         _seed_from_blank(dsp_instance)
     else:

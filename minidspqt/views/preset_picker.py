@@ -49,7 +49,9 @@ class PresetPickerDialog(QDialog):
 
         f00 = QListWidgetItem("F00 \u2014 Factory")
         if mode == "store":
-            f00.setFlags(f00.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled)
+            f00.setFlags(
+                f00.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled
+            )
             fg = f00.foreground()
             fg.setColor(Qt.GlobalColor.gray)
             f00.setForeground(fg)
@@ -72,7 +74,11 @@ class PresetPickerDialog(QDialog):
                 foreground.setColor(Qt.GlobalColor.gray)
                 item.setForeground(foreground)
                 if mode == "recall":
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable & ~Qt.ItemFlag.ItemIsEnabled)
+                    item.setFlags(
+                        item.flags()
+                        & ~Qt.ItemFlag.ItemIsSelectable
+                        & ~Qt.ItemFlag.ItemIsEnabled
+                    )
             if i + 1 == active_slot and name:
                 font = item.font()
                 font.setBold(True)
