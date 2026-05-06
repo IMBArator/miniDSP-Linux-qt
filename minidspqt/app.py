@@ -14,6 +14,12 @@ from pathlib import Path
 from .views.main_window import MainWindow
 
 BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
+STYLESHEET = Path(__file__).parent / "resources" / "style.qss"
+
+
+def _apply_stylesheet(app: QApplication) -> None:
+    if STYLESHEET.exists():
+        app.setStyleSheet(STYLESHEET.read_text(encoding="utf-8"))
 
 
 def _seed_from_blank(dsp) -> None:
@@ -67,6 +73,7 @@ def run(*, offline: bool = False, verbose: int = 0) -> None:
 
     app = QApplication(sys.argv)
     _apply_dark_theme(app)
+    _apply_stylesheet(app)
 
     if offline:
         from .virtual_dsp import VirtualDSP

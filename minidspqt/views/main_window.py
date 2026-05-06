@@ -85,7 +85,6 @@ class MainWindow(QMainWindow):
         menu.addAction("About").triggered.connect(self._on_about)
         btn = self._home_view.menu_button
         btn.setMenu(menu)
-        btn.setStyleSheet(btn.styleSheet() + " QPushButton::menu-indicator { width: 0; }")
 
         if offline:
             self._home_view.set_offline_mode()

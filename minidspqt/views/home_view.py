@@ -60,31 +60,13 @@ class ChannelStrip(QFrame):
     ) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet(
-            "ChannelStrip { background-color: #2d2d31; border: 1px solid #3a3a3e;"
-            " border-radius: 6px; } QLabel { background: transparent; }"
-            " QPushButton { background: transparent; }"
-        )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 6, 8, 6)
         root.setSpacing(4)
 
         self._title_btn = QPushButton(title)
-        self._title_btn.setStyleSheet(
-            "QPushButton {"
-            " background-color: #3a3a3e;"
-            " color: #cccccc;"
-            " border: 1px solid #55555a;"
-            " border-radius: 10px;"
-            " padding: 2px 12px;"
-            " font-weight: 600;"
-            " font-size: 11px;"
-            " text-align: center;"
-            "}"
-            "QPushButton:hover { background-color: #4a4a4e; }"
-            "QPushButton:pressed { background-color: #55555a; }"
-        )
+        self._title_btn.setObjectName("channelTitle")
         self._title_btn.setFixedHeight(22)
         self._title_btn.setFlat(True)
         self._title_btn.clicked.connect(self._on_title_clicked)
@@ -98,10 +80,8 @@ class ChannelStrip(QFrame):
         meter_row.addWidget(self._knob)
 
         separator = QFrame()
+        separator.setObjectName("channelSeparator")
         separator.setFrameShape(QFrame.Shape.VLine)
-        separator.setStyleSheet(
-            "QFrame { color: #3a3a3e; max-width: 1px; }"
-        )
         meter_row.addWidget(separator)
         meter_row.addSpacing(4)
 
@@ -113,12 +93,9 @@ class ChannelStrip(QFrame):
         meter_col.addWidget(self._meter, stretch=1)
 
         self._db_label = QLabel("\u2014 dB")
+        self._db_label.setObjectName("channelDbLabel")
         self._db_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self._db_label.setFixedHeight(16)
-        self._db_label.setStyleSheet(
-            "QLabel { color: #999999; font-size: 11px; font-family: monospace;"
-            " background: transparent; }"
-        )
 
         self._limiter_led: LedIndicator | None = None
         db_row = QHBoxLayout()
@@ -127,10 +104,8 @@ class ChannelStrip(QFrame):
         db_row.addWidget(self._db_label, stretch=1)
         if is_output:
             limiter_label = QLabel("Lim")
+            limiter_label.setObjectName("channelLimLabel")
             limiter_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            limiter_label.setStyleSheet(
-                "QLabel { color: #777; font-size: 9px; background: transparent; }"
-            )
             db_row.addWidget(limiter_label)
             self._limiter_led = LedIndicator()
             db_row.addWidget(self._limiter_led)
@@ -156,13 +131,10 @@ class ChannelStrip(QFrame):
             self._toggles[feature] = btn
 
         self._link_label = QLabel("")
+        self._link_label.setObjectName("channelLinkLabel")
         self._link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._link_label.setSizePolicy(
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-        )
-        self._link_label.setStyleSheet(
-            "QLabel { color: #66aaff; font-size: 14px; font-weight: 600;"
-            " background: transparent; }"
         )
         self._link_label.hide()
         self._is_linked_slave = False
@@ -305,8 +277,8 @@ class HomeView(QWidget):
         )
 
         self.titleLabel = QLabel("Home")
+        self.titleLabel.setObjectName("titleLabel")
         self.titleLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.titleLabel.setStyleSheet("font-size: 16pt; font-weight: 600;")
         header.addWidget(self.titleLabel)
 
         header.addItem(
@@ -314,21 +286,15 @@ class HomeView(QWidget):
         )
 
         self.connectionLabel = QLabel("Disconnected")
+        self.connectionLabel.setObjectName("connectionLabel")
         self.connectionLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.connectionLabel.setMinimumSize(110, 28)
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a2020; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_state("disconnected")
         header.addWidget(self.connectionLabel)
 
         self.menuButton = QPushButton("≡")
+        self.menuButton.setObjectName("menuButton")
         self.menuButton.setFixedSize(28, 28)
-        self.menuButton.setStyleSheet(
-            "QPushButton { border: 1px solid #55555a; border-radius: 3px;"
-            " background-color: #3a3a3e; color: #dddddd; font-size: 14pt; }"
-            " QPushButton:hover { background-color: #48484d; }"
-        )
         header.addWidget(self.menuButton)
 
         self.rootLayout.addLayout(header)
@@ -360,9 +326,7 @@ class HomeView(QWidget):
         footer = QHBoxLayout()
 
         self.presetLabel = QLabel("Preset: —")
-        self.presetLabel.setStyleSheet(
-            "padding: 4px 8px; background-color: #2a2a2e; border-radius: 4px;"
-        )
+        self.presetLabel.setObjectName("presetLabel")
         footer.addWidget(self.presetLabel)
 
         footer.addItem(
@@ -471,21 +435,22 @@ class HomeView(QWidget):
     def _all_strips(self) -> list[ChannelStrip]:
         return self._input_strips + self._output_strips
 
+    def _set_connection_state(self, state: str) -> None:
+        # Drives the QSS selector QLabel#connectionLabel[state="..."]; valid
+        # values: disconnected, connected, offline, preview.
+        self.connectionLabel.setProperty("state", state)
+        self.connectionLabel.style().unpolish(self.connectionLabel)
+        self.connectionLabel.style().polish(self.connectionLabel)
+
     def show_preview_banner(self, filename: str) -> None:
         self.titleLabel.setText(f"Preview — {filename}")
         self.connectionLabel.setText("Preview")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_state("preview")
 
     def set_offline_mode(self) -> None:
         self.titleLabel.setText("Home")
         self.connectionLabel.setText("Offline")
-        self.connectionLabel.setStyleSheet(
-            "background-color: #8a6d20; color: white; border-radius: 4px;"
-            " padding: 4px 8px; font-weight: 600;"
-        )
+        self._set_connection_state("offline")
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
         if self._state:
@@ -495,16 +460,10 @@ class HomeView(QWidget):
         self.titleLabel.setText("Home")
         if connected:
             self.connectionLabel.setText("Connected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #2fa84a; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_state("connected")
         else:
             self.connectionLabel.setText("Disconnected")
-            self.connectionLabel.setStyleSheet(
-                "background-color: #8a2020; color: white; border-radius: 4px;"
-                " padding: 4px 8px; font-weight: 600;"
-            )
+            self._set_connection_state("disconnected")
             for strip in self._input_strips + self._output_strips:
                 strip.set_enabled_state(False)
             return

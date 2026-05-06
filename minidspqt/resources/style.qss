@@ -1,0 +1,136 @@
+/*
+ * Application-wide stylesheet for the DSP 4x4 Mini Qt GUI.
+ *
+ * Loaded once at startup by app.run() and applied to the QApplication, so
+ * every rule cascades to all widgets. Custom-painted widgets (GainKnob arc,
+ * LevelMeter segments, LedIndicator, RoutingMatrix) draw themselves and are
+ * intentionally NOT styled here — only their containers/labels are.
+ *
+ * Dynamic state (e.g. the connection badge changing color, ToggleButton's
+ * per-feature accent) is driven by Qt dynamic properties (`state`, `feature`)
+ * paired with attribute selectors below; the Python code calls
+ * setProperty(...) followed by style().unpolish/polish() to repaint.
+ */
+
+/* ---------- Home view: header / footer chrome ---------- */
+
+QLabel#titleLabel {
+    font-size: 16pt;
+    font-weight: 600;
+}
+
+QLabel#connectionLabel {
+    color: white;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: 600;
+}
+QLabel#connectionLabel[state="disconnected"] { background-color: #8a2020; }
+QLabel#connectionLabel[state="connected"]    { background-color: #2fa84a; }
+QLabel#connectionLabel[state="offline"]      { background-color: #8a6d20; }
+QLabel#connectionLabel[state="preview"]      { background-color: #8a6d20; }
+
+QPushButton#menuButton {
+    border: 1px solid #55555a;
+    border-radius: 3px;
+    background-color: #3a3a3e;
+    color: #dddddd;
+    font-size: 14pt;
+}
+QPushButton#menuButton:hover { background-color: #48484d; }
+QPushButton#menuButton::menu-indicator { width: 0; }
+
+QLabel#presetLabel {
+    padding: 4px 8px;
+    background-color: #2a2a2e;
+    border-radius: 4px;
+}
+
+/* ---------- Channel strip ---------- */
+
+ChannelStrip {
+    background-color: #2d2d31;
+    border: 1px solid #3a3a3e;
+    border-radius: 6px;
+}
+ChannelStrip QLabel,
+ChannelStrip QPushButton { background: transparent; }
+
+QPushButton#channelTitle {
+    background-color: #3a3a3e;
+    color: #cccccc;
+    border: 1px solid #55555a;
+    border-radius: 10px;
+    padding: 2px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    text-align: center;
+}
+QPushButton#channelTitle:hover   { background-color: #4a4a4e; }
+QPushButton#channelTitle:pressed { background-color: #55555a; }
+
+QFrame#channelSeparator {
+    color: #3a3a3e;
+    max-width: 1px;
+}
+
+QLabel#channelDbLabel {
+    color: #999999;
+    font-size: 11px;
+    font-family: monospace;
+}
+
+QLabel#channelLimLabel {
+    color: #777;
+    font-size: 9px;
+}
+
+QLabel#channelLinkLabel {
+    color: #66aaff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ---------- GainKnob value editor ---------- */
+
+QLineEdit#gainKnobEdit {
+    background: transparent;
+    color: #cccccc;
+    border: none;
+    font-size: 10px;
+}
+QLineEdit#gainKnobEdit:focus {
+    border: 1px solid #5090d0;
+    border-radius: 2px;
+    background: #1e1e22;
+}
+
+/* ---------- LevelMeter (frame only; segments are custom-painted) ---------- */
+
+LevelMeter {
+    background: #1c1c1e;
+    border: 1px solid #333336;
+    border-radius: 3px;
+}
+LevelMeter::chunk { background: transparent; }
+
+/* ---------- ToggleButton (per-feature accent via `feature` property) ---------- */
+
+ToggleButton {
+    background-color: #3a3a3e;
+    color: #dddddd;
+    border: 1px solid #55555a;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-weight: 600;
+}
+ToggleButton:hover { background-color: #48484d; }
+
+ToggleButton:checked                    { color: white; background-color: #5a7ab0; border: 1px solid #344a6b; }
+ToggleButton[feature="mute"]:checked    { background-color: #cc2424; border: 1px solid #801515; }
+ToggleButton[feature="phase"]:checked   { background-color: #d5a021; border: 1px solid #8d6b15; }
+ToggleButton[feature="gate"]:checked    { background-color: #2fa84a; border: 1px solid #1e6b30; }
+ToggleButton[feature="xover"]:checked   { background-color: #4a8bd0; border: 1px solid #2f578a; }
+ToggleButton[feature="peq"]:checked     { background-color: #8a5ad2; border: 1px solid #563789; }
+ToggleButton[feature="comp"]:checked    { background-color: #2fa89b; border: 1px solid #1d675f; }
+ToggleButton[feature="delay"]:checked   { background-color: #6c92c2; border: 1px solid #44587a; }

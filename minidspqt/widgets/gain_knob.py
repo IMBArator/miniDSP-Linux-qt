@@ -68,21 +68,9 @@ class GainKnob(QWidget):
         layout.addWidget(self._arc_widget, stretch=1)
 
         self._value_edit = QLineEdit(_format_db_full(self._value))
+        self._value_edit.setObjectName("gainKnobEdit")
         self._value_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._value_edit.setFixedWidth(68)
-        self._value_edit.setStyleSheet(
-            "QLineEdit {"
-            " background: transparent;"
-            " color: #cccccc;"
-            " border: none;"
-            " font-size: 10px;"
-            "}"
-            "QLineEdit:focus {"
-            " border: 1px solid #5090d0;"
-            " border-radius: 2px;"
-            " background: #1e1e22;"
-            "}"
-        )
         self._value_edit.setReadOnly(True)
         self._value_edit.returnPressed.connect(self._apply_edit)
         self._value_edit.editingFinished.connect(self._apply_edit)

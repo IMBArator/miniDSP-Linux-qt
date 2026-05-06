@@ -105,11 +105,6 @@ class LevelMeter(QProgressBar):
         self.setTextVisible(False)
         self.setMinimumWidth(80)
         self.setMinimumHeight(14)
-        self.setStyleSheet(
-            "QProgressBar { background: #1c1c1e; border: 1px solid #333336;"
-            " border-radius: 3px; }"
-            "QProgressBar::chunk { background: transparent; }"
-        )
 
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.
