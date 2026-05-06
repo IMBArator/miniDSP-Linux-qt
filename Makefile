@@ -3,7 +3,7 @@ UV := uv
 .PHONY: sync install test build clean
 
 sync:
-	$(UV) sync
+	$(UV) sync --extra dev
 
 install: sync   ## alias kept for muscle memory
 
