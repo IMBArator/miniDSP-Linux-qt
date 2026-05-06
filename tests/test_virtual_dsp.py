@@ -64,7 +64,7 @@ def test_store_then_load_roundtrip():
     dsp.set_gain(0, 250)
     dsp.set_gain(4, 180)
     dsp.mute(2, True)
-    original = dsp.read_config()
+    _original = dsp.read_config()
 
     assert dsp.store_preset(5, "TestPreset")
 

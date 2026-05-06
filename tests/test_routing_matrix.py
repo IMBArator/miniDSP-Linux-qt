@@ -11,7 +11,6 @@ from PySide6.QtWidgets import QApplication
 from minidspqt.widgets.routing_matrix import (
     _point_to_segment_dist,
     RoutingMatrix,
-    NUM,
 )
 
 

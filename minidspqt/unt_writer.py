@@ -13,7 +13,6 @@ from pathlib import Path
 
 from .unt_loader import (
     ACTIVE_SLOT_OFFSET,
-    EMPTY_FILL,
     EXPECTED_SIZE,
     SLOT_BASE,
     SLOT_COUNT,

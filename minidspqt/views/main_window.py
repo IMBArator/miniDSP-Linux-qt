@@ -15,15 +15,6 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-
-def _logo_path() -> Path:
-    try:
-        import importlib.resources as ir
-        ref = ir.files("minidspqt.resources").joinpath("logo.svg")
-        return Path(str(ref))
-    except Exception:
-        return Path()
-
 from ..device_thread import DeviceThread
 from ..model import DeviceState
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
@@ -33,6 +24,15 @@ from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
 
 log = logging.getLogger(__name__)
+
+
+def _logo_path() -> Path:
+    try:
+        import importlib.resources as ir
+        ref = ir.files("minidspqt.resources").joinpath("logo.svg")
+        return Path(str(ref))
+    except Exception:
+        return Path()
 
 
 class MainWindow(QMainWindow):

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from PySide6.QtWidgets import QDialog
 
 from minidspqt.views.preset_picker import PresetPickerDialog
 
