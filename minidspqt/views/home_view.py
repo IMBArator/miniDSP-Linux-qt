@@ -172,6 +172,14 @@ class ChannelStrip(QFrame):
     def set_gain_silent(self, raw: int) -> None:
         self._knob.setValueSilently(raw)
 
+    def set_gate_active(self, active: bool) -> None:
+        btn = self._toggles.get("gate")
+        if btn is None:
+            return
+        btn.setProperty("gate_active", active)
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
     def set_toggle_silent(self, feature: str, checked: bool) -> None:
         btn = self._toggles.get(feature)
         if btn is None:
@@ -229,7 +237,7 @@ class HomeView(QWidget):
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
     phase_changed = Signal(int, bool)
-    gate_toggled = Signal(int, bool)
+    gate_clicked = Signal(int)
     output_feature_toggled = Signal(int, str, bool)
     name_changed = Signal(int, str)
     route_changed = Signal(int, int)
@@ -369,7 +377,8 @@ class HomeView(QWidget):
             elif feature == "phase":
                 self.phase_changed.emit(ch, checked)
             elif feature == "gate":
-                self.gate_toggled.emit(ch, checked)
+                strip.set_toggle_silent("gate", False)
+                self.gate_clicked.emit(ch)
 
         strip.toggle_changed.connect(_on_toggle)
 
@@ -405,6 +414,7 @@ class HomeView(QWidget):
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
             strip.set_toggle_silent("gate", False)
+            strip.set_gate_active(ch_state.gate.threshold > 0)
             master_name = self._master_title(state, i, strips)
             strip.set_linked_slave(state.is_linked_slave(i), master_name)
 

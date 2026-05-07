@@ -77,7 +77,7 @@ def _dim(color: QColor) -> QColor:
 
 
 class LevelMeter(QProgressBar):
-    """Horizontal LED-segment audio level meter with peak-hold.
+    """LED-segment audio level meter with peak-hold.
 
     Visual elements:
       - 20 discrete LED segments (green → yellow → red) driven by the
@@ -89,22 +89,35 @@ class LevelMeter(QProgressBar):
 
     The widget is driven entirely by :meth:`set_level`, called from the
     device poll loop (~150 ms interval).  There are no internal timers.
+
+    Parameters
+    ----------
+    vertical:
+        When ``True`` the meter is drawn bottom-to-top instead of
+        left-to-right.  Useful for side panels showing routed channel
+        levels in the detail view.
     """
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, *, vertical: bool = False) -> None:
         """Set up the progress bar, apply styling and initialise state."""
         super().__init__(parent)
+        self._vertical = vertical
         self._peak = 0.0
         self._peak_hold = 0
         self._smoothed = 0.0
         self._db_peak = float("-inf")
         self._db_hold = 0
-        self.setOrientation(Qt.Orientation.Horizontal)
+        orient = Qt.Orientation.Vertical if vertical else Qt.Orientation.Horizontal
+        self.setOrientation(orient)
         self.setRange(0, NUM_SEGMENTS)
         self.setValue(0)
         self.setTextVisible(False)
-        self.setMinimumWidth(80)
-        self.setMinimumHeight(14)
+        if vertical:
+            self.setMinimumWidth(14)
+            self.setMinimumHeight(60)
+        else:
+            self.setMinimumWidth(80)
+            self.setMinimumHeight(14)
 
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.
@@ -181,38 +194,64 @@ class LevelMeter(QProgressBar):
             w, h = self.width(), self.height()
 
             total_gap = SEGMENT_GAP * (NUM_SEGMENTS - 1)
-            seg_w = (w - total_gap) / NUM_SEGMENTS
-            seg_h = h - 2
-
             lit = self.value()
 
             peak_seg = _db_to_segments(level_uint16_to_dbu(self._peak))
             peak_seg = max(0, min(NUM_SEGMENTS - 1, peak_seg))
 
-            for i in range(NUM_SEGMENTS):
-                x = i * (seg_w + SEGMENT_GAP)
-                color = _segment_color(i) if i < lit else _dim(_segment_color(i))
-                p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(color)
-                p.drawRoundedRect(
-                    int(x),
-                    1,
-                    max(1, int(seg_w)),
-                    int(seg_h),
-                    CORNER_RADIUS,
-                    CORNER_RADIUS,
-                )
-
-            if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
-                x = peak_seg * (seg_w + SEGMENT_GAP)
-                p.setBrush(QColor(255, 255, 255, 160))
-                p.drawRoundedRect(
-                    int(x),
-                    1,
-                    max(1, int(seg_w)),
-                    int(seg_h),
-                    CORNER_RADIUS,
-                    CORNER_RADIUS,
-                )
+            if self._vertical:
+                seg_h = (h - total_gap) / NUM_SEGMENTS
+                seg_w = w - 2
+                for i in range(NUM_SEGMENTS):
+                    y = h - 1 - (i + 1) * (seg_h + SEGMENT_GAP) + SEGMENT_GAP
+                    color = _segment_color(i) if i < lit else _dim(_segment_color(i))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(color)
+                    p.drawRoundedRect(
+                        1,
+                        int(y),
+                        int(seg_w),
+                        max(1, int(seg_h)),
+                        CORNER_RADIUS,
+                        CORNER_RADIUS,
+                    )
+                if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
+                    y = h - 1 - (peak_seg + 1) * (seg_h + SEGMENT_GAP) + SEGMENT_GAP
+                    p.setBrush(QColor(255, 255, 255, 160))
+                    p.drawRoundedRect(
+                        1,
+                        int(y),
+                        int(seg_w),
+                        max(1, int(seg_h)),
+                        CORNER_RADIUS,
+                        CORNER_RADIUS,
+                    )
+            else:
+                seg_w = (w - total_gap) / NUM_SEGMENTS
+                seg_h = h - 2
+                for i in range(NUM_SEGMENTS):
+                    x = i * (seg_w + SEGMENT_GAP)
+                    color = _segment_color(i) if i < lit else _dim(_segment_color(i))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(color)
+                    p.drawRoundedRect(
+                        int(x),
+                        1,
+                        max(1, int(seg_w)),
+                        int(seg_h),
+                        CORNER_RADIUS,
+                        CORNER_RADIUS,
+                    )
+                if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
+                    x = peak_seg * (seg_w + SEGMENT_GAP)
+                    p.setBrush(QColor(255, 255, 255, 160))
+                    p.drawRoundedRect(
+                        int(x),
+                        1,
+                        max(1, int(seg_w)),
+                        int(seg_h),
+                        CORNER_RADIUS,
+                        CORNER_RADIUS,
+                    )
         finally:
             p.end()

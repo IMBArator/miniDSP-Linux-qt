@@ -24,6 +24,7 @@ QLabel#connectionLabel {
     border-radius: 4px;
     padding: 4px 8px;
     font-weight: 600;
+    font-size: 11pt;
 }
 QLabel#connectionLabel[state="disconnected"] { background-color: #8a2020; }
 QLabel#connectionLabel[state="connected"]    { background-color: #2fa84a; }
@@ -130,7 +131,55 @@ ToggleButton:checked                    { color: white; background-color: #5a7ab
 ToggleButton[feature="mute"]:checked    { background-color: #cc2424; border: 1px solid #801515; }
 ToggleButton[feature="phase"]:checked   { background-color: #d5a021; border: 1px solid #8d6b15; }
 ToggleButton[feature="gate"]:checked    { background-color: #2fa84a; border: 1px solid #1e6b30; }
+ToggleButton[feature="gate"][gate_active="true"] { background-color: #2fa84a; border: 1px solid #1e6b30; color: white; }
 ToggleButton[feature="xover"]:checked   { background-color: #4a8bd0; border: 1px solid #2f578a; }
 ToggleButton[feature="peq"]:checked     { background-color: #8a5ad2; border: 1px solid #563789; }
 ToggleButton[feature="comp"]:checked    { background-color: #2fa89b; border: 1px solid #1d675f; }
 ToggleButton[feature="delay"]:checked   { background-color: #6c92c2; border: 1px solid #44587a; }
+
+/* ---------- Detail view ---------- */
+
+QFrame#detailChannelStrip {
+    background-color: #2d2d31;
+    border: 1px solid #3a3a3e;
+    border-radius: 6px;
+}
+QFrame#detailChannelStrip QLabel,
+QFrame#detailChannelStrip QPushButton { background: transparent; }
+
+QPushButton#channelNavButton {
+    background-color: #3a3a3e;
+    color: #cccccc;
+    border: 1px solid #55555a;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-weight: 600;
+    font-size: 11px;
+}
+QPushButton#channelNavButton:hover   { background-color: #48484d; }
+QPushButton#channelNavButton:checked { background-color: #5090d0; color: white; border-color: #346090; }
+
+QLabel#panelTitle {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #cccccc;
+    padding: 4px 0;
+}
+
+QLabel#paramLabel {
+    color: #999999;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QFrame#gateGraphPlaceholder {
+    background-color: #1c1c1e;
+    border: 1px dashed #444448;
+    border-radius: 4px;
+}
+
+QLabel#routedMeterLabel {
+    color: #888888;
+    font-size: 9px;
+    font-weight: 600;
+}

@@ -20,6 +20,7 @@ from ..model import DeviceState
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
+from .detail_view import DetailView
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
 
@@ -50,7 +51,9 @@ class MainWindow(QMainWindow):
 
         self._stack = QStackedWidget()
         self._home_view = HomeView()
+        self._detail_view = DetailView()
         self._stack.addWidget(self._home_view)
+        self._stack.addWidget(self._detail_view)
         self.setCentralWidget(self._stack)
 
         if dsp_instance is not None:
@@ -65,18 +68,29 @@ class MainWindow(QMainWindow):
             dsp_instance=dsp_instance,
             parent=self,
         )
-        self._thread.levels_updated.connect(self._home_view.update_levels)
+        self._thread.levels_updated.connect(self._on_levels_updated)
         self._thread.connection_changed.connect(self._on_connection_changed)
         self._thread.config_loaded.connect(self._on_config_loaded)
 
         self._home_view.gain_changed.connect(self._on_gain_changed)
         self._home_view.mute_changed.connect(self._on_mute_changed)
         self._home_view.phase_changed.connect(self._on_phase_changed)
-        self._home_view.gate_toggled.connect(self._on_gate_toggled)
+        self._home_view.gate_clicked.connect(self._show_detail)
         self._home_view.name_changed.connect(self._on_name_changed)
         self._home_view.route_changed.connect(self._on_route_changed)
         self._home_view.recall_clicked.connect(self._on_recall)
         self._home_view.store_clicked.connect(self._on_store)
+
+        self._detail_view.back_clicked.connect(self._on_detail_back)
+        self._detail_view.gain_changed.connect(self._on_gain_changed)
+        self._detail_view.mute_changed.connect(self._on_mute_changed)
+        self._detail_view.phase_changed.connect(self._on_phase_changed)
+        self._detail_view.gate_enable_changed.connect(self._on_detail_gate_enable)
+        self._detail_view.gate_params_changed.connect(self._on_detail_gate_params)
+        self._detail_view.name_changed.connect(self._on_name_changed)
+        self._detail_view.output_feature_toggled.connect(
+            self._on_detail_output_feature
+        )
 
         self._thread.start()
 
@@ -90,8 +104,11 @@ class MainWindow(QMainWindow):
         btn = self._home_view.menu_button
         btn.setMenu(menu)
 
+        self._detail_view.menu_button.setMenu(menu)
+
         if offline:
             self._home_view.set_offline_mode()
+            self._detail_view.set_offline_mode()
             self._save_action.setEnabled(True)
 
     @property
@@ -101,11 +118,17 @@ class MainWindow(QMainWindow):
 
     # --- DeviceThread -> UI ---
 
+    def _on_levels_updated(self, payload: dict) -> None:
+        self._home_view.update_levels(payload)
+        if self._stack.currentIndex() == 1:
+            self._detail_view.update_levels(payload)
+
     def _on_connection_changed(self, connected: bool) -> None:
         self._state.connected = connected
         if self._offline:
             return
         self._home_view.set_connected(connected)
+        self._detail_view.set_connected(connected)
 
     def _on_config_loaded(self, cfg: dict) -> None:
         log.info(
@@ -284,9 +307,33 @@ class MainWindow(QMainWindow):
             if ch != channel:
                 self._apply_strip_toggle(ch, "phase", inverted)
 
-    def _on_gate_toggled(self, channel: int, enabled: bool) -> None:
+    def _show_detail(self, channel: int) -> None:
+        self._detail_view.set_channel(channel, self._state)
+        self._stack.setCurrentIndex(1)
+
+    def _on_detail_back(self) -> None:
+        self._stack.setCurrentIndex(0)
+
+    def _on_detail_gate_enable(self, channel: int, enabled: bool) -> None:
+        log.info("Gate enable ch=%d enabled=%s", channel, enabled)
+
+    def _on_detail_gate_params(
+        self, channel: int, attack: int, release: int, hold: int, threshold: int
+    ) -> None:
+        if 0 <= channel < 4 and channel < len(self._state.inputs):
+            gate = self._state.inputs[channel].gate
+            gate.attack = attack
+            gate.release = release
+            gate.hold = hold
+            gate.threshold = threshold
+        self._thread.request_gate(channel, attack, release, hold, threshold)
+        self._home_view._input_strips[channel].set_gate_active(threshold > 0)
+
+    def _on_detail_output_feature(
+        self, channel: int, feature: str, checked: bool
+    ) -> None:
         log.info(
-            "Gate toggle ch=%d checked=%s (detail view not yet wired)", channel, enabled
+            "Output feature ch=%d feature=%s checked=%s", channel, feature, checked
         )
 
     def _on_name_changed(self, channel: int, name: str) -> None:
