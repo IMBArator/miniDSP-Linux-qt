@@ -59,7 +59,7 @@ class RoutedMetersPanel(QWidget):
         self._meters: list[tuple[int, QLabel, LevelMeter]] = []
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
 
-    def set_channels(self, channel_indices: list[int]) -> None:
+    def set_channels(self, channel_indices: list[int], names: dict[int, str] | None = None) -> None:
         while self._layout.count():
             item = self._layout.takeAt(0)
             w = item.widget()
@@ -72,7 +72,7 @@ class RoutedMetersPanel(QWidget):
             col.setSpacing(2)
             col.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-            lbl = QLabel(CHANNEL_NAMES[ch])
+            lbl = QLabel((names or {}).get(ch, CHANNEL_NAMES[ch]))
             lbl.setObjectName("routedMeterLabel")
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             col.addWidget(lbl)
@@ -275,6 +275,7 @@ class DetailView(QWidget):
 
         self._strip_stack.setCurrentIndex(0 if self._is_input else 1)
         self._update_nav_highlight()
+        self._update_nav_labels(state)
         self._update_routed_meters(state)
 
         strip = self._strip
@@ -301,9 +302,10 @@ class DetailView(QWidget):
                 strip.set_toggle_silent(f, False)
             self._content_stack.setCurrentWidget(self._gate_panel)
 
-        strip.set_title(CHANNEL_NAMES[channel])
+        ch_name = ch_state.name or CHANNEL_NAMES[channel]
+        strip.set_title(ch_name)
         self._feature_name = "Gate"
-        self._title_label.setText(f"{self._feature_name} \u2014 {CHANNEL_NAMES[channel]}")
+        self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
 
     def update_levels(self, payload: dict) -> None:
         inputs = payload.get("inputs", [])
@@ -359,15 +361,17 @@ class DetailView(QWidget):
         self._left_meters.hide()
         self._right_meters.hide()
 
+        names = self._channel_names(state)
+
         if self._is_input:
             routed = self._routed_outputs_for_input(state, self._channel)
             if routed:
-                self._right_meters.set_channels(routed)
+                self._right_meters.set_channels(routed, names)
                 self._right_meters.show()
         else:
             routed = self._routed_inputs_for_output(state, self._channel)
             if routed:
-                self._left_meters.set_channels(routed)
+                self._left_meters.set_channels(routed, names)
                 self._left_meters.show()
 
     @staticmethod
@@ -426,12 +430,17 @@ class DetailView(QWidget):
     def _on_gate_nav(self) -> None:
         self._content_stack.setCurrentWidget(self._gate_panel)
         self._feature_name = "Gate"
-        self._title_label.setText(
-            f"{self._feature_name} \u2014 {CHANNEL_NAMES[self._channel]}"
-        )
+        ch_name = self._strip._title_btn.text()
+        self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
         self.gate_clicked.emit(self._channel)
 
     def _on_strip_name(self, name: str) -> None:
+        ch_name = name or CHANNEL_NAMES[self._channel]
+        self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
+        if self._is_input:
+            self._input_buttons[self._channel].setText(ch_name)
+        else:
+            self._output_buttons[self._channel - 4].setText(ch_name)
         self.name_changed.emit(self._channel, name)
 
     def _on_gate_params(self, attack: int, release: int, hold: int, threshold: int) -> None:
@@ -449,3 +458,18 @@ class DetailView(QWidget):
         self._connection_label.setProperty("state", state)
         self._connection_label.style().unpolish(self._connection_label)
         self._connection_label.style().polish(self._connection_label)
+
+    def _channel_names(self, state: DeviceState) -> dict[int, str]:
+        names: dict[int, str] = {}
+        for i, ch in enumerate(state.inputs):
+            names[i] = ch.name or CHANNEL_NAMES[i]
+        for i, ch in enumerate(state.outputs):
+            names[i + 4] = ch.name or CHANNEL_NAMES[i + 4]
+        return names
+
+    def _update_nav_labels(self, state: DeviceState) -> None:
+        for i in range(NUM_CHANNELS):
+            self._input_buttons[i].setText(state.inputs[i].name or CHANNEL_NAMES[i])
+            self._output_buttons[i].setText(
+                state.outputs[i].name or CHANNEL_NAMES[i + 4]
+            )

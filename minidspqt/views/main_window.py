@@ -339,6 +339,9 @@ class MainWindow(QMainWindow):
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._state.set_field(channel, "name", name)
         self._thread.request_channel_name(channel, name)
+        strips = self._home_view._all_strips()
+        if 0 <= channel < len(strips):
+            strips[channel].set_title(name)
 
     def _on_route_changed(self, output_idx: int, input_mask: int) -> None:
         if output_idx < 0 or output_idx >= len(self._state.outputs):
