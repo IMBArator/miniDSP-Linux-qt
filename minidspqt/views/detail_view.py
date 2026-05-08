@@ -42,7 +42,7 @@ from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 from ..widgets import LevelMeter
-from .home_view import ChannelStrip
+from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
 from .panels import GatePanel
 
 NUM_CHANNELS = 4
@@ -125,7 +125,7 @@ class DetailView(QWidget):
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
     phase_changed = Signal(int, bool)
-    gate_enable_changed = Signal(int, bool)
+    gate_clicked = Signal(int)
     gate_params_changed = Signal(int, int, int, int, int)
     output_feature_toggled = Signal(int, str, bool)
     name_changed = Signal(int, str)
@@ -229,8 +229,8 @@ class DetailView(QWidget):
         row.addWidget(input_container)
 
         self._strip_stack = QStackedWidget()
-        self._input_strip = ChannelStrip("InA", is_output=False)
-        self._output_strip = ChannelStrip("Out1", is_output=True)
+        self._input_strip = InputChannelStrip("InA")
+        self._output_strip = OutputChannelStrip("Out1")
         self._strip_stack.addWidget(self._input_strip)
         self._strip_stack.addWidget(self._output_strip)
         row.addWidget(self._strip_stack, stretch=1)
@@ -255,6 +255,8 @@ class DetailView(QWidget):
             strip.gain_changed.connect(self._on_strip_gain)
             strip.toggle_changed.connect(self._on_strip_toggle)
             strip.name_changed.connect(self._on_strip_name)
+
+        self._input_strip.gate_clicked.connect(self._on_gate_nav)
 
         return row
 
@@ -282,6 +284,7 @@ class DetailView(QWidget):
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
             strip.set_toggle_silent("gate", False)
+            strip.set_gate_active(ch_state.gate.threshold > 0)
             self._gate_panel.set_params_silently(
                 ch_state.gate.attack,
                 ch_state.gate.release,
@@ -417,15 +420,23 @@ class DetailView(QWidget):
             self.mute_changed.emit(self._channel, checked)
         elif feature == "phase":
             self.phase_changed.emit(self._channel, checked)
-        elif feature == "gate":
-            self.gate_enable_changed.emit(self._channel, checked)
         else:
             self.output_feature_toggled.emit(self._channel, feature, checked)
+
+    def _on_gate_nav(self) -> None:
+        self._content_stack.setCurrentWidget(self._gate_panel)
+        self._feature_name = "Gate"
+        self._title_label.setText(
+            f"{self._feature_name} \u2014 {CHANNEL_NAMES[self._channel]}"
+        )
+        self.gate_clicked.emit(self._channel)
 
     def _on_strip_name(self, name: str) -> None:
         self.name_changed.emit(self._channel, name)
 
     def _on_gate_params(self, attack: int, release: int, hold: int, threshold: int) -> None:
+        if self._is_input:
+            self._input_strip.set_gate_active(threshold > 0)
         self.gate_params_changed.emit(
             self._channel, attack, release, hold, threshold
         )

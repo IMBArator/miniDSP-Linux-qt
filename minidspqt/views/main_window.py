@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
         self._detail_view.gain_changed.connect(self._on_gain_changed)
         self._detail_view.mute_changed.connect(self._on_mute_changed)
         self._detail_view.phase_changed.connect(self._on_phase_changed)
-        self._detail_view.gate_enable_changed.connect(self._on_detail_gate_enable)
+        self._detail_view.gate_clicked.connect(self._on_detail_gate_clicked)
         self._detail_view.gate_params_changed.connect(self._on_detail_gate_params)
         self._detail_view.name_changed.connect(self._on_name_changed)
         self._detail_view.output_feature_toggled.connect(
@@ -314,8 +314,8 @@ class MainWindow(QMainWindow):
     def _on_detail_back(self) -> None:
         self._stack.setCurrentIndex(0)
 
-    def _on_detail_gate_enable(self, channel: int, enabled: bool) -> None:
-        log.info("Gate enable ch=%d enabled=%s", channel, enabled)
+    def _on_detail_gate_clicked(self, channel: int) -> None:
+        pass
 
     def _on_detail_gate_params(
         self, channel: int, attack: int, release: int, hold: int, threshold: int
