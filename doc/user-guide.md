@@ -17,6 +17,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Linked Channels](#linked-channels)
 - [Channel Detail View](#channel-detail-view)
   - [Gate Panel](#gate-panel)
+  - [PEQ Panel](#peq-panel)
 - [Routing Matrix](#routing-matrix)
 - [Preset Management](#preset-management)
   - [Recalling a Preset](#recalling-a-preset)
@@ -166,9 +167,14 @@ Toggle buttons are color-coded per feature:
 | **Comp** | Teal | — | Yes |
 | **Delay** | Light blue | — | Yes |
 
-Click a button to toggle the feature on/off. When **off** the button paints its accent color on the **border and text** (outlined look). When **on** the button fills with the same accent. The Gate button on input strips additionally fills green whenever the gate is "armed" (threshold above the noise floor) even if the detail view is not currently open.
+Click a button to toggle the feature on/off. When **off** the button paints its accent color on the **border and text** (outlined look). When **on** the button fills with the same accent.
 
-> **Note:** The Gate button opens the [channel detail view](#channel-detail-view) where the gate parameters can be edited. The Xover, PEQ, Comp, and Delay buttons on output strips are placeholders — toggling them does not yet control DSP parameters.
+Two of the buttons act as **navigation buttons** rather than stateful toggles — they open the [channel detail view](#channel-detail-view) and immediately un-check themselves:
+
+- **Gate** (input strips) opens the Gate panel. The button fills green whenever the gate is "armed" (threshold above the noise floor), regardless of whether the detail view is open.
+- **PEQ** (output strips) opens the PEQ panel. The button fills purple whenever any band has non-zero gain and is not bypassed (and channel-bypass is off).
+
+> **Note:** The Xover, Comp, and Delay buttons on output strips are still placeholders — toggling them does not yet control DSP parameters.
 
 ### Channel Names
 
@@ -182,7 +188,7 @@ When channels are linked on the device (e.g., stereo pair), the **slave** channe
 
 ## Channel Detail View
 
-Click the **Gate** button on any input strip in the home view to open the channel detail view:
+Click the **Gate** button on an input strip — or the **PEQ** button on an output strip — in the home view to open the channel detail view:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -203,10 +209,10 @@ Click the **Gate** button on any input strip in the home view to open the channe
 Layout:
 
 - **Header** — back arrow, title (`<feature> — <channel name>`), connection badge, menu
-- **Channel navigation** — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view
+- **Channel navigation** — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view. The active feature is preserved across channel switches when valid for the new channel type (e.g. moving Out1 → Out2 keeps you on the PEQ panel; moving Out1 → InA falls back to Gate)
 - **Channel strip** — same widget as on the home view, kept synchronised with all gain / mute / phase / name edits
 - **Routed meters** — when an input is selected, vertical meters for every output it routes to appear on the right; when an output is selected, meters for every input feeding it appear on the left
-- **Feature panel** — currently shows the **Gate** panel for input channels and a **placeholder** ("This feature is not available for this channel") otherwise
+- **Feature panel** — the **Gate** panel for input channels, the **PEQ** panel for output channels, or a **placeholder** ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type
 
 Press **←** in the header to return to the home view.
 
@@ -224,6 +230,61 @@ The Gate panel exposes the four parameters of the per-input noise gate. All four
 The transfer-function graph next to the knobs shows input level (x-axis) versus output level (y-axis), with the threshold marker as a vertical dashed line. Below the threshold the gate is closed (signal cut to the noise floor); above it the gate passes the signal at unity gain. Only the threshold parameter affects the static graph — attack, hold, and release are time-domain parameters with no static representation.
 
 The gate icon on the input channel strip shows green ("armed") whenever the threshold is above the very lowest setting, regardless of whether the detail view is open.
+
+### PEQ Panel
+
+The PEQ panel exposes the 7-band parametric EQ that lives on each output channel. The layout mirrors the t.racks editor: a frequency-response graph at the top showing the summed magnitude across all bands, then 7 columns of per-band controls below.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PEQ — Out1                                          [Bypass]   │
+├─────────────────────────────────────────────────────────────────┤
+│   +18 dB ┊                                                       │
+│   +12 dB ┊·····················································│
+│    +6 dB ┊·····················································│
+│     0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│
+│    -6 dB ┊·····················································│
+│   -12 dB ┊·····················································│
+│   -18 dB └─────┬───┬────┬────┬────┬────┬────┬────┬─────┬───┬──│
+│             20  50 100  200  500  1k   2k   5k  10k  20k       │
+├─────────────────────────────────────────────────────────────────┤
+│         B1     B2     B3     B4     B5     B6     B7            │
+│        [Type] [Type] [Type] [Type] [Type] [Type] [Type]         │
+│  Freq   ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
+│  Gain   ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
+│   Q     ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
+│        [Byp]  [Byp]  [Byp]  [Byp]  [Byp]  [Byp]  [Byp]          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Per-band controls
+
+| Control | Range | Notes |
+|---------|-------|-------|
+| **Type** | 7 filter types | Peak, Low Shelf, High Shelf, Low Pass, High Pass, AP1 (1st-order allpass), AP2 (2nd-order allpass) |
+| **Freq** | 19.7 Hz – 20.16 kHz | Log-scaled raw 0–300; sub-1 kHz values shown with one decimal (e.g. `300.8 Hz`) to match the original editor; ≥ 1 kHz shown as kHz with two decimals (`5.00 kHz`) |
+| **Gain** | −12.0 dB to +12.0 dB | 0.1 dB step; affects Peak / Low Shelf / High Shelf only — for pass and allpass filters the gain knob has no effect on the response |
+| **Q** | 0.40 – 128 | Logarithmic scale; **shelves and pass filters are capped at Q = 3.0** (raw 35) per the official editor — switching the type combo to a shelf or pass automatically clamps Q if it was higher; switching back to Peak does *not* restore the previous higher Q |
+| **Byp** | toggle | Bypasses *that* band only — the other 6 keep working |
+
+Each control fires the band's parameters atomically: changing any one of the five widgets sends the full band over USB (protocol command `0x33`). All seven bands coalesce independently in the device thread, so dragging Q on band 3 doesn't compete with edits to band 1.
+
+#### Channel-wide bypass
+
+The **Bypass** toggle in the panel header bypasses the entire PEQ block for this output (protocol command `0x3C`). Per-band edits remain editable while bypass is engaged — flip it off and your settings come back exactly as they were.
+
+#### Frequency-response graph
+
+The graph plots the summed magnitude response of all seven bands at 256 log-spaced frequencies between 10 Hz and 25 kHz. Coefficients are computed locally from the raw protocol values using the Audio EQ Cookbook (RBJ) biquad formulas at a 96 kHz sample rate; the curve shape in the audio band is virtually identical at the device's actual rate.
+
+- **Markers** — small numbered circles at each band's centre frequency (`1`..`7`). Active bands are green; band-bypassed or channel-bypassed bands are dim grey.
+- **Channel-bypass visualisation** — when the channel-wide bypass is engaged the curve renders as a flat 0 dB line at reduced opacity, while the per-band controls remain editable.
+
+The graph is *display-only* in this version — drag-to-edit on the markers is not yet supported. Edit values in the controls below.
+
+#### "PEQ active" indicator on the output strip
+
+The PEQ button on the output channel strip lights up purple whenever the channel's PEQ is shaping the signal, defined as: **at least one band has gain ≠ 0 dB AND is not bypassed AND the channel-wide bypass is off**. The state updates live as you drag knobs and toggle bypasses, on both the home view and the detail view's strip header.
 
 ---
 
