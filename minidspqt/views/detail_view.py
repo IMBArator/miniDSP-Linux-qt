@@ -43,7 +43,7 @@ from minidsp.protocol import CHANNEL_NAMES
 from ..model import DeviceState
 from ..widgets import LevelMeter
 from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
-from .panels import GatePanel
+from .panels import GatePanel, PlaceholderPanel
 
 NUM_CHANNELS = 4
 
@@ -153,7 +153,9 @@ class DetailView(QWidget):
 
         self._content_stack = QStackedWidget()
         self._gate_panel = GatePanel()
+        self._placeholder_panel = PlaceholderPanel()
         self._content_stack.addWidget(self._gate_panel)
+        self._content_stack.addWidget(self._placeholder_panel)
         content_row.addWidget(self._content_stack, stretch=1)
 
         self._right_meters = RoutedMetersPanel()
@@ -292,7 +294,6 @@ class DetailView(QWidget):
                 ch_state.gate.hold,
                 ch_state.gate.threshold,
             )
-            self._content_stack.setCurrentWidget(self._gate_panel)
         else:
             ch_state = state.outputs[channel - 4]
             strip.set_gain_silent(ch_state.gain_raw)
@@ -300,7 +301,8 @@ class DetailView(QWidget):
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
             for f in ("xover", "peq", "comp", "delay"):
                 strip.set_toggle_silent(f, False)
-            self._content_stack.setCurrentWidget(self._gate_panel)
+
+        self._show_feature_panel()
 
         ch_name = ch_state.name or CHANNEL_NAMES[channel]
         strip.set_title(ch_name)
@@ -428,8 +430,8 @@ class DetailView(QWidget):
             self.output_feature_toggled.emit(self._channel, feature, checked)
 
     def _on_gate_nav(self) -> None:
-        self._content_stack.setCurrentWidget(self._gate_panel)
         self._feature_name = "Gate"
+        self._show_feature_panel()
         ch_name = self._strip._title_btn.text()
         self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
         self.gate_clicked.emit(self._channel)
@@ -453,6 +455,21 @@ class DetailView(QWidget):
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _feature_available(feature: str, is_input: bool) -> bool:
+        if feature == "Gate":
+            return is_input
+        return False
+
+    def _show_feature_panel(self) -> None:
+        if self._feature_name == "Gate" and self._feature_available("Gate", self._is_input):
+            self._content_stack.setCurrentWidget(self._gate_panel)
+        else:
+            self._placeholder_panel.set_message(
+                f"{self._feature_name} is not available for this channel."
+            )
+            self._content_stack.setCurrentWidget(self._placeholder_panel)
 
     def _set_connection_state(self, state: str) -> None:
         self._connection_label.setProperty("state", state)

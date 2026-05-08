@@ -178,6 +178,13 @@ QFrame#gateGraphPlaceholder {
     border-radius: 4px;
 }
 
+QLabel#placeholderLabel {
+    color: #888888;
+    font-size: 13px;
+    font-style: italic;
+    background: transparent;
+}
+
 QLabel#routedMeterLabel {
     color: #888888;
     font-size: 9px;
