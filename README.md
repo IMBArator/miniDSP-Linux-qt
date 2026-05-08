@@ -1,6 +1,6 @@
 # miniDSP-Linux-qt
 
-> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters) and preset management are functional. Detail view (crossover, PEQ, compressor, delay) not yet wired.
+> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters), preset management, and the channel detail view with the **Gate** panel for inputs are functional. Crossover, PEQ, compressor, and delay panels are not yet implemented (the detail view shows a placeholder for them).
 
 Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
 
@@ -24,8 +24,20 @@ Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the
 - **Mute** and **phase invert** toggles per channel
 - **Routing matrix** — interactive 4×4 input-to-output mapping (drag to connect, double-click to disconnect)
 - **dB-scaled level meters** for all 8 channels
+- **Outlined toggle buttons** — each feature button (gate / mute / phase / xover / peq / comp / delay) paints its accent color on the border and text when off, and fills with the same accent when on
 - Startup **config read** — knobs and toggles reflect device state on connect
 - **Auto-reconnect** on USB disconnect
+
+### Channel detail view
+
+Click the **Gate** button on any input strip to open the per-channel detail view:
+
+- Header with the same channel strip from the home view (gain knob, level meter, mute/phase/gate toggles, name)
+- Quick navigation buttons for all 4 inputs and 4 outputs
+- A feature panel area, currently:
+  - **Gate** (inputs) — Threshold, Attack, Hold, Release knobs plus a live transfer-function graph; all four parameters are sent atomically (protocol command 0x3E)
+  - A **placeholder panel** is shown when the active feature does not apply to the selected channel (e.g. Gate on an output)
+- Routed-channel level meters — outputs to the right of an input, inputs to the left of an output, driven by the routing matrix
 
 ### Preset management
 
@@ -103,7 +115,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-56 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, and .unt read/write round-trip.
+62 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -120,12 +132,15 @@ minidspqt/                     Main package
     main_window.py             Main window: owns thread, state, Recall/Store
     home_view.py               8 channel strips + routing matrix + level meters
     preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
-  widgets/                     Custom Qt widgets (GainKnob, LedIndicator, LevelMeter, RoutingMatrix, ToggleButton)
-  ui/                          Compiled .ui forms
-  forms/                       Qt Designer .ui sources
-  resources/                   blank.unt template, icons
+    channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
+    detail_view.py             Per-channel detail view with feature panels and routed meters
+    panels/
+      gate_panel.py            Gate parameters (threshold, attack, hold, release) + transfer graph
+      placeholder_panel.py     Shown when the active feature is N/A for the selected channel
+  widgets/                     Custom Qt widgets (GainKnob, GateGraph, LedIndicator, LevelMeter, ParamKnob, RoutingMatrix, ToggleButton)
+  resources/                   blank.unt template, icons, style.qss
 
-tests/                         pytest suite (56 tests)
+tests/                         pytest suite (62 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing and queue behaviour
   test_model.py                DeviceState.from_config parsing
@@ -138,6 +153,7 @@ tests/                         pytest suite (56 tests)
 doc/
   concept-art/                 UI mockups (.excalidraw + .png)
   user-guide.md                End-user documentation
+  architecture-plan.md         Original architecture plan (historical)
   offline-mode-unt-read-write.md  Implementation plan
 ```
 
@@ -163,12 +179,13 @@ doc/
 | .unt load/save | — | 30-slot round-trip |
 | Linked channel display | `decode_link_groups` | Icon + disabled controls on slaves |
 | Limiter indicator | `limiter_mask` in `poll_levels` | Red LED + "Lim" label on output strips, bitmask-driven |
+| Channel detail view (Gate) | `set_gate` | Per-channel canvas with quick-nav, routed meters, and a Gate panel for input channels (threshold / attack / hold / release + transfer-function graph). Outputs and other features show a placeholder |
 
 ### High priority
 
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
-| **Channel detail view** | `set_hipass`, `set_lopass`, `set_peq_band`, `set_compressor`, `set_delay`, `set_gate` | Generic per-channel canvas for Gate (inputs), Xover / PEQ / Comp / Delay (outputs). Backend fully exists in DeviceThread, VirtualDSP, and model — only the detail-view UI and MainWindow wiring are missing |
+| **Detail view: Crossover / PEQ / Compressor / Delay panels** | `set_hipass`, `set_lopass`, `set_peq_band`, `set_compressor`, `set_delay` | Output-channel feature panels. Detail-view scaffolding (navigation, routed meters, placeholder fallback, MainWindow wiring) is already in place; backend fully exists in DeviceThread, VirtualDSP, and model |
 | **PEQ channel bypass** | `set_peq_channel_bypass` | Toggle + per-band bypass checkboxes in PEQ view |
 
 ### Medium priority

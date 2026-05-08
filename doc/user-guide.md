@@ -15,6 +15,8 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Toggle Buttons](#toggle-buttons)
   - [Channel Names](#channel-names)
   - [Linked Channels](#linked-channels)
+- [Channel Detail View](#channel-detail-view)
+  - [Gate Panel](#gate-panel)
 - [Routing Matrix](#routing-matrix)
 - [Preset Management](#preset-management)
   - [Recalling a Preset](#recalling-a-preset)
@@ -154,19 +156,19 @@ Output channel strips display a small red LED labeled **Lim** to the right of th
 
 Toggle buttons are color-coded per feature:
 
-| Button | Color when active | Input | Output |
-|--------|-------------------|-------|--------|
+| Button | Accent color | Input | Output |
+|--------|--------------|-------|--------|
 | **Gate** | Green | Yes | — |
-| **Phase** | Yellow | Yes | Yes |
+| **Phase** | Gold | Yes | Yes |
 | **Mute** | Red | Yes | Yes |
 | **Xover** | Blue | — | Yes |
 | **PEQ** | Purple | — | Yes |
 | **Comp** | Teal | — | Yes |
-| **Delay** | Steel blue | — | Yes |
+| **Delay** | Light blue | — | Yes |
 
-Click a button to toggle the feature on/off. The active (checked) state shows the feature's color; the inactive state is grey.
+Click a button to toggle the feature on/off. When **off** the button paints its accent color on the **border and text** (outlined look). When **on** the button fills with the same accent. The Gate button on input strips additionally fills green whenever the gate is "armed" (threshold above the noise floor) even if the detail view is not currently open.
 
-> **Note:** The Xover, PEQ, Comp, and Delay buttons on output strips are placeholders for the detail view, which is not yet implemented. They can be toggled but do not yet control DSP parameters.
+> **Note:** The Gate button opens the [channel detail view](#channel-detail-view) where the gate parameters can be edited. The Xover, PEQ, Comp, and Delay buttons on output strips are placeholders — toggling them does not yet control DSP parameters.
 
 ### Channel Names
 
@@ -175,6 +177,53 @@ Click the channel name button at the top of any strip to rename it. A dialog app
 ### Linked Channels
 
 When channels are linked on the device (e.g., stereo pair), the **slave** channel displays a chain icon (🔗) and its controls (gain knob and toggles) are disabled. Adjusting the master channel automatically updates all linked slaves.
+
+---
+
+## Channel Detail View
+
+Click the **Gate** button on any input strip in the home view to open the channel detail view:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  ← Gate — InA                  [Connected]      [≡]      │
+├────┬───────────────────────────────────┬─────────────────┤
+│ InA│                                   │  Out1   Out3    │
+│ InB│           Channel Strip           │  ▌▌▌▌   ▌▌▌▌    │
+│ InC│  (gain, meter, mute/phase/gate)   │   …      …     │
+│ InD│                                   │                 │
+├────┴───────────────────────────────────┴─────────────────┤
+│                                                          │
+│       Gate Panel: Threshold / Attack / Hold /             │
+│       Release knobs + transfer-function graph             │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+Layout:
+
+- **Header** — back arrow, title (`<feature> — <channel name>`), connection badge, menu
+- **Channel navigation** — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view
+- **Channel strip** — same widget as on the home view, kept synchronised with all gain / mute / phase / name edits
+- **Routed meters** — when an input is selected, vertical meters for every output it routes to appear on the right; when an output is selected, meters for every input feeding it appear on the left
+- **Feature panel** — currently shows the **Gate** panel for input channels and a **placeholder** ("This feature is not available for this channel") otherwise
+
+Press **←** in the header to return to the home view.
+
+### Gate Panel
+
+The Gate panel exposes the four parameters of the per-input noise gate. All four are sent to the device atomically every time any one of them changes (the firmware command for the gate is monolithic).
+
+| Knob | Range | Notes |
+|------|-------|-------|
+| **Threshold** | -89.5 dB to 0 dB | Click the value below the knob to type an exact dB value |
+| **Attack** | 1 ms to 999 ms | Time constant for the gate opening |
+| **Hold** | 10 ms to 999 ms | Time the gate stays open after the signal drops below threshold |
+| **Release** | 1 ms to 3000 ms | Time constant for the gate closing |
+
+The transfer-function graph next to the knobs shows input level (x-axis) versus output level (y-axis), with the threshold marker as a vertical dashed line. Below the threshold the gate is closed (signal cut to the noise floor); above it the gate passes the signal at unity gain. Only the threshold parameter affects the static graph — attack, hold, and release are time-domain parameters with no static representation.
+
+The gate icon on the input channel strip shows green ("armed") whenever the threshold is above the very lowest setting, regardless of whether the detail view is open.
 
 ---
 
