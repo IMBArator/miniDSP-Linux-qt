@@ -127,15 +127,27 @@ ToggleButton {
 }
 ToggleButton:hover { background-color: #48484d; }
 
+/* Inactive: accent-colored border and text on the dark base fill */
+ToggleButton[feature="mute"]:!checked    { color: #cc2424; border-color: #cc2424; }
+ToggleButton[feature="phase"]:!checked   { color: #d5a021; border-color: #d5a021; }
+ToggleButton[feature="gate"]:!checked    { color: #2fa84a; border-color: #2fa84a; }
+ToggleButton[feature="xover"]:!checked   { color: #4a8bd0; border-color: #4a8bd0; }
+ToggleButton[feature="peq"]:!checked     { color: #8a5ad2; border-color: #8a5ad2; }
+ToggleButton[feature="comp"]:!checked    { color: #2fa89b; border-color: #2fa89b; }
+ToggleButton[feature="delay"]:!checked   { color: #6c92c2; border-color: #6c92c2; }
+
+/* Active: filled with the same accent */
 ToggleButton:checked                    { color: white; background-color: #5a7ab0; border: 1px solid #344a6b; }
 ToggleButton[feature="mute"]:checked    { background-color: #cc2424; border: 1px solid #801515; }
 ToggleButton[feature="phase"]:checked   { background-color: #d5a021; border: 1px solid #8d6b15; }
 ToggleButton[feature="gate"]:checked    { background-color: #2fa84a; border: 1px solid #1e6b30; }
-ToggleButton[feature="gate"][gate_active="true"] { background-color: #2fa84a; border: 1px solid #1e6b30; color: white; }
 ToggleButton[feature="xover"]:checked   { background-color: #4a8bd0; border: 1px solid #2f578a; }
 ToggleButton[feature="peq"]:checked     { background-color: #8a5ad2; border: 1px solid #563789; }
 ToggleButton[feature="comp"]:checked    { background-color: #2fa89b; border: 1px solid #1d675f; }
 ToggleButton[feature="delay"]:checked   { background-color: #6c92c2; border: 1px solid #44587a; }
+
+/* Gate "armed but panel closed": filled green to flag activity */
+ToggleButton[feature="gate"][gate_active="true"] { color: white; background-color: #2fa84a; border: 1px solid #1e6b30; }
 
 /* ---------- Detail view ---------- */
 

@@ -1,7 +1,8 @@
 """Checkable QPushButton with per-feature color theming.
 
-Call `setFeature("mute" | "phase" | "gate" | ...)` to pick the active
-color. Unchecked state is uniformly grey.
+Call `setFeature("mute" | "phase" | "gate" | ...)` to pick the accent.
+When unchecked the accent colors the border and text only (outline
+look); when checked it fills the whole button.
 
 Styling lives entirely in `resources/style.qss`: the per-feature accent
 is selected via the `feature` dynamic property, e.g.
