@@ -149,6 +149,9 @@ ToggleButton[feature="delay"]:checked   { background-color: #6c92c2; border: 1px
 /* Gate "armed but panel closed": filled green to flag activity */
 ToggleButton[feature="gate"][gate_active="true"] { color: white; background-color: #2fa84a; border: 1px solid #1e6b30; }
 
+/* PEQ "active": at least one band shaping the signal (gain != 0 dB, not bypassed) */
+ToggleButton[feature="peq"][peq_active="true"] { color: white; background-color: #8a5ad2; border: 1px solid #563789; }
+
 /* ---------- Detail view ---------- */
 
 QFrame#detailChannelStrip {

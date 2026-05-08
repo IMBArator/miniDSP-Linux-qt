@@ -214,6 +214,8 @@ class HomeView(QWidget):
             strip.set_gain_silent(ch_state.gain_raw)
             strip.set_toggle_silent("mute", ch_state.muted)
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
+            strip.set_toggle_silent("peq", False)
+            strip.set_peq_active(ch_state.peq_active)
             master_name = self._master_title(state, i + 4, strips)
             strip.set_linked_slave(state.is_linked_slave(i + 4), master_name)
 

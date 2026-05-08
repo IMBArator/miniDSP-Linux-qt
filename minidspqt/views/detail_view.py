@@ -43,7 +43,7 @@ from minidsp.protocol import CHANNEL_NAMES
 from ..model import DeviceState
 from ..widgets import LevelMeter
 from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
-from .panels import GatePanel, PlaceholderPanel
+from .panels import GatePanel, PEQPanel, PlaceholderPanel
 
 NUM_CHANNELS = 4
 
@@ -128,6 +128,8 @@ class DetailView(QWidget):
     gate_clicked = Signal(int)
     gate_params_changed = Signal(int, int, int, int, int)
     output_feature_toggled = Signal(int, str, bool)
+    peq_band_changed = Signal(int, int, int, int, int, int, bool)
+    peq_channel_bypass_changed = Signal(int, bool)
     name_changed = Signal(int, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -153,8 +155,10 @@ class DetailView(QWidget):
 
         self._content_stack = QStackedWidget()
         self._gate_panel = GatePanel()
+        self._peq_panel = PEQPanel()
         self._placeholder_panel = PlaceholderPanel()
         self._content_stack.addWidget(self._gate_panel)
+        self._content_stack.addWidget(self._peq_panel)
         self._content_stack.addWidget(self._placeholder_panel)
         content_row.addWidget(self._content_stack, stretch=1)
 
@@ -165,6 +169,10 @@ class DetailView(QWidget):
         root.addLayout(content_row, stretch=1)
 
         self._gate_panel.gate_params_changed.connect(self._on_gate_params)
+        self._peq_panel.peq_band_changed.connect(self._on_peq_band)
+        self._peq_panel.peq_channel_bypass_changed.connect(
+            self._on_peq_channel_bypass
+        )
 
     # ------------------------------------------------------------------ #
     # Header (identical chrome to HomeView)
@@ -301,12 +309,21 @@ class DetailView(QWidget):
             strip.set_toggle_silent("phase", ch_state.phase_inverted)
             for f in ("xover", "peq", "comp", "delay"):
                 strip.set_toggle_silent(f, False)
+            self._peq_panel.set_bands_silently(
+                ch_state.peqs, ch_state.peq_channel_bypass
+            )
+            strip.set_peq_active(ch_state.peq_active)
+
+        # Reset _feature_name only if it doesn't apply to the new channel type;
+        # otherwise preserve cross-channel navigation context (e.g. user was on
+        # PEQ for Out1, clicks Out2 \u2192 still on PEQ).
+        if not self._feature_available(self._feature_name, self._is_input):
+            self._feature_name = "Gate" if self._is_input else "PEQ"
 
         self._show_feature_panel()
 
         ch_name = ch_state.name or CHANNEL_NAMES[channel]
         strip.set_title(ch_name)
-        self._feature_name = "Gate"
         self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
 
     def update_levels(self, payload: dict) -> None:
@@ -352,8 +369,25 @@ class DetailView(QWidget):
         return self._gate_panel
 
     @property
+    def peq_panel(self) -> PEQPanel:
+        return self._peq_panel
+
+    @property
     def channel(self) -> int:
         return self._channel
+
+    def show_feature(self, channel: int, feature_name: str) -> None:
+        """Switch the detail view to ``channel`` and ``feature_name``.
+
+        Called by MainWindow when an output's feature nav button is hit
+        on either the home view or the detail view.
+        """
+        if self._cached_state is not None and channel != self._channel:
+            self.set_channel(channel, self._cached_state)
+        self._feature_name = feature_name
+        self._show_feature_panel()
+        ch_name = self._strip._title_btn.text()
+        self._title_label.setText(f"{feature_name} — {ch_name}")
 
     # ------------------------------------------------------------------ #
     # Routed meters
@@ -445,6 +479,26 @@ class DetailView(QWidget):
             self._output_buttons[self._channel - 4].setText(ch_name)
         self.name_changed.emit(self._channel, name)
 
+    def _on_peq_band(
+        self,
+        band: int,
+        gain_raw: int,
+        freq_raw: int,
+        q_raw: int,
+        filter_type: int,
+        bypass: bool,
+    ) -> None:
+        if not self._is_input:
+            self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
+        self.peq_band_changed.emit(
+            self._channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
+        )
+
+    def _on_peq_channel_bypass(self, bypass: bool) -> None:
+        if not self._is_input:
+            self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
+        self.peq_channel_bypass_changed.emit(self._channel, bypass)
+
     def _on_gate_params(self, attack: int, release: int, hold: int, threshold: int) -> None:
         if self._is_input:
             self._input_strip.set_gate_active(threshold > 0)
@@ -460,16 +514,22 @@ class DetailView(QWidget):
     def _feature_available(feature: str, is_input: bool) -> bool:
         if feature == "Gate":
             return is_input
+        if feature == "PEQ":
+            return not is_input
         return False
 
     def _show_feature_panel(self) -> None:
-        if self._feature_name == "Gate" and self._feature_available("Gate", self._is_input):
-            self._content_stack.setCurrentWidget(self._gate_panel)
-        else:
-            self._placeholder_panel.set_message(
-                f"{self._feature_name} is not available for this channel."
-            )
-            self._content_stack.setCurrentWidget(self._placeholder_panel)
+        if self._feature_available(self._feature_name, self._is_input):
+            if self._feature_name == "Gate":
+                self._content_stack.setCurrentWidget(self._gate_panel)
+                return
+            if self._feature_name == "PEQ":
+                self._content_stack.setCurrentWidget(self._peq_panel)
+                return
+        self._placeholder_panel.set_message(
+            f"{self._feature_name} is not available for this channel."
+        )
+        self._content_stack.setCurrentWidget(self._placeholder_panel)
 
     def _set_connection_state(self, state: str) -> None:
         self._connection_label.setProperty("state", state)

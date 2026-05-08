@@ -72,6 +72,17 @@ class OutputChannelState:
     routing_mask: int = 0
     link_flags: int = 0
 
+    @property
+    def peq_active(self) -> bool:
+        """True if the PEQ block is shaping the signal.
+
+        At least one band must have non-zero gain (raw 120 = 0 dB) and
+        not be bypassed, with the channel-wide bypass off.
+        """
+        if self.peq_channel_bypass:
+            return False
+        return any(b.gain_raw != 120 and not b.bypass for b in self.peqs)
+
 
 @dataclass
 class DeviceState:

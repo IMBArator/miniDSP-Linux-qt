@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..device_thread import DeviceThread
-from ..model import DeviceState
+from ..model import DeviceState, PEQBand
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
@@ -76,6 +76,9 @@ class MainWindow(QMainWindow):
         self._home_view.mute_changed.connect(self._on_mute_changed)
         self._home_view.phase_changed.connect(self._on_phase_changed)
         self._home_view.gate_clicked.connect(self._show_detail)
+        self._home_view.output_feature_toggled.connect(
+            self._on_output_feature_toggled
+        )
         self._home_view.name_changed.connect(self._on_name_changed)
         self._home_view.route_changed.connect(self._on_route_changed)
         self._home_view.recall_clicked.connect(self._on_recall)
@@ -89,7 +92,11 @@ class MainWindow(QMainWindow):
         self._detail_view.gate_params_changed.connect(self._on_detail_gate_params)
         self._detail_view.name_changed.connect(self._on_name_changed)
         self._detail_view.output_feature_toggled.connect(
-            self._on_detail_output_feature
+            self._on_output_feature_toggled
+        )
+        self._detail_view.peq_band_changed.connect(self._on_detail_peq_band)
+        self._detail_view.peq_channel_bypass_changed.connect(
+            self._on_detail_peq_channel_bypass
         )
 
         self._thread.start()
@@ -329,12 +336,61 @@ class MainWindow(QMainWindow):
         self._thread.request_gate(channel, attack, release, hold, threshold)
         self._home_view._input_strips[channel].set_gate_active(threshold > 0)
 
-    def _on_detail_output_feature(
+    def _on_output_feature_toggled(
         self, channel: int, feature: str, checked: bool
     ) -> None:
-        log.info(
-            "Output feature ch=%d feature=%s checked=%s", channel, feature, checked
+        # Output feature buttons (xover/peq/comp/delay) are navigation buttons.
+        # The strip auto-unchecks PEQ; only act on the press (checked=True).
+        if not checked:
+            return
+        if feature == "peq":
+            self._show_detail(channel)
+            self._detail_view.show_feature(channel, "PEQ")
+        else:
+            log.info(
+                "Output feature ch=%d feature=%s checked=%s (no panel yet)",
+                channel,
+                feature,
+                checked,
+            )
+
+    def _on_detail_peq_band(
+        self,
+        channel: int,
+        band: int,
+        gain_raw: int,
+        freq_raw: int,
+        q_raw: int,
+        filter_type: int,
+        bypass: bool,
+    ) -> None:
+        out_idx = channel - 4
+        if 0 <= out_idx < len(self._state.outputs):
+            peqs = self._state.outputs[out_idx].peqs
+            while len(peqs) <= band:
+                peqs.append(PEQBand())
+            peqs[band] = PEQBand(
+                gain_raw=gain_raw,
+                freq_raw=freq_raw,
+                q_raw=q_raw,
+                filter_type=filter_type,
+                bypass=bypass,
+            )
+            self._home_view._output_strips[out_idx].set_peq_active(
+                self._state.outputs[out_idx].peq_active
+            )
+        self._thread.request_peq_band(
+            channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
         )
+
+    def _on_detail_peq_channel_bypass(self, channel: int, bypass: bool) -> None:
+        out_idx = channel - 4
+        if 0 <= out_idx < len(self._state.outputs):
+            self._state.outputs[out_idx].peq_channel_bypass = bypass
+            self._home_view._output_strips[out_idx].set_peq_active(
+                self._state.outputs[out_idx].peq_active
+            )
+        self._thread.request_peq_channel_bypass(channel, bypass)
 
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._state.set_field(channel, "name", name)

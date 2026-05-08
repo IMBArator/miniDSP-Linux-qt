@@ -169,6 +169,14 @@ class ChannelStrip(QFrame):
         btn.style().unpolish(btn)
         btn.style().polish(btn)
 
+    def set_peq_active(self, active: bool) -> None:
+        btn = self._toggles.get("peq")
+        if btn is None:
+            return
+        btn.setProperty("peq_active", active)
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
     def set_toggle_silent(self, feature: str, checked: bool) -> None:
         btn = self._toggles.get(feature)
         if btn is None:
@@ -249,10 +257,30 @@ class InputChannelStrip(ChannelStrip):
 class OutputChannelStrip(ChannelStrip):
     """Output channel strip: Xover / PEQ / Comp / Phase / Delay / Mute toggles.
 
-    Includes a limiter LED indicator.  Feature toggles (xover, peq, comp,
-    delay) emit :attr:`toggle_changed` normally — they are navigation
-    buttons for the detail view.
+    Includes a limiter LED indicator.  PEQ is wired as a navigation
+    button (clicks emit :attr:`toggle_changed` then auto-uncheck, the
+    same pattern as the input Gate button).  It turns purple via the
+    ``peq_active`` QSS property when at least one band has non-zero
+    gain and is not bypassed.  Xover / Comp / Delay still latch as
+    plain toggles until their detail-view panels exist — this will be
+    unified once those panels land.
     """
 
     _toggle_specs = OUTPUT_TOGGLES
     _show_limiter = True
+
+    def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        super().__init__(title, parent)
+        peq_btn = self._toggles.get("peq")
+        if peq_btn is not None:
+            peq_btn.toggled.connect(self._on_peq_toggled)
+
+    def _on_peq_toggled(self, checked: bool) -> None:
+        # Navigation button: when the user clicks an unchecked button the
+        # underlying toggle_changed("peq", True) has already propagated to
+        # MainWindow before this slot runs.  We force the visual state back
+        # to unchecked so the button reads as a momentary tap.  blockSignals
+        # inside set_toggle_silent prevents this False write from re-firing.
+        # See InputChannelStrip._on_gate_toggled for the same pattern.
+        if checked:
+            self.set_toggle_silent("peq", False)
