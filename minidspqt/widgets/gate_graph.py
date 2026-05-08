@@ -21,10 +21,18 @@ _DB_MIN = -90.0
 _DB_MAX = 0.0
 _DB_RANGE = _DB_MAX - _DB_MIN
 
-_MARGIN_LEFT = 40
-_MARGIN_RIGHT = 10
-_MARGIN_TOP = 10
-_MARGIN_BOTTOM = 25
+_OUTER_PADDING = 10
+_OUTER_PADDING_LEFT = 4  # tighter than other sides: y-labels are right-aligned
+                         # and naturally drift toward the rect, leaving extra
+                         # whitespace on the widget-edge side of the text.
+_LABEL_GAP = 4
+_X_LABEL_HEIGHT = 12
+_Y_LABEL_WIDTH = 24
+
+_MARGIN_TOP = _OUTER_PADDING
+_MARGIN_RIGHT = _OUTER_PADDING
+_MARGIN_BOTTOM = _OUTER_PADDING + _LABEL_GAP + _X_LABEL_HEIGHT
+_MARGIN_LEFT = _OUTER_PADDING_LEFT + _LABEL_GAP + _Y_LABEL_WIDTH
 
 _GRID_INTERVAL = 15.0
 
@@ -131,8 +139,22 @@ class GateGraph(QWidget):
             x = self._db_to_x(db)
             y = self._db_to_y(db)
             label = f"{db:.0f}"
-            p.drawText(int(x) - 12, int(rect.bottom()) + 14, 24, 12, Qt.AlignmentFlag.AlignCenter, label)
-            p.drawText(int(rect.left()) - 36, int(y) - 6, 32, 12, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, label)
+            p.drawText(
+                int(x) - _Y_LABEL_WIDTH // 2,
+                int(rect.bottom()) + _LABEL_GAP,
+                _Y_LABEL_WIDTH,
+                _X_LABEL_HEIGHT,
+                Qt.AlignmentFlag.AlignCenter,
+                label,
+            )
+            p.drawText(
+                int(rect.left()) - (_LABEL_GAP + _Y_LABEL_WIDTH),
+                int(y) - _X_LABEL_HEIGHT // 2,
+                _Y_LABEL_WIDTH,
+                _X_LABEL_HEIGHT,
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                label,
+            )
             db += _GRID_INTERVAL
 
     def _draw_ref_diagonal(self, p: QPainter, rect: QRectF) -> None:
