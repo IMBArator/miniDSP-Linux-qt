@@ -107,8 +107,10 @@ class TestFeatureAvailability:
         assert detail._feature_available("PEQ", False) is True
 
     def test_unknown_feature_unavailable(self, detail):
-        assert detail._feature_available("Xover", False) is False
+        assert detail._feature_available("Xover", False) is True
         assert detail._feature_available("Xover", True) is False
+        assert detail._feature_available("Comp", False) is False
+        assert detail._feature_available("Comp", True) is False
 
 
 class TestPEQActive:

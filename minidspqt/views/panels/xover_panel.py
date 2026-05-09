@@ -1,0 +1,206 @@
+"""Crossover settings panel for output channels.
+
+Lays out Hi-Pass and Lo-Pass rows, each with frequency knob, slope
+combo, and bypass toggle, below a summed frequency-response graph
+showing both crossover and PEQ contributions.
+
+Protocol encoding (shared by hipass 0x32 and lopass 0x31):
+
+============  ==========  ===================  ===========================
+Parameter     Raw range   Display              Formula
+============  ==========  ===================  ===========================
+Frequency     0 -- 300    19.7 Hz .. 20 kHz    Hz = 19.70 * (20160/19.70)^(raw/300)
+Slope         0 -- 10     Off / BW 6 .. LR 24  See SLOPE_NAMES
+============  ==========  ===================  ===========================
+
+Slope = 0 means bypassed.  The device **forgets** the slope on bypass
+so the panel tracks the last-active slope and re-sends it on un-bypass.
+"""
+
+from __future__ import annotations
+
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
+
+from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
+
+from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
+from ...widgets.freq_response_graph import CrossoverData
+
+_SLOPE_ITEMS = [SLOPE_NAMES[i] for i in sorted(SLOPE_NAMES) if i != 0]
+
+_DEFAULT_SLOPE = 10  # LR-24, device default when slope is lost after bypass
+
+
+def _fmt_freq(raw: int) -> str:
+    hz = freq_raw_to_hz(raw)
+    return f"{hz:.1f} Hz" if hz < 1000 else f"{hz / 1000:.2f} kHz"
+
+
+def _parse_freq(text: str) -> int:
+    import math
+
+    t = text.lower().strip()
+    mult = 1.0
+    if t.endswith("khz"):
+        mult = 1000.0
+        t = t.removesuffix("khz").strip()
+    elif t.endswith("hz"):
+        t = t.removesuffix("hz").strip()
+    hz = float(t) * mult
+    if hz <= 0:
+        return 0
+    raw = round(300.0 * math.log(hz / 19.70) / math.log(20160.0 / 19.70))
+    return max(0, min(300, raw))
+
+
+class XoverPanel(QWidget):
+    """Crossover controls + shared frequency-response graph for one output.
+
+    Signals
+    -------
+    xover_changed(int, int, int, int)
+        ``(hipass_freq, hipass_slope, lopass_freq, lopass_slope)``
+    """
+
+    xover_changed = Signal(int, int, int, int)
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._suppress_emit = False
+        self._hp_last_slope: int = 10
+        self._lp_last_slope: int = 10
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(8)
+
+        title = QLabel("Xover Settings")
+        title.setObjectName("panelTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        root.addWidget(title)
+
+        self._graph = FreqResponseGraph()
+        self._graph.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+        )
+        root.addWidget(self._graph, stretch=1)
+
+        root.addLayout(self._build_filter_row("Hi-Pass", "hp"))
+        root.addLayout(self._build_filter_row("Lo-Pass", "lp"))
+
+    def _build_filter_row(self, label: str, prefix: str) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.setSpacing(8)
+
+        lbl = QLabel(label)
+        lbl.setObjectName("paramLabel")
+        lbl.setFixedWidth(56)
+        row.addWidget(lbl)
+
+        freq_knob = ParamKnob(
+            minimum=0,
+            maximum=300,
+            default=0,
+            formatter=_fmt_freq,
+            parser=_parse_freq,
+        )
+        freq_knob.valueChanged.connect(lambda _v: self._on_param_changed())
+        row.addWidget(freq_knob)
+        setattr(self, f"_{prefix}_freq", freq_knob)
+
+        slope_combo = QComboBox()
+        slope_combo.addItems(_SLOPE_ITEMS)
+        slope_combo.setCurrentIndex(_DEFAULT_SLOPE - 1)
+        slope_combo.setFixedWidth(80)
+        slope_combo.currentIndexChanged.connect(lambda _i: self._on_param_changed())
+        row.addWidget(slope_combo)
+        setattr(self, f"_{prefix}_slope", slope_combo)
+
+        bypass_btn = ToggleButton()
+        bypass_btn.setText("Byp")
+        bypass_btn.setMinimumWidth(48)
+        bypass_btn.toggled.connect(lambda _c: self._on_param_changed())
+        row.addWidget(bypass_btn)
+        setattr(self, f"_{prefix}_bypass", bypass_btn)
+
+        row.addStretch(1)
+        return row
+
+    def _read_state(self) -> CrossoverData:
+        hp_bypassed = self._hp_bypass.isChecked()
+        hp_slope = 0 if hp_bypassed else (self._hp_slope.currentIndex() + 1)
+
+        lp_bypassed = self._lp_bypass.isChecked()
+        lp_slope = 0 if lp_bypassed else (self._lp_slope.currentIndex() + 1)
+
+        return CrossoverData(
+            hipass_freq=self._hp_freq.value(),
+            hipass_slope=hp_slope,
+            lopass_freq=self._lp_freq.value(),
+            lopass_slope=lp_slope,
+        )
+
+    def _on_param_changed(self) -> None:
+        if self._suppress_emit:
+            return
+
+        self._hp_last_slope = self._hp_slope.currentIndex() + 1
+        self._lp_last_slope = self._lp_slope.currentIndex() + 1
+
+        xo = self._read_state()
+        self._graph.set_crossover(xo)
+        self.xover_changed.emit(
+            xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+        )
+
+    def is_xover_active(self) -> bool:
+        xo = self._read_state()
+        return xo.hipass_slope != 0 or xo.lopass_slope != 0
+
+    def set_params_silently(
+        self,
+        hipass_freq: int,
+        hipass_slope: int,
+        lopass_freq: int,
+        lopass_slope: int,
+    ) -> None:
+        prev = self._suppress_emit
+        self._suppress_emit = True
+        try:
+            hp_bypassed = hipass_slope == 0
+            hp_display = hipass_slope if hipass_slope != 0 else _DEFAULT_SLOPE
+            self._hp_last_slope = hp_display
+
+            self._hp_freq.setValueSilently(hipass_freq)
+            self._hp_slope.blockSignals(True)
+            self._hp_slope.setCurrentIndex(hp_display - 1)
+            self._hp_slope.blockSignals(False)
+            self._hp_bypass.blockSignals(True)
+            self._hp_bypass.setChecked(hp_bypassed)
+            self._hp_bypass.blockSignals(False)
+
+            lp_bypassed = lopass_slope == 0
+            lp_display = lopass_slope if lopass_slope != 0 else _DEFAULT_SLOPE
+            self._lp_last_slope = lp_display
+
+            self._lp_freq.setValueSilently(lopass_freq)
+            self._lp_slope.blockSignals(True)
+            self._lp_slope.setCurrentIndex(lp_display - 1)
+            self._lp_slope.blockSignals(False)
+            self._lp_bypass.blockSignals(True)
+            self._lp_bypass.setChecked(lp_bypassed)
+            self._lp_bypass.blockSignals(False)
+        finally:
+            self._suppress_emit = prev
+        self._graph.set_crossover(self._read_state())
+
+    def set_bands(self, bands, channel_bypass: bool) -> None:
+        self._graph.set_bands(bands, channel_bypass)

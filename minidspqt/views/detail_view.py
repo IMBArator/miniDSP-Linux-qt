@@ -43,7 +43,8 @@ from minidsp.protocol import CHANNEL_NAMES
 from ..model import DeviceState
 from ..widgets import LevelMeter
 from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
-from .panels import GatePanel, PEQPanel, PlaceholderPanel
+from .panels import GatePanel, PEQPanel, PlaceholderPanel, XoverPanel
+from ..widgets.freq_response_graph import CrossoverData
 
 NUM_CHANNELS = 4
 
@@ -130,6 +131,7 @@ class DetailView(QWidget):
     output_feature_toggled = Signal(int, str, bool)
     peq_band_changed = Signal(int, int, int, int, int, int, bool)
     peq_channel_bypass_changed = Signal(int, bool)
+    xover_changed = Signal(int, int, int, int, int)
     name_changed = Signal(int, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -156,9 +158,11 @@ class DetailView(QWidget):
         self._content_stack = QStackedWidget()
         self._gate_panel = GatePanel()
         self._peq_panel = PEQPanel()
+        self._xover_panel = XoverPanel()
         self._placeholder_panel = PlaceholderPanel()
         self._content_stack.addWidget(self._gate_panel)
         self._content_stack.addWidget(self._peq_panel)
+        self._content_stack.addWidget(self._xover_panel)
         self._content_stack.addWidget(self._placeholder_panel)
         content_row.addWidget(self._content_stack, stretch=1)
 
@@ -173,6 +177,7 @@ class DetailView(QWidget):
         self._peq_panel.peq_channel_bypass_changed.connect(
             self._on_peq_channel_bypass
         )
+        self._xover_panel.xover_changed.connect(self._on_xover_changed)
 
     # ------------------------------------------------------------------ #
     # Header (identical chrome to HomeView)
@@ -313,6 +318,15 @@ class DetailView(QWidget):
                 ch_state.peqs, ch_state.peq_channel_bypass
             )
             strip.set_peq_active(ch_state.peq_active)
+            xo = ch_state.crossover
+            self._xover_panel.set_params_silently(
+                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+            )
+            self._peq_panel.set_crossover(CrossoverData(
+                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+            ))
+            self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
+            strip.set_xover_active(ch_state.xover_active)
 
         # Reset _feature_name only if it doesn't apply to the new channel type;
         # otherwise preserve cross-channel navigation context (e.g. user was on
@@ -371,6 +385,10 @@ class DetailView(QWidget):
     @property
     def peq_panel(self) -> PEQPanel:
         return self._peq_panel
+
+    @property
+    def xover_panel(self) -> XoverPanel:
+        return self._xover_panel
 
     @property
     def channel(self) -> int:
@@ -490,6 +508,7 @@ class DetailView(QWidget):
     ) -> None:
         if not self._is_input:
             self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
+            self._xover_panel.set_bands(self._peq_panel._all_bands(), self._peq_panel._channel_bypass.isChecked())
         self.peq_band_changed.emit(
             self._channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
         )
@@ -506,6 +525,17 @@ class DetailView(QWidget):
             self._channel, attack, release, hold, threshold
         )
 
+    def _on_xover_changed(
+        self, hp_freq: int, hp_slope: int, lp_freq: int, lp_slope: int
+    ) -> None:
+        if not self._is_input:
+            active = hp_slope != 0 or lp_slope != 0
+            self._output_strip.set_xover_active(active)
+            self._peq_panel.set_crossover(CrossoverData(
+                hp_freq, hp_slope, lp_freq, lp_slope
+            ))
+        self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
+
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
@@ -514,7 +544,7 @@ class DetailView(QWidget):
     def _feature_available(feature: str, is_input: bool) -> bool:
         if feature == "Gate":
             return is_input
-        if feature == "PEQ":
+        if feature in ("PEQ", "Xover"):
             return not is_input
         return False
 
@@ -525,6 +555,9 @@ class DetailView(QWidget):
                 return
             if self._feature_name == "PEQ":
                 self._content_stack.setCurrentWidget(self._peq_panel)
+                return
+            if self._feature_name == "Xover":
+                self._content_stack.setCurrentWidget(self._xover_panel)
                 return
         self._placeholder_panel.set_message(
             f"{self._feature_name} is not available for this channel."

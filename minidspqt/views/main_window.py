@@ -98,6 +98,7 @@ class MainWindow(QMainWindow):
         self._detail_view.peq_channel_bypass_changed.connect(
             self._on_detail_peq_channel_bypass
         )
+        self._detail_view.xover_changed.connect(self._on_detail_xover_changed)
 
         self._thread.start()
 
@@ -346,6 +347,9 @@ class MainWindow(QMainWindow):
         if feature == "peq":
             self._show_detail(channel)
             self._detail_view.show_feature(channel, "PEQ")
+        elif feature == "xover":
+            self._show_detail(channel)
+            self._detail_view.show_feature(channel, "Xover")
         else:
             log.info(
                 "Output feature ch=%d feature=%s checked=%s (no panel yet)",
@@ -391,6 +395,24 @@ class MainWindow(QMainWindow):
                 self._state.outputs[out_idx].peq_active
             )
         self._thread.request_peq_channel_bypass(channel, bypass)
+
+    def _on_detail_xover_changed(
+        self, channel: int, hp_freq: int, hp_slope: int, lp_freq: int, lp_slope: int
+    ) -> None:
+        out_idx = channel - 4
+        if 0 <= out_idx < len(self._state.outputs):
+            xo = self._state.outputs[out_idx].crossover
+            xo.hipass_freq = hp_freq
+            xo.hipass_slope = hp_slope
+            xo.lopass_freq = lp_freq
+            xo.lopass_slope = lp_slope
+            self._home_view._output_strips[out_idx].set_xover_active(
+                self._state.outputs[out_idx].xover_active
+            )
+        if hp_slope != 0:
+            self._thread.request_hipass(channel, hp_freq, hp_slope)
+        if lp_slope != 0:
+            self._thread.request_lopass(channel, lp_freq, lp_slope)
 
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._state.set_field(channel, "name", name)

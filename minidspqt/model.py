@@ -83,6 +83,10 @@ class OutputChannelState:
             return False
         return any(b.gain_raw != 120 and not b.bypass for b in self.peqs)
 
+    @property
+    def xover_active(self) -> bool:
+        return self.crossover.hipass_slope != 0 or self.crossover.lopass_slope != 0
+
 
 @dataclass
 class DeviceState:

@@ -62,7 +62,8 @@ from minidsp.protocol import (
 )
 
 from ...model import PEQBand
-from ...widgets import ParamKnob, PEQGraph, ToggleButton
+from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
+from ...widgets.freq_response_graph import CrossoverData
 
 NUM_BANDS = 7
 
@@ -163,7 +164,7 @@ class PEQPanel(QWidget):
 
         root.addLayout(self._build_header())
 
-        self._graph = PEQGraph()
+        self._graph = FreqResponseGraph()
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
@@ -417,3 +418,6 @@ class PEQPanel(QWidget):
         finally:
             self._suppress_emit = prev
         self._graph.set_bands(self._all_bands(), channel_bypass)
+
+    def set_crossover(self, xo: CrossoverData) -> None:
+        self._graph.set_crossover(xo)

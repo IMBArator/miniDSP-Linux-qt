@@ -152,6 +152,9 @@ ToggleButton[feature="gate"][gate_active="true"] { color: white; background-colo
 /* PEQ "active": at least one band shaping the signal (gain != 0 dB, not bypassed) */
 ToggleButton[feature="peq"][peq_active="true"] { color: white; background-color: #8a5ad2; border: 1px solid #563789; }
 
+/* Xover "active": hi-pass or lo-pass not bypassed */
+ToggleButton[feature="xover"][xover_active="true"] { color: white; background-color: #4a8bd0; border: 1px solid #2f578a; }
+
 /* ---------- Detail view ---------- */
 
 QFrame#detailChannelStrip {
