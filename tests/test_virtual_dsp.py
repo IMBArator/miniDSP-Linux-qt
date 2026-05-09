@@ -213,3 +213,41 @@ def test_set_hipass_lopass():
     assert cfg["crossovers"][0]["hipass_slope"] == 3
     assert cfg["crossovers"][0]["lopass_freq"] == 200
     assert cfg["crossovers"][0]["lopass_slope"] == 5
+
+
+def test_default_config_matches_factory_defaults():
+    """A fresh VirtualDSP must mirror the lib's F00 factory values."""
+    from minidsp.defaults import load_factory_defaults
+
+    factory = load_factory_defaults()["params"]
+    cfg = VirtualDSP().read_config()
+    for key in (
+        "names",
+        "gains",
+        "mutes",
+        "phases",
+        "link_flags",
+        "routings",
+        "gates",
+        "delays",
+        "crossovers",
+        "compressors",
+        "peqs",
+    ):
+        assert cfg[key] == factory[key], f"{key} diverges from factory defaults"
+
+
+def test_offline_startup_seeded_from_blank_yields_factory_defaults():
+    """End-to-end offline startup: blank.unt is empty → factory defaults remain."""
+    from minidsp.defaults import load_factory_defaults
+    from minidspqt.app import _seed_from_blank
+
+    dsp = VirtualDSP()
+    _seed_from_blank(dsp)
+    cfg = dsp.read_config()
+    factory = load_factory_defaults()["params"]
+    assert cfg["crossovers"] == factory["crossovers"]
+    assert cfg["peqs"] == factory["peqs"]
+    assert cfg["gates"] == factory["gates"]
+    assert cfg["compressors"] == factory["compressors"]
+    assert cfg["gains"] == factory["gains"]

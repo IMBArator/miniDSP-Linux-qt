@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from minidspqt.unt_loader import EXPECTED_SIZE, UntParseError, load_unt
+from minidspqt.unt_loader import EXPECTED_SIZE, UntParseError, load_unt, load_unt_all_slots
 
 FIXTURE_PATH = "/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt"
+BUNDLED_BLANK = Path(__file__).resolve().parent.parent / "minidspqt" / "resources" / "blank.unt"
 
 
 @pytest.fixture
@@ -41,3 +44,11 @@ def test_wrong_size_raises(tmp_path):
     bad.write_bytes(b"\x00" * 100)
     with pytest.raises(UntParseError, match="bytes"):
         load_unt(bad)
+
+
+def test_bundled_blank_unt_has_no_stored_presets():
+    """Mimics a brand-new DSP: every slot empty, no preset names."""
+    slots, _, names, raw = load_unt_all_slots(BUNDLED_BLANK)
+    assert len(raw) == EXPECTED_SIZE
+    assert all(s is None for s in slots)
+    assert all(n == "" for n in names)

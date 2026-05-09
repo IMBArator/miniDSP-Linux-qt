@@ -86,10 +86,9 @@ def test_save_without_template_uses_blank():
         saved = out.read_bytes()
         assert len(saved) == 13010
 
-        cfg, active, names = load_unt(out)
-        assert cfg is not None
-        assert cfg["names"][0] == "InA"
-        assert cfg["gains"][0] == 280
+        slots, active, names, _ = load_unt_all_slots(out)
+        assert active == active_0
+        assert all(s is None for s in slots)
 
 
 @skip_if_no_fixture

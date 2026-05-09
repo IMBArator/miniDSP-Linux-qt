@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from minidsp.protocol import CHANNEL_NAMES
+from minidsp.defaults import load_factory_defaults
 
 _SLOT_KEYS = frozenset(
     {
@@ -28,41 +28,22 @@ _SLOT_KEYS = frozenset(
     }
 )
 
+_FACTORY_PARAMS_CACHE: dict[str, Any] | None = None
+
+
+def _factory_params() -> dict[str, Any]:
+    global _FACTORY_PARAMS_CACHE
+    if _FACTORY_PARAMS_CACHE is None:
+        _FACTORY_PARAMS_CACHE = load_factory_defaults()["params"]
+    return _FACTORY_PARAMS_CACHE
+
 
 def _default_config() -> dict[str, Any]:
-    return {
-        "names": list(CHANNEL_NAMES.values()),
-        "gains": [280, 280, 280, 280, 280, 280, 280, 280],
-        "mutes": [False] * 8,
-        "phases": [False] * 8,
-        "link_flags": [0x01, 0x02, 0x04, 0x08, 0x01, 0x02, 0x04, 0x08],
-        "routings": [0x01, 0x02, 0x04, 0x08],
-        "gates": [
-            {"attack": 50, "release": 100, "hold": 200, "threshold": 20}
-            for _ in range(4)
-        ],
-        "delays": [0, 0, 0, 0],
-        "crossovers": [
-            {"hipass_freq": 0, "hipass_slope": 0, "lopass_freq": 0, "lopass_slope": 0}
-            for _ in range(4)
-        ],
-        "compressors": [
-            {"ratio": 0, "knee": 0, "attack": 0, "release": 0, "threshold": 0}
-            for _ in range(4)
-        ],
-        "peqs": [
-            {
-                "bands": [
-                    {"gain": 120, "freq": 150, "q": 40, "type": 0, "bypass": False}
-                    for _ in range(7)
-                ],
-                "channel_bypass": False,
-            }
-            for _ in range(4)
-        ],
-        "active_slot": 1,
-        "preset_names": [f"U{i + 1:02d}" for i in range(30)],
-    }
+    params = _factory_params()
+    cfg = {k: copy.deepcopy(params[k]) for k in _SLOT_KEYS if k in params}
+    cfg["active_slot"] = 1
+    cfg["preset_names"] = [f"U{i + 1:02d}" for i in range(30)]
+    return cfg
 
 
 class VirtualDSP:
