@@ -18,6 +18,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
 - [Channel Detail View](#channel-detail-view)
   - [Gate Panel](#gate-panel)
   - [PEQ Panel](#peq-panel)
+  - [Crossover Panel](#crossover-panel)
 - [Routing Matrix](#routing-matrix)
 - [Preset Management](#preset-management)
   - [Recalling a Preset](#recalling-a-preset)
@@ -173,8 +174,9 @@ Two of the buttons act as **navigation buttons** rather than stateful toggles �
 
 - **Gate** (input strips) opens the Gate panel. The button fills green whenever the gate is "armed" (threshold above the noise floor), regardless of whether the detail view is open.
 - **PEQ** (output strips) opens the PEQ panel. The button fills purple whenever any band has non-zero gain and is not bypassed (and channel-bypass is off).
+- **Xover** (output strips) opens the Crossover panel. The button fills blue whenever either the hi-pass or lo-pass filter is not bypassed.
 
-> **Note:** The Xover, Comp, and Delay buttons on output strips are still placeholders — toggling them does not yet control DSP parameters.
+> **Note:** The Comp and Delay buttons on output strips are still placeholders — toggling them does not yet control DSP parameters.
 
 ### Channel Names
 
@@ -188,7 +190,7 @@ When channels are linked on the device (e.g., stereo pair), the **slave** channe
 
 ## Channel Detail View
 
-Click the **Gate** button on an input strip — or the **PEQ** button on an output strip — in the home view to open the channel detail view:
+Click the **Gate** button on an input strip — or the **PEQ** / **Xover** button on an output strip — in the home view to open the channel detail view:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -212,7 +214,7 @@ Layout:
 - **Channel navigation** — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view. The active feature is preserved across channel switches when valid for the new channel type (e.g. moving Out1 → Out2 keeps you on the PEQ panel; moving Out1 → InA falls back to Gate)
 - **Channel strip** — same widget as on the home view, kept synchronised with all gain / mute / phase / name edits
 - **Routed meters** — when an input is selected, vertical meters for every output it routes to appear on the right; when an output is selected, meters for every input feeding it appear on the left
-- **Feature panel** — the **Gate** panel for input channels, the **PEQ** panel for output channels, or a **placeholder** ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type
+- **Feature panel** — the **Gate** panel for input channels, the **PEQ** or **Crossover** panel for output channels, or a **placeholder** ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type
 
 Press **←** in the header to return to the home view.
 
@@ -285,6 +287,46 @@ The graph is *display-only* in this version — drag-to-edit on the markers is n
 #### "PEQ active" indicator on the output strip
 
 The PEQ button on the output channel strip lights up purple whenever the channel's PEQ is shaping the signal, defined as: **at least one band has gain ≠ 0 dB AND is not bypassed AND the channel-wide bypass is off**. The state updates live as you drag knobs and toggle bypasses, on both the home view and the detail view's strip header.
+
+### Crossover Panel
+
+The Crossover panel exposes the hi-pass and lo-pass filters on each output channel. Each filter has three controls:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Xover Settings                                                  │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│   +18 dB ┊                                                        │
+│    +0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
+│   -18 dB └────────────────────────────────────────────────────────│
+│                                                                   │
+├──────────────────────────────────────────────────────────────────┤
+│  Hi-Pass   ◍  1.00 kHz    [BW 24 ▾]  [Byp]                      │
+│  Lo-Pass   ◍  20.00 kHz   [LR 24 ▾]  [Byp]                      │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### Per-filter controls
+
+| Control | Range | Notes |
+|---------|-------|-------|
+| **Frequency knob** | 19.7 Hz – 20.16 kHz | Log-scaled, same encoding as PEQ frequency |
+| **Slope selector** | 9 slope types | BW 6, BL 6, BW 12, BL 12, LR 12, BW 18, BL 18, BW 24, BL 24, LR 24 |
+| **Bypass toggle** | On/Off | Bypasses that filter independently. When bypassed, the slope selector still shows the last-used slope (or LR-24 by default), so un-bypassing re-activates with the correct setting |
+
+> **Important:** The device **forgets** the slope value when a filter is bypassed. The application tracks the last-active slope and re-sends it when you un-bypass. If the application is restarted while a filter is bypassed, the slope defaults to **LR-24** (the device default).
+
+#### Shared frequency-response graph
+
+Both the **Crossover** and **PEQ** panels share a combined frequency-response graph that shows the **summed crossover + PEQ magnitude response**. Editing a crossover filter updates the graph on both panels, and vice versa. The graph uses local biquad coefficient math (Audio EQ Cookbook / RBJ) for both the crossover filters (cascaded 2nd-order Butterworth / Bessel / Linkwitz-Riley sections) and the PEQ bands.
+
+- **PEQ band markers** — numbered circles (`1`..`7`) at each band's centre frequency
+- **Crossover markers** — blue triangles labeled `HP` / `LP` at the respective cutoff frequencies
+
+#### "Xover active" indicator on the output strip
+
+The Xover button on the output channel strip lights up blue whenever **either** the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.
 
 ---
 
