@@ -20,6 +20,8 @@ from PySide6.QtWidgets import QProgressBar
 
 from minidsp.protocol import level_uint16_to_dbu
 
+from ..theme import theme_manager
+
 EMA_ALPHA = 0.55  # Exponential moving average smoothing for the raw level
 #   1.0 = no smoothing, 0.0 = frozen
 LED_PEAK_DECAY = 0.93  # LED peak indicator: multiplicative decay per 150 ms frame
@@ -59,21 +61,37 @@ def _db_to_segments(db: float) -> int:
 def _segment_color(index: int) -> QColor:
     """Return the bright color for a lit segment at the given index.
 
-    Green segments brighten from dark-green (G=140) to bright-green (G=200).
-    Yellow segments are gold/amber. The red segment is pure red.
+    The green segments brighten from "low" to "high" along the ramp; the
+    endpoints come from the active theme so the meter follows light/dark
+    mode.  Yellow and red segments are flat theme colors.
     """
+    theme = theme_manager.current
     if index < GREEN_SEGMENTS:
-        g = 140 + int(60 * (index / max(1, GREEN_SEGMENTS - 1)))
-        return QColor(0, g, 0)
+        # Linearly interpolate each channel between the low and high
+        # green endpoints rather than only G as before — this lets the
+        # light theme use a slightly different hue if needed.
+        lo = theme.meter_segment_green_low
+        hi = theme.meter_segment_green_high
+        t = index / max(1, GREEN_SEGMENTS - 1)
+        return QColor(
+            int(lo.red() * (1 - t) + hi.red() * t),
+            int(lo.green() * (1 - t) + hi.green() * t),
+            int(lo.blue() * (1 - t) + hi.blue() * t),
+        )
     elif index < GREEN_SEGMENTS + YELLOW_SEGMENTS:
-        return QColor(210, 200, 0)
+        return theme.meter_segment_amber
     else:
-        return QColor(255, 0, 0)
+        return theme.meter_segment_red
 
 
 def _dim(color: QColor) -> QColor:
-    """Return a 1/5-brightness version of *color*, used for unlit segments."""
-    return QColor(color.red() // 5, color.green() // 5, color.blue() // 5)
+    """Blend *color* toward the active theme's unlit target.
+
+    Dark theme blends toward black so unlit LEDs look "off"; light theme
+    blends toward the meter frame fill so unlit segments stay legible
+    without becoming dark blobs in an otherwise light UI.
+    """
+    return theme_manager.current.dim_segment(color)
 
 
 class LevelMeter(QProgressBar):
@@ -118,6 +136,7 @@ class LevelMeter(QProgressBar):
         else:
             self.setMinimumWidth(80)
             self.setMinimumHeight(14)
+        theme_manager.themeChanged.connect(self.update)
 
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.
@@ -217,7 +236,7 @@ class LevelMeter(QProgressBar):
                     )
                 if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
                     y = h - 1 - (peak_seg + 1) * (seg_h + SEGMENT_GAP) + SEGMENT_GAP
-                    p.setBrush(QColor(255, 255, 255, 160))
+                    p.setBrush(theme_manager.current.meter_peak_marker)
                     p.drawRoundedRect(
                         1,
                         int(y),
@@ -244,7 +263,7 @@ class LevelMeter(QProgressBar):
                     )
                 if 0 < peak_seg < NUM_SEGMENTS and peak_seg >= lit:
                     x = peak_seg * (seg_w + SEGMENT_GAP)
-                    p.setBrush(QColor(255, 255, 255, 160))
+                    p.setBrush(theme_manager.current.meter_peak_marker)
                     p.drawRoundedRect(
                         int(x),
                         1,

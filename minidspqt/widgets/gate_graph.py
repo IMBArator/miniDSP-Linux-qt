@@ -12,10 +12,12 @@ function.
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtGui import QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 from minidsp.protocol import gate_threshold_to_db
+
+from ..theme import theme_manager
 
 _DB_MIN = -90.0
 _DB_MAX = 0.0
@@ -35,16 +37,7 @@ _MARGIN_BOTTOM = _OUTER_PADDING + _LABEL_GAP + _X_LABEL_HEIGHT
 _MARGIN_LEFT = _OUTER_PADDING_LEFT + _LABEL_GAP + _Y_LABEL_WIDTH
 
 _GRID_INTERVAL = 15.0
-
-_BG_COLOR = QColor(26, 26, 46)
-_GRID_COLOR = QColor(255, 255, 255, 25)
-_REF_COLOR = QColor(255, 255, 255, 40)
-_CURVE_COLOR = QColor(80, 200, 120)
 _CURVE_WIDTH = 2.5
-_CLOSED_FILL = QColor(200, 50, 50, 40)
-_OPEN_FILL = QColor(50, 180, 80, 25)
-_THRESHOLD_COLOR = QColor(255, 200, 50, 140)
-_LABEL_COLOR = QColor(150, 150, 150)
 
 
 class GateGraph(QWidget):
@@ -58,6 +51,7 @@ class GateGraph(QWidget):
             self.sizePolicy().horizontalPolicy(),
             self.sizePolicy().verticalPolicy(),
         )
+        theme_manager.themeChanged.connect(self.update)
 
     def set_threshold(self, raw: int) -> None:
         db = gate_threshold_to_db(raw)
@@ -100,8 +94,9 @@ class GateGraph(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             w, h = self.width(), self.height()
             rect = self._plot_rect()
+            theme = theme_manager.current
 
-            p.fillRect(0, 0, w, h, _BG_COLOR)
+            p.fillRect(0, 0, w, h, theme.graph_bg)
 
             self._draw_grid(p, rect)
             self._draw_axis_labels(p, rect)
@@ -111,14 +106,14 @@ class GateGraph(QWidget):
             self._draw_curve(p, rect)
             self._draw_threshold_marker(p, rect)
 
-            p.setPen(QPen(QColor(80, 80, 90), 1))
+            p.setPen(QPen(theme.graph_border, 1))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawRect(rect)
         finally:
             p.end()
 
     def _draw_grid(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_GRID_COLOR, 1, Qt.PenStyle.DotLine)
+        pen = QPen(theme_manager.current.graph_grid, 1, Qt.PenStyle.DotLine)
         p.setPen(pen)
         db = _DB_MIN + _GRID_INTERVAL
         while db < _DB_MAX:
@@ -132,7 +127,7 @@ class GateGraph(QWidget):
         font = QFont(p.font())
         font.setPixelSize(10)
         p.setFont(font)
-        p.setPen(QPen(_LABEL_COLOR))
+        p.setPen(QPen(theme_manager.current.graph_label))
 
         db = _DB_MIN
         while db <= _DB_MAX + 0.1:
@@ -158,7 +153,7 @@ class GateGraph(QWidget):
             db += _GRID_INTERVAL
 
     def _draw_ref_diagonal(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_REF_COLOR, 1, Qt.PenStyle.DashLine)
+        pen = QPen(theme_manager.current.graph_ref, 1, Qt.PenStyle.DashLine)
         p.setPen(pen)
         p.drawLine(
             int(rect.left()),
@@ -176,7 +171,7 @@ class GateGraph(QWidget):
         poly.append(self._db_to_xy(rect, self._threshold_db, _DB_MIN))
 
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(_CLOSED_FILL)
+        p.setBrush(theme_manager.current.gate_closed_fill)
         p.drawPolygon(poly)
 
     def _draw_open_fill(self, p: QPainter, rect: QRectF) -> None:
@@ -188,12 +183,12 @@ class GateGraph(QWidget):
         poly.append(self._db_to_xy(rect, _DB_MAX, _DB_MIN))
 
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(_OPEN_FILL)
+        p.setBrush(theme_manager.current.gate_open_fill)
         p.drawPolygon(poly)
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         thr_db = self._threshold_db
-        pen = QPen(_CURVE_COLOR, _CURVE_WIDTH)
+        pen = QPen(theme_manager.current.graph_curve, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
@@ -208,15 +203,16 @@ class GateGraph(QWidget):
         p.drawPolyline(poly)
 
     def _draw_threshold_marker(self, p: QPainter, rect: QRectF) -> None:
+        theme = theme_manager.current
         x = self._db_to_x(self._threshold_db)
-        pen = QPen(_THRESHOLD_COLOR, 1, Qt.PenStyle.DashLine)
+        pen = QPen(theme.gate_threshold_line, 1, Qt.PenStyle.DashLine)
         p.setPen(pen)
         p.drawLine(int(x), int(rect.top()), int(x), int(rect.bottom()))
 
         font = QFont(p.font())
         font.setPixelSize(10)
         p.setFont(font)
-        p.setPen(QPen(QColor(255, 200, 50)))
+        p.setPen(QPen(theme.gate_threshold_text))
         label = f"{self._threshold_db:.1f} dB"
         p.drawText(int(x) + 4, int(rect.top()) + 12, label)
 

@@ -8,14 +8,12 @@ on output channel strips.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QWidget
 
-LED_SIZE = 14
+from ..theme import theme_manager
 
-_COLOR_ACTIVE = QColor(255, 40, 40)
-_COLOR_DIM = QColor(80, 15, 15)
-_COLOR_GLOW = QColor(255, 60, 60, 90)
+LED_SIZE = 14
 
 
 class LedIndicator(QWidget):
@@ -37,6 +35,7 @@ class LedIndicator(QWidget):
         # (e.g. ChannelStrip's frame fill) from painting underneath the LED.
         self.setStyleSheet("background: transparent;")
         self.setToolTip("Limiter")
+        theme_manager.themeChanged.connect(self.update)
 
     def set_active(self, active: bool) -> None:
         if self._active == active:
@@ -55,13 +54,14 @@ class LedIndicator(QWidget):
         try:
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             p.setPen(Qt.PenStyle.NoPen)
+            theme = theme_manager.current
 
-            color = _COLOR_ACTIVE if self._active else _COLOR_DIM
+            color = theme.led_active if self._active else theme.led_dim
             p.setBrush(color)
             p.drawEllipse(1, 1, self.width() - 2, self.height() - 2)
 
             if self._active:
-                p.setBrush(_COLOR_GLOW)
+                p.setBrush(theme.led_glow)
                 p.drawEllipse(0, 0, self.width(), self.height())
         finally:
             p.end()

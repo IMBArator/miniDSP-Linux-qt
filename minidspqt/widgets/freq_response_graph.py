@@ -17,7 +17,7 @@ import math
 from dataclasses import dataclass
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtGui import QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 from minidsp.protocol import (
@@ -34,6 +34,7 @@ from minidsp.protocol import (
 )
 
 from ..model import PEQBand
+from ..theme import theme_manager
 
 _FS_HZ = 96_000.0
 
@@ -62,18 +63,7 @@ _DB_GRID_LINES = (-18.0, -12.0, -6.0, 0.0, 6.0, 12.0, 18.0)
 _DB_LABELS = (-18.0, -12.0, -6.0, 0.0, 6.0, 12.0, 18.0)
 _FREQ_MARKERS = (20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000)
 
-_BG_COLOR = QColor(26, 26, 46)
-_GRID_COLOR = QColor(255, 255, 255, 25)
-_REF_COLOR = QColor(255, 255, 255, 60)
-_CURVE_COLOR = QColor(80, 200, 120)
-_CURVE_BYPASSED_COLOR = QColor(80, 200, 120, 70)
 _CURVE_WIDTH = 2.0
-_LABEL_COLOR = QColor(150, 150, 150)
-_MARKER_ACTIVE = QColor(80, 200, 120)
-_MARKER_BYPASSED = QColor(140, 140, 140, 140)
-_MARKER_TEXT = QColor(20, 20, 28)
-_XOVER_MARKER_COLOR = QColor(74, 139, 208)
-
 _NUM_SAMPLES = 256
 
 # Bessel Q values per order (per-section Q for cascaded 2nd-order stages).
@@ -199,6 +189,7 @@ class FreqResponseGraph(QWidget):
         self._channel_bypass: bool = False
         self._crossover: CrossoverData = CrossoverData()
         self.setMinimumHeight(160)
+        theme_manager.themeChanged.connect(self.update)
 
     def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
         self._bands = list(bands)
@@ -246,8 +237,9 @@ class FreqResponseGraph(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             w, h = self.width(), self.height()
             rect = self._plot_rect()
+            theme = theme_manager.current
 
-            p.fillRect(0, 0, w, h, _BG_COLOR)
+            p.fillRect(0, 0, w, h, theme.graph_bg)
             self._draw_grid(p, rect)
             self._draw_axis_labels(p, rect)
             self._draw_zero_line(p, rect)
@@ -255,14 +247,14 @@ class FreqResponseGraph(QWidget):
             self._draw_xover_markers(p, rect)
             self._draw_peq_markers(p, rect)
 
-            p.setPen(QPen(QColor(80, 80, 90), 1))
+            p.setPen(QPen(theme.graph_border, 1))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawRect(rect)
         finally:
             p.end()
 
     def _draw_grid(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_GRID_COLOR, 1, Qt.PenStyle.DotLine)
+        pen = QPen(theme_manager.current.graph_grid, 1, Qt.PenStyle.DotLine)
         p.setPen(pen)
         for f in _FREQ_MARKERS:
             x = self._hz_to_x(f)
@@ -272,7 +264,7 @@ class FreqResponseGraph(QWidget):
             p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
 
     def _draw_zero_line(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_REF_COLOR, 1, Qt.PenStyle.DashLine)
+        pen = QPen(theme_manager.current.graph_ref, 1, Qt.PenStyle.DashLine)
         p.setPen(pen)
         y = self._db_to_y(0.0)
         p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
@@ -281,7 +273,7 @@ class FreqResponseGraph(QWidget):
         font = QFont(p.font())
         font.setPixelSize(10)
         p.setFont(font)
-        p.setPen(QPen(_LABEL_COLOR))
+        p.setPen(QPen(theme_manager.current.graph_label))
         for f in _FREQ_MARKERS:
             x = self._hz_to_x(f)
             label = f"{int(f)}" if f < 1000 else f"{int(f / 1000)}k"
@@ -306,8 +298,9 @@ class FreqResponseGraph(QWidget):
             )
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
+        theme = theme_manager.current
         if self._channel_bypass and self._crossover.hipass_slope == 0 and self._crossover.lopass_slope == 0:
-            pen = QPen(_CURVE_BYPASSED_COLOR, _CURVE_WIDTH)
+            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -322,7 +315,7 @@ class FreqResponseGraph(QWidget):
         all_coeffs.extend(_crossover_biquads(self._crossover))
 
         if not all_coeffs:
-            pen = QPen(_CURVE_BYPASSED_COLOR, _CURVE_WIDTH)
+            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -340,7 +333,7 @@ class FreqResponseGraph(QWidget):
             y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
             poly.append(QPointF(x, y))
 
-        pen = QPen(_CURVE_COLOR, _CURVE_WIDTH)
+        pen = QPen(theme.graph_curve, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
@@ -349,6 +342,7 @@ class FreqResponseGraph(QWidget):
 
     def _draw_xover_markers(self, p: QPainter, rect: QRectF) -> None:
         xo = self._crossover
+        theme = theme_manager.current
         for freq_raw, slope, label in [
             (xo.hipass_freq, xo.hipass_slope, "HP"),
             (xo.lopass_freq, xo.lopass_slope, "LP"),
@@ -364,9 +358,8 @@ class FreqResponseGraph(QWidget):
             y = self._db_to_y(0.0)
 
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(_XOVER_MARKER_COLOR)
-            from PySide6.QtGui import QPolygonF as QPoly
-            tri = QPoly()
+            p.setBrush(theme.graph_xover_marker)
+            tri = QPolygonF()
             tri.append(QPointF(x, y - 8))
             tri.append(QPointF(x - 6, y + 4))
             tri.append(QPointF(x + 6, y + 4))
@@ -376,7 +369,7 @@ class FreqResponseGraph(QWidget):
             font.setPixelSize(8)
             font.setBold(True)
             p.setFont(font)
-            p.setPen(QPen(QColor(255, 255, 255, 200)))
+            p.setPen(QPen(theme.graph_xover_label_text))
             p.drawText(
                 QRectF(x - 12, y + 4, 24, 12),
                 Qt.AlignmentFlag.AlignCenter,
@@ -388,6 +381,7 @@ class FreqResponseGraph(QWidget):
         font.setPixelSize(9)
         font.setBold(True)
         p.setFont(font)
+        theme = theme_manager.current
 
         for idx, band in enumerate(self._bands):
             f_hz = freq_raw_to_hz(band.freq_raw)
@@ -407,12 +401,16 @@ class FreqResponseGraph(QWidget):
                 y_db = 0.0
             y = self._db_to_y(y_db)
 
-            color = _MARKER_BYPASSED if (band.bypass or self._channel_bypass) else _MARKER_ACTIVE
+            color = (
+                theme.graph_marker_bypassed
+                if (band.bypass or self._channel_bypass)
+                else theme.graph_marker_active
+            )
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)
             p.drawEllipse(QPointF(x, y), 7.0, 7.0)
 
-            p.setPen(QPen(_MARKER_TEXT))
+            p.setPen(QPen(theme.graph_marker_text))
             p.drawText(
                 QRectF(x - 8, y - 7, 16, 14),
                 Qt.AlignmentFlag.AlignCenter,

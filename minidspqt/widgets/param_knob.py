@@ -11,12 +11,14 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QPainter, QPen
 from PySide6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
     QWidget,
 )
+
+from ..theme import theme_manager
 
 _ARC_START_DEG = 225.0
 _ARC_SWEEP_DEG = -270.0
@@ -162,6 +164,7 @@ class _ArcWidget(QWidget):
     def __init__(self, knob: ParamKnob, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._knob = knob
+        theme_manager.themeChanged.connect(self.update)
 
     def paintEvent(self, event) -> None:
         p = QPainter()
@@ -169,6 +172,7 @@ class _ArcWidget(QWidget):
             return
         try:
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
+            theme = theme_manager.current
 
             value = self._knob._value
             minimum = self._knob._minimum
@@ -180,14 +184,14 @@ class _ArcWidget(QWidget):
             radius = side / 2 - 4
             rect = QRectF(cx - radius, cy - radius, 2 * radius, 2 * radius)
 
-            pen_bg = QPen(QColor(60, 60, 64), max(2.0, radius * 0.10))
+            pen_bg = QPen(theme.knob_arc_bg, max(2.0, radius * 0.10))
             pen_bg.setCapStyle(Qt.PenCapStyle.FlatCap)
             p.setPen(pen_bg)
             p.drawArc(rect, int(_ARC_START_DEG * 16), int(_ARC_SWEEP_DEG * 16))
 
             span = maximum - minimum
             frac = (value - minimum) / span if span else 0.0
-            pen_fg = QPen(QColor(80, 160, 230), max(2.0, radius * 0.10))
+            pen_fg = QPen(theme.knob_arc_fg, max(2.0, radius * 0.10))
             pen_fg.setCapStyle(Qt.PenCapStyle.FlatCap)
             p.setPen(pen_fg)
             p.drawArc(
@@ -202,7 +206,7 @@ class _ArcWidget(QWidget):
                 cx + radius * 0.85 * math.cos(angle_rad),
                 cy - radius * 0.85 * math.sin(angle_rad),
             )
-            p.setPen(QPen(QColor(230, 230, 230), max(1.5, radius * 0.06)))
+            p.setPen(QPen(theme.knob_pointer, max(1.5, radius * 0.06)))
             p.drawLine(QPointF(cx, cy), tip)
         finally:
             p.end()

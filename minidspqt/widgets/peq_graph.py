@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtGui import QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QWidget
 
 from minidsp.protocol import (
@@ -34,8 +34,9 @@ from minidsp.protocol import (
 )
 
 from ..model import PEQBand
+from ..theme import theme_manager
 
-_FS_HZ = 96_000.0  # assumed DSP sample rate for biquad evaluation
+_FS_HZ = 96_000.0  # assumed DSP sample rate for biquad evaluation # TODO: this needs to be changed ... the manual says 48kHz
 
 # Visible frequency range.  We extend a touch beyond the labelled markers
 # on both ends so the first/last grid line doesn't sit flush against the
@@ -78,17 +79,7 @@ _DB_LABELS = (-18.0, -12.0, -6.0, 0.0, 6.0, 12.0, 18.0)
 # inside the plot rather than clipping its border.
 _FREQ_MARKERS = (20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000)
 
-_BG_COLOR = QColor(26, 26, 46)
-_GRID_COLOR = QColor(255, 255, 255, 25)
-_REF_COLOR = QColor(255, 255, 255, 60)
-_CURVE_COLOR = QColor(80, 200, 120)
-_CURVE_BYPASSED_COLOR = QColor(80, 200, 120, 70)
 _CURVE_WIDTH = 2.0
-_LABEL_COLOR = QColor(150, 150, 150)
-_MARKER_ACTIVE = QColor(80, 200, 120)
-_MARKER_BYPASSED = QColor(140, 140, 140, 140)
-_MARKER_TEXT = QColor(20, 20, 28)
-
 _NUM_SAMPLES = 256
 
 
@@ -100,6 +91,8 @@ class PEQGraph(QWidget):
         self._bands: list[PEQBand] = []
         self._channel_bypass: bool = False
         self.setMinimumHeight(160)
+        # Repaint when the active theme flips (system or user toggle).
+        theme_manager.themeChanged.connect(self.update)
 
     def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
         self._bands = list(bands)
@@ -136,8 +129,9 @@ class PEQGraph(QWidget):
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             w, h = self.width(), self.height()
             rect = self._plot_rect()
+            theme = theme_manager.current
 
-            p.fillRect(0, 0, w, h, _BG_COLOR)
+            p.fillRect(0, 0, w, h, theme.graph_bg)
 
             self._draw_grid(p, rect)
             self._draw_axis_labels(p, rect)
@@ -145,7 +139,7 @@ class PEQGraph(QWidget):
             self._draw_curve(p, rect)
             self._draw_markers(p, rect)
 
-            p.setPen(QPen(QColor(80, 80, 90), 1))
+            p.setPen(QPen(theme.graph_border, 1))
             p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawRect(rect)
         finally:
@@ -156,7 +150,7 @@ class PEQGraph(QWidget):
     # ------------------------------------------------------------------ #
 
     def _draw_grid(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_GRID_COLOR, 1, Qt.PenStyle.DotLine)
+        pen = QPen(theme_manager.current.graph_grid, 1, Qt.PenStyle.DotLine)
         p.setPen(pen)
 
         # Vertical: one gridline per labelled marker.  No edge gridlines —
@@ -171,7 +165,7 @@ class PEQGraph(QWidget):
             p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
 
     def _draw_zero_line(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(_REF_COLOR, 1, Qt.PenStyle.DashLine)
+        pen = QPen(theme_manager.current.graph_ref, 1, Qt.PenStyle.DashLine)
         p.setPen(pen)
         y = self._db_to_y(0.0)
         p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
@@ -180,7 +174,7 @@ class PEQGraph(QWidget):
         font = QFont(p.font())
         font.setPixelSize(10)
         p.setFont(font)
-        p.setPen(QPen(_LABEL_COLOR))
+        p.setPen(QPen(theme_manager.current.graph_label))
 
         for f in _FREQ_MARKERS:
             x = self._hz_to_x(f)
@@ -211,8 +205,9 @@ class PEQGraph(QWidget):
     # ------------------------------------------------------------------ #
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
+        theme = theme_manager.current
         if self._channel_bypass:
-            pen = QPen(_CURVE_BYPASSED_COLOR, _CURVE_WIDTH)
+            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -236,7 +231,7 @@ class PEQGraph(QWidget):
             y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
             poly.append(QPointF(x, y))
 
-        pen = QPen(_CURVE_COLOR, _CURVE_WIDTH)
+        pen = QPen(theme.graph_curve, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
@@ -252,6 +247,7 @@ class PEQGraph(QWidget):
         font.setPixelSize(9)
         font.setBold(True)
         p.setFont(font)
+        theme = theme_manager.current
 
         for idx, band in enumerate(self._bands):
             f_hz = freq_raw_to_hz(band.freq_raw)
@@ -273,12 +269,16 @@ class PEQGraph(QWidget):
                 y_db = 0.0
             y = self._db_to_y(y_db)
 
-            color = _MARKER_BYPASSED if (band.bypass or self._channel_bypass) else _MARKER_ACTIVE
+            color = (
+                theme.graph_marker_bypassed
+                if (band.bypass or self._channel_bypass)
+                else theme.graph_marker_active
+            )
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)
             p.drawEllipse(QPointF(x, y), 7.0, 7.0)
 
-            p.setPen(QPen(_MARKER_TEXT))
+            p.setPen(QPen(theme.graph_marker_text))
             p.drawText(
                 QRectF(x - 8, y - 7, 16, 14),
                 Qt.AlignmentFlag.AlignCenter,

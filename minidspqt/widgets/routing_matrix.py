@@ -14,19 +14,16 @@ Interactions
 from __future__ import annotations
 
 from PySide6.QtCore import QLineF, QPointF, Qt, Signal
-from PySide6.QtGui import QColor, QCursor, QPainter, QPen
+from PySide6.QtGui import QCursor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
+
+from ..theme import theme_manager
 
 NUM = 4
 
 NODE_RADIUS = 7.0
 LINE_HIT_TOLERANCE = 8.0
 PAD_X = 12.0
-
-COLOR_ACTIVE = QColor(80, 170, 230)
-COLOR_DRAG = QColor(120, 200, 255, 180)
-COLOR_HIGHLIGHT = QColor(120, 200, 255, 60)
-COLOR_NODE_FILL = QColor(200, 200, 200)
 
 
 def _point_to_segment_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
@@ -57,6 +54,7 @@ class RoutingMatrix(QWidget):
         self._drag_pos: QPointF = QPointF()
         self._hover_output: int = -1
         self._hover_input: int = -1
+        theme_manager.themeChanged.connect(self.update)
 
     def set_routing(self, masks: list[int]) -> None:
         if len(masks) != NUM:
@@ -137,14 +135,15 @@ class RoutingMatrix(QWidget):
         try:
             p.setRenderHint(QPainter.RenderHint.Antialiasing)
             ins, outs = self._node_positions()
+            theme = theme_manager.current
 
             for o in range(NUM):
                 if self._hover_output == o:
                     p.setPen(Qt.PenStyle.NoPen)
-                    p.setBrush(COLOR_HIGHLIGHT)
+                    p.setBrush(theme.matrix_highlight)
                     p.drawEllipse(outs[o], NODE_RADIUS + 10, NODE_RADIUS + 10)
 
-            pen_active = QPen(COLOR_ACTIVE, 2.5)
+            pen_active = QPen(theme.matrix_active, 2.5)
             for o in range(NUM):
                 for i in range(NUM):
                     if self._masks[o] & (1 << i):
@@ -152,17 +151,17 @@ class RoutingMatrix(QWidget):
                         p.drawLine(ins[i], outs[o])
 
             if self._dragging and 0 <= self._drag_input < NUM:
-                pen_drag = QPen(COLOR_DRAG, 2, Qt.PenStyle.DashLine)
+                pen_drag = QPen(theme.matrix_drag, 2, Qt.PenStyle.DashLine)
                 p.setPen(pen_drag)
                 p.drawLine(ins[self._drag_input], self._drag_pos)
 
             p.setPen(Qt.PenStyle.NoPen)
             for i in range(NUM):
-                fill = COLOR_ACTIVE if self._hover_input == i else COLOR_NODE_FILL
+                fill = theme.matrix_active if self._hover_input == i else theme.matrix_node_fill
                 p.setBrush(fill)
                 p.drawEllipse(ins[i], NODE_RADIUS, NODE_RADIUS)
             for o in range(NUM):
-                fill = COLOR_ACTIVE if self._hover_output == o else COLOR_NODE_FILL
+                fill = theme.matrix_active if self._hover_output == o else theme.matrix_node_fill
                 p.setBrush(fill)
                 p.drawEllipse(outs[o], NODE_RADIUS, NODE_RADIUS)
         finally:
