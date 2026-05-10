@@ -28,6 +28,12 @@ Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the
 - Startup **config read** — knobs and toggles reflect device state on connect
 - **Auto-reconnect** on USB disconnect
 
+### Light / dark theme
+
+- Follows the **system color scheme** automatically (Qt 6.5+ `QStyleHints.colorSchemeChanged`); switches live when the OS appearance changes
+- Manual override via **Menu → Theme** (System / Light / Dark), persisted across sessions via `QSettings`
+- Custom-painted widgets (PEQ / crossover / gate graphs, level meter, knobs, routing matrix, limiter LED) are theme-aware: graph backgrounds use a soft tinted off-white in light mode rather than pure white
+
 ### Channel detail view
 
 Click the **Gate** button on any input strip — or the **PEQ** / **Xover** button on any output strip — to open the per-channel detail view:
@@ -118,14 +124,15 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-123 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, and .unt read/write round-trip.
+126 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, and .unt read/write round-trip.
 
 ## Repository structure
 
 ```
 minidspqt/                     Main package
   cli.py                       Entry point: -v/--offline flags
-  app.py                       QApplication setup, dark theme, offline seeding
+  app.py                       QApplication setup, theme manager binding, offline seeding
+  theme.py                     Theme registry (DARK_THEME / LIGHT_THEME) and ThemeManager singleton
   model.py                     Typed device state (DeviceState dataclass)
   device_thread.py             QThread: poll loop, command coalescing, preset queue
   virtual_dsp.py               In-RAM DSP implementing DSPmini interface
@@ -143,9 +150,9 @@ minidspqt/                     Main package
       xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
       placeholder_panel.py     Shown when the active feature is N/A for the selected channel
   widgets/                     Custom Qt widgets (FreqResponseGraph, GainKnob, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
-  resources/                   blank.unt template, icons, style.qss
+  resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (123 tests)
+tests/                         pytest suite (126 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing and queue behaviour
   test_model.py                DeviceState.from_config parsing

@@ -28,6 +28,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Loading a .unt File](#loading-a-unt-file)
   - [Saving a .unt File](#saving-a-unt-file)
 - [Menu](#menu)
+- [Themes (light / dark)](#themes-light--dark)
 - [USB Permissions](#usb-permissions)
 - [Troubleshooting](#troubleshooting)
 
@@ -453,7 +454,41 @@ Click the **menu button** (≡) in the top-right corner of the window:
 |--------|-------------|
 | **Load .unt file...** | Import a manufacturer preset file |
 | **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
+| **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
+
+---
+
+## Themes (light / dark)
+
+The application supports both a **dark** and a **light** theme.  By default it tracks the operating-system color preference: switch your desktop between light and dark mode and the app follows immediately, no restart required.  Live tracking works on Windows, macOS, and most Linux desktops that emit the standard freedesktop color-scheme signal (GNOME, XFCE, GTK-based environments).
+
+### Choosing a theme
+
+Open the menu (≡) → **Theme** and pick one:
+
+| Choice | What it does |
+|--------|--------------|
+| **System** *(default)* | Mirror the OS appearance setting; flips automatically when you change the system theme |
+| **Light** | Force light mode regardless of OS preference |
+| **Dark** | Force dark mode regardless of OS preference |
+
+Your selection is remembered between sessions (stored via `QSettings`, typically at `~/.config/miniDSP/minidspqt.conf` on Linux).  Choosing **System** at any time clears the override and resumes following the OS.
+
+### What changes
+
+Every part of the UI re-themes:
+
+- Window chrome, panels, channel strips, buttons, sliders (driven by Qt's Fusion style + a custom palette)
+- Custom-painted widgets — gain knobs, level meters, the limiter LED, the routing matrix, and all three frequency-response graphs (PEQ, Crossover, Gate)
+
+Graph backgrounds are intentionally a **soft tinted off-white** in light mode rather than pure white, to keep the curve, grid, and band markers comfortable to read at a glance.
+
+### Notes on Linux
+
+- **GNOME / XFCE / GTK-based environments** — fully supported, including live switching when you toggle the system theme.
+- **KDE Plasma** — Qt's platform-theme integration is still evolving; the manual override (Light / Dark) always works, but live system tracking may not flip the app until KDE wires up the `requestColorScheme()` portal call.
+- If automatic tracking ever returns "Unknown" on your setup (e.g. headless or unusual desktops), the app falls back to the last preference you chose (defaulting to Dark on the very first launch).
 
 ---
 
