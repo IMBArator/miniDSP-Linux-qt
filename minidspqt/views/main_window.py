@@ -21,6 +21,7 @@ from ..theme import theme_manager
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
+from .channel_linking_dialog import ChannelLinkingDialog
 from .detail_view import DetailView
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
@@ -109,6 +110,9 @@ class MainWindow(QMainWindow):
         self._save_action.triggered.connect(self._on_save_unt)
         self._save_action.setEnabled(False)
         menu.addSeparator()
+        menu.addAction("Channel linking\u2026").triggered.connect(self._on_channel_linking)
+        self._linking_dialog: ChannelLinkingDialog | None = None
+        menu.addSeparator()
         self._build_theme_menu(menu)
         menu.addSeparator()
         menu.addAction("About").triggered.connect(self._on_about)
@@ -162,6 +166,18 @@ class MainWindow(QMainWindow):
             [ch.gain_raw for ch in self._state.inputs + self._state.outputs],
         )
         self._home_view.apply_state(self._state)
+        self._sync_linking_dialog()
+
+    def _sync_linking_dialog(self) -> None:
+        """Refresh the channel-linking dialog if it's currently open.
+
+        Called wherever ``self._state`` is replaced (config reload, .unt
+        load) so the dialog reflects the authoritative state — crucial
+        after _apply_channel_links so any silent device rejection snaps
+        the radios back instead of showing stale optimistic state.
+        """
+        if self._linking_dialog is not None and self._linking_dialog.isVisible():
+            self._linking_dialog.refresh(self._state)
 
     def _on_load_unt(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -188,6 +204,7 @@ class MainWindow(QMainWindow):
                 log.exception("Failed to parse config from loaded .unt")
                 return
             self._home_view.apply_state(self._state)
+            self._sync_linking_dialog()
             self._save_action.setEnabled(True)
             return
 
@@ -202,6 +219,7 @@ class MainWindow(QMainWindow):
         self._state.connected = False
         self._home_view.set_connected(False)
         self._home_view.apply_state(self._state)
+        self._sync_linking_dialog()
         self._home_view.show_preview_banner(Path(path).name)
 
     def _on_save_unt(self) -> None:
@@ -439,6 +457,77 @@ class MainWindow(QMainWindow):
         strips = self._home_view._all_strips()
         if 0 <= channel < len(strips):
             strips[channel].set_toggle_silent(feature, checked)
+
+    # --- Channel linking ---
+
+    def _on_channel_linking(self) -> None:
+        """Open the channel-linking dialog (creating it on first use)."""
+        if self._linking_dialog is None:
+            self._linking_dialog = ChannelLinkingDialog(self, self._state)
+            self._linking_dialog.applyRequested.connect(self._apply_channel_links)
+        else:
+            self._linking_dialog.refresh(self._state)
+        self._linking_dialog.show()
+        self._linking_dialog.raise_()
+        self._linking_dialog.activateWindow()
+
+    def _apply_channel_links(self, new_flags: list[int]) -> None:
+        """Push link changes to the device and trigger a config reload.
+
+        Sequencing matches the protocol contract:
+          1. For every *new* slave (non-zero → zero transition), declare the
+             pair via prepare_link before any set_channel_link is sent.
+          2. Send set_channel_link for every channel whose flags changed
+             (master + slaves both need updating).
+          3. Request a fresh read_config so the UI reflects what the device
+             actually committed (handles silent rejections).
+        """
+        old_flags = self._state._link_flags_list()
+        if new_flags == old_flags:
+            return  # nothing changed — don't churn the device
+
+        # Step 1: prepare_link for any new slave pair, per group.
+        for group_start in (0, 4):
+            new_master = self._find_new_master(
+                old_flags, new_flags, group_start
+            )
+            if new_master is None:
+                continue
+            new_master_unified = group_start + new_master
+            for i in range(4):
+                ch = group_start + i
+                # A "new slave" is a channel whose new flags are 0x00 and
+                # whose old flags weren't (or whose master changed).
+                was_slave = old_flags[ch] == 0x00
+                is_slave = new_flags[ch] == 0x00
+                if is_slave and not was_slave:
+                    self._thread.request_prepare_link(new_master_unified, ch)
+
+        # Step 2: send set_channel_link for every channel whose flags changed.
+        for ch in range(8):
+            if new_flags[ch] != old_flags[ch]:
+                self._thread.request_channel_link(ch, new_flags[ch])
+
+        # Step 3: refresh from the device so the UI snaps to the truth.
+        self._thread.request_read_config()
+
+    @staticmethod
+    def _find_new_master(
+        old_flags: list[int], new_flags: list[int], group_start: int
+    ) -> int | None:
+        """Return the within-group master index for the new state, or None.
+
+        Used to look up which channel needs the prepare_link partner. The
+        master is the unique channel in the group whose new flags have
+        more than one bit set.
+        """
+        for i in range(4):
+            ch = group_start + i
+            f = new_flags[ch]
+            if f and (f & (f - 1)) != 0:
+                # f has more than one bit set → this is a master.
+                return i
+        return None
 
     # --- Theme menu ---
 

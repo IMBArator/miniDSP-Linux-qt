@@ -206,3 +206,13 @@ QLabel#routedMeterLabel {
     font-size: 9px;
     font-weight: 600;
 }
+
+/* ---------- Channel-linking dialog ---------- */
+
+QLabel#linkingHeaderLabel {
+    font-weight: 600;
+}
+
+QLabel#linkingStatusLabel {
+    font-size: 10px;
+}
