@@ -28,6 +28,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Loading a .unt File](#loading-a-unt-file)
   - [Saving a .unt File](#saving-a-unt-file)
 - [Menu](#menu)
+- [Channel Linking](#channel-linking)
 - [Themes (light / dark)](#themes-light--dark)
 - [USB Permissions](#usb-permissions)
 - [Troubleshooting](#troubleshooting)
@@ -186,6 +187,8 @@ Click the channel name button at the top of any strip to rename it. A dialog app
 ### Linked Channels
 
 When channels are linked on the device (e.g., stereo pair), the **slave** channel displays a chain icon (🔗) and its controls (gain knob and toggles) are disabled. Adjusting the master channel automatically updates all linked slaves.
+
+To **edit** which channels are linked, open **Menu ≡ → Channel linking…** (see [Channel Linking](#channel-linking)).
 
 ---
 
@@ -454,8 +457,57 @@ Click the **menu button** (≡) in the top-right corner of the window:
 |--------|-------------|
 | **Load .unt file...** | Import a manufacturer preset file |
 | **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
+| **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
+
+---
+
+## Channel Linking
+
+Linking lets you treat multiple channels as a group: gain, mute, phase, and other strip-level edits made on the **master** channel are mirrored on all of its **slaves**.  Only inputs can be linked together, and only outputs can be linked together — there is no cross-group linking.  The hardware permits up to four channels in a single group per side.
+
+Open the dialog from **Menu ≡ → Channel linking…**.  It shows two triangular radio-button matrices, one for inputs and one for outputs:
+
+```
+        InA  InB  InC  InD
+InA      ●
+InB      ○    ●
+InC      ○    ○    ●
+InD      ○    ○    ○    ●
+```
+
+### How to read the matrix
+
+Each row is a channel.  The selected radio in that row is the channel it is **linked to**:
+
+- **Diagonal selected** (row N, column N) — the channel is *standalone* (its own master).  When other channels link to it, it automatically becomes their master.
+- **Non-diagonal selected** (row N, column M with M < N) — channel N is a *slave* of channel M.  M holds the master role for the whole group.
+
+The master is always the **lowest-indexed** channel in any group; that is enforced by the triangular layout (a row can only point to columns to its left).
+
+The labels reflect your **custom channel names** — if you renamed InB to "Mic 2", the matrix will show "Mic 2".  Below each matrix, a one-line summary per channel reads back the resolved state ("InA: master of InA, InB", "InB: linked to InA", "InC: standalone").
+
+### Forbidden actions are greyed out
+
+The dialog enforces two invariants by disabling the radios that would violate them:
+
+1. **No chains.**  A channel that is already a slave cannot be selected as anyone else's target.  If you want to link InC into InA's group, you must select **InC → InA** directly — *not* InC → InB.
+2. **A master must be released before it can join another group.**  If InC currently has slaves, its row's non-diagonal radios are disabled.  Free the slaves first (click each slave's diagonal to make it standalone), then re-link InC.
+
+If a radio is disabled, hover it for a tooltip explaining what the click would mean.
+
+### Apply behaviour
+
+- The dialog is **non-modal** — you can leave it open while you adjust other parts of the UI.
+- Click **Apply** to send the new linking to the device.  The dialog stays open, then immediately re-reads the device's authoritative state and updates itself; if the device silently rejected one of your choices, the matrix snaps back to what was actually committed.
+- Click **Close** (or press Esc) to dismiss without applying.
+
+In **offline mode**, Apply mutates the in-memory virtual DSP exactly as the real device would, so loading and saving `.unt` files round-trips your linking just like any other preset data.
+
+### Behind the scenes
+
+For each new master/slave pair the dialog issues `OP_PREPARE_LINK` (0x2A) before the matching `OP_LINK` (0x3B) commits the group; unlinking only needs the second command.  Both opcodes are documented in [`analysis/protocol.md`](https://github.com/IMBArator/miniDSP-Linux/blob/main/analysis/protocol.md) of the upstream protocol library.
 
 ---
 

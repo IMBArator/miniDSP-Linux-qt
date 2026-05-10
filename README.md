@@ -34,6 +34,14 @@ Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the
 - Manual override via **Menu → Theme** (System / Light / Dark), persisted across sessions via `QSettings`
 - Custom-painted widgets (PEQ / crossover / gate graphs, level meter, knobs, routing matrix, limiter LED) are theme-aware: graph backgrounds use a soft tinted off-white in light mode rather than pure white
 
+### Channel linking
+
+- Editable from **Menu → Channel linking…** — a popup with two triangular radio-button matrices (inputs / outputs) where each row picks the channel it is linked to (or its own diagonal for *standalone*)
+- The lowest-indexed channel in each group automatically becomes the master, matching the device's master = OR-bitmask / slave = 0x00 wire convention
+- Forbidden configurations are greyed out: a slave can't itself be picked as a target (no chains), and a master with active slaves can't be demoted before they are released
+- Headers, row labels, and the live "InA: master of …" / "InB: linked to InA" status text use the user's custom channel names from the home view
+- Apply sends `OP_PREPARE_LINK` (0x2A) for every new pair followed by `OP_LINK` (0x3B) for each affected channel, then re-reads the device config so the dialog reflects whatever the device actually committed; offline mode uses the same code path against the in-memory virtual DSP
+
 ### Channel detail view
 
 Click the **Gate** button on any input strip — or the **PEQ** / **Xover** button on any output strip — to open the per-channel detail view:
@@ -124,7 +132,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-126 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, and .unt read/write round-trip.
+149 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, channel-linking dialog, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -139,9 +147,10 @@ minidspqt/                     Main package
   unt_loader.py                Parse .unt files (single-slot and all-slots)
   unt_writer.py                Write .unt files with field-level overwrites
   views/
-    main_window.py             Main window: owns thread, state, Recall/Store
+    main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
     home_view.py               8 channel strips + routing matrix + level meters
     preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
+    channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
     channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
     detail_view.py             Per-channel detail view with feature panels and routed meters
     panels/
@@ -152,15 +161,16 @@ minidspqt/                     Main package
   widgets/                     Custom Qt widgets (FreqResponseGraph, GainKnob, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
   resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (126 tests)
+tests/                         pytest suite (149 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
-  test_device_thread.py        Command coalescing and queue behaviour
+  test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
   test_model.py                DeviceState.from_config parsing
   test_virtual_dsp.py          State persistence, load/store round-trip
   test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
   test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
   test_peq_panel.py            Atomic emit, silent setters, peq_active state, per-type Q clamping
   test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
+  test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
   test_unt_loader.py           .unt parsing and validation
   test_unt_writer.py           Byte-identical round-trip, field-level edits
 
