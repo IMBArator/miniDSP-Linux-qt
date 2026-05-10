@@ -9,7 +9,7 @@ install: sync   ## alias kept for muscle memory
 
 # Run the test suite
 test:
-	$(UV) run pytest -v
+	QT_QPA_PLATFORM=offscreen $(UV) run pytest -v
 
 # Build the package (sdist and wheel into dist/)
 build:
