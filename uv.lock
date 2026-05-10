@@ -79,7 +79,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "minidsp-linux", path = "../miniDSP-Linux/dist/minidsp_linux-0.1.0-py3-none-any.whl" },
-    { name = "pyside6", specifier = ">=6.5" },
+    { name = "pyside6", specifier = ">=6.8" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-qt", marker = "extra == 'dev'", specifier = ">=4.4" },
 ]

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QActionGroup, QIcon
 from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from ..device_thread import DeviceThread
 from ..model import DeviceState, PEQBand
+from ..theme import theme_manager
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
@@ -107,6 +108,8 @@ class MainWindow(QMainWindow):
         self._save_action = menu.addAction("Save .unt file\u2026")
         self._save_action.triggered.connect(self._on_save_unt)
         self._save_action.setEnabled(False)
+        menu.addSeparator()
+        self._build_theme_menu(menu)
         menu.addSeparator()
         menu.addAction("About").triggered.connect(self._on_about)
         btn = self._home_view.menu_button
@@ -436,6 +439,29 @@ class MainWindow(QMainWindow):
         strips = self._home_view._all_strips()
         if 0 <= channel < len(strips):
             strips[channel].set_toggle_silent(feature, checked)
+
+    # --- Theme menu ---
+
+    def _build_theme_menu(self, parent_menu: QMenu) -> None:
+        """Add a "Theme" submenu with System / Light / Dark choices.
+
+        The choice is persisted via QSettings inside the theme manager, so
+        the next launch reflects whatever the user picked here.
+        """
+        theme_menu = parent_menu.addMenu("Theme")
+        group = QActionGroup(self)
+        group.setExclusive(True)
+
+        def _add(label: str, pref: str) -> None:
+            act = theme_menu.addAction(label)
+            act.setCheckable(True)
+            act.setChecked(theme_manager.preference == pref)
+            act.triggered.connect(lambda _checked, p=pref: theme_manager.set_user_preference(p))
+            group.addAction(act)
+
+        _add("System", "system")
+        _add("Light", "light")
+        _add("Dark", "dark")
 
     # --- Lifecycle ---
 

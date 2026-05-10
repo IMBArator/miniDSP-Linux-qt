@@ -1,10 +1,14 @@
 /*
- * Application-wide stylesheet for the DSP 4x4 Mini Qt GUI.
+ * Dark-mode stylesheet for the DSP 4x4 Mini Qt GUI.
  *
- * Loaded once at startup by app.run() and applied to the QApplication, so
- * every rule cascades to all widgets. Custom-painted widgets (GainKnob arc,
- * LevelMeter segments, LedIndicator, RoutingMatrix) draw themselves and are
- * intentionally NOT styled here — only their containers/labels are.
+ * Loaded by ThemeManager (see minidspqt/theme.py) when the resolved color
+ * scheme is Dark.  The light counterpart lives in style_light.qss; the two
+ * files share the same selector list, so when adding a rule remember to
+ * mirror it in both.
+ *
+ * Custom-painted widgets (GainKnob arc, LevelMeter segments, LedIndicator,
+ * RoutingMatrix, graph widgets) draw themselves from theme.py rather than
+ * QSS — only their containers/labels are styled here.
  *
  * Dynamic state (e.g. the connection badge changing color, ToggleButton's
  * per-feature accent) is driven by Qt dynamic properties (`state`, `feature`)

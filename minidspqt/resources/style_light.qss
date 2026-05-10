@@ -1,0 +1,208 @@
+/*
+ * Light-mode stylesheet for the DSP 4x4 Mini Qt GUI.
+ *
+ * Loaded by ThemeManager (see minidspqt/theme.py) when the resolved color
+ * scheme is Light.  The dark counterpart lives in style_dark.qss; the two
+ * files share the same selector list.
+ *
+ * Custom-painted widgets (GainKnob arc, LevelMeter segments, LedIndicator,
+ * RoutingMatrix, graph widgets) draw themselves from theme.py rather than
+ * QSS — only their containers/labels are styled here.
+ */
+
+/* ---------- Home view: header / footer chrome ---------- */
+
+QLabel#titleLabel {
+    font-size: 16pt;
+    font-weight: 600;
+}
+
+QLabel#connectionLabel {
+    color: white;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: 600;
+    font-size: 11pt;
+}
+QLabel#connectionLabel[state="disconnected"] { background-color: #b81f1f; }
+QLabel#connectionLabel[state="connected"]    { background-color: #1f8a3a; }
+QLabel#connectionLabel[state="offline"]      { background-color: #b78a18; }
+QLabel#connectionLabel[state="preview"]      { background-color: #b78a18; }
+
+QPushButton#menuButton {
+    border: 1px solid #c4c4c8;
+    border-radius: 3px;
+    background-color: #e8e8ec;
+    color: #2a2a2c;
+    font-size: 14pt;
+}
+QPushButton#menuButton:hover { background-color: #dcdce0; }
+QPushButton#menuButton::menu-indicator { width: 0; }
+
+QLabel#presetLabel {
+    padding: 4px 8px;
+    background-color: #e8e8ec;
+    border-radius: 4px;
+}
+
+/* ---------- Channel strip ---------- */
+
+ChannelStrip {
+    background-color: #f5f5f8;
+    border: 1px solid #d8d8dc;
+    border-radius: 6px;
+}
+ChannelStrip QLabel,
+ChannelStrip QPushButton { background: transparent; }
+
+QPushButton#channelTitle {
+    background-color: #e8e8ec;
+    color: #2a2a2c;
+    border: 1px solid #c4c4c8;
+    border-radius: 10px;
+    padding: 2px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    text-align: center;
+}
+QPushButton#channelTitle:hover   { background-color: #dcdce0; }
+QPushButton#channelTitle:pressed { background-color: #c8c8cc; }
+
+QFrame#channelSeparator {
+    color: #d8d8dc;
+    max-width: 1px;
+}
+
+QLabel#channelDbLabel {
+    color: #6a6a70;
+    font-size: 11px;
+    font-family: monospace;
+}
+
+QLabel#channelLimLabel {
+    color: #888888;
+    font-size: 9px;
+}
+
+QLabel#channelLinkLabel {
+    color: #2f6dad;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ---------- GainKnob value editor ---------- */
+
+QLineEdit#gainKnobEdit {
+    background: transparent;
+    color: #2a2a2c;
+    border: none;
+    font-size: 10px;
+}
+QLineEdit#gainKnobEdit:focus {
+    border: 1px solid #4682c8;
+    border-radius: 2px;
+    background: #ffffff;
+}
+
+/* ---------- LevelMeter (frame only; segments are custom-painted) ---------- */
+
+LevelMeter {
+    background: #e8e8ec;
+    border: 1px solid #c8c8cc;
+    border-radius: 3px;
+}
+LevelMeter::chunk { background: transparent; }
+
+/* ---------- ToggleButton (per-feature accent via `feature` property) ---------- */
+
+ToggleButton {
+    background-color: #e8e8ec;
+    color: #2a2a2c;
+    border: 1px solid #c4c4c8;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-weight: 600;
+}
+ToggleButton:hover { background-color: #dcdce0; }
+
+/* Inactive: accent-colored border and text on the light base fill */
+ToggleButton[feature="mute"]:!checked    { color: #b81f1f; border-color: #b81f1f; }
+ToggleButton[feature="phase"]:!checked   { color: #b78a18; border-color: #b78a18; }
+ToggleButton[feature="gate"]:!checked    { color: #1e7a36; border-color: #1e7a36; }
+ToggleButton[feature="xover"]:!checked   { color: #2f6dad; border-color: #2f6dad; }
+ToggleButton[feature="peq"]:!checked     { color: #6e3fb8; border-color: #6e3fb8; }
+ToggleButton[feature="comp"]:!checked    { color: #1e857a; border-color: #1e857a; }
+ToggleButton[feature="delay"]:!checked   { color: #4d7299; border-color: #4d7299; }
+
+/* Active: filled with the same accent */
+ToggleButton:checked                    { color: white; background-color: #4d7299; border: 1px solid #2c4669; }
+ToggleButton[feature="mute"]:checked    { background-color: #b81f1f; border: 1px solid #7a1414; }
+ToggleButton[feature="phase"]:checked   { background-color: #b78a18; border: 1px solid #7a5c0e; }
+ToggleButton[feature="gate"]:checked    { background-color: #1e7a36; border: 1px solid #145024; }
+ToggleButton[feature="xover"]:checked   { background-color: #2f6dad; border: 1px solid #1e487a; }
+ToggleButton[feature="peq"]:checked     { background-color: #6e3fb8; border: 1px solid #482879; }
+ToggleButton[feature="comp"]:checked    { background-color: #1e857a; border: 1px solid #135751; }
+ToggleButton[feature="delay"]:checked   { background-color: #4d7299; border: 1px solid #324c66; }
+
+/* Gate "armed but panel closed": filled green to flag activity */
+ToggleButton[feature="gate"][gate_active="true"] { color: white; background-color: #1e7a36; border: 1px solid #145024; }
+
+/* PEQ "active": at least one band shaping the signal */
+ToggleButton[feature="peq"][peq_active="true"] { color: white; background-color: #6e3fb8; border: 1px solid #482879; }
+
+/* Xover "active": hi-pass or lo-pass not bypassed */
+ToggleButton[feature="xover"][xover_active="true"] { color: white; background-color: #2f6dad; border: 1px solid #1e487a; }
+
+/* ---------- Detail view ---------- */
+
+QFrame#detailChannelStrip {
+    background-color: #f5f5f8;
+    border: 1px solid #d8d8dc;
+    border-radius: 6px;
+}
+QFrame#detailChannelStrip QLabel,
+QFrame#detailChannelStrip QPushButton { background: transparent; }
+
+QPushButton#channelNavButton {
+    background-color: #e8e8ec;
+    color: #2a2a2c;
+    border: 1px solid #c4c4c8;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-weight: 600;
+    font-size: 11px;
+}
+QPushButton#channelNavButton:hover   { background-color: #dcdce0; }
+QPushButton#channelNavButton:checked { background-color: #4682c8; color: white; border-color: #2f5e94; }
+
+QLabel#panelTitle {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #2a2a2c;
+    padding: 4px 0;
+}
+
+QLabel#paramLabel {
+    color: #6a6a70;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+QFrame#gateGraphPlaceholder {
+    background-color: #f0f2f7;
+    border: 1px dashed #c0c0c8;
+    border-radius: 4px;
+}
+
+QLabel#placeholderLabel {
+    color: #8a8a90;
+    font-size: 13px;
+    font-style: italic;
+    background: transparent;
+}
+
+QLabel#routedMeterLabel {
+    color: #888888;
+    font-size: 9px;
+    font-weight: 600;
+}
