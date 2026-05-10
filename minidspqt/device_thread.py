@@ -39,6 +39,7 @@ class CommandType(Enum):
     PEQ_BAND = auto()
     PEQ_CHANNEL_BYPASS = auto()
     MATRIX_ROUTE = auto()
+    PREPARE_LINK = auto()
     CHANNEL_LINK = auto()
     CHANNEL_NAME = auto()
 
@@ -123,6 +124,15 @@ class DeviceThread(QThread):
     def request_matrix_route(self, output_ch: int, input_mask: int) -> None:
         self._enqueue((CommandType.MATRIX_ROUTE, output_ch), (input_mask,))
 
+    def request_prepare_link(self, master_ch: int, slave_ch: int) -> None:
+        # Order matters: this MUST reach the device before the matching
+        # CHANNEL_LINK for the same slave. Callers should enqueue all
+        # prepare-link requests first; dict insertion order preserves
+        # that ordering through the coalescing batch.
+        self._enqueue(
+            (CommandType.PREPARE_LINK, master_ch, slave_ch), (master_ch, slave_ch)
+        )
+
     def request_channel_link(self, channel: int, link_flags: int) -> None:
         self._enqueue((CommandType.CHANNEL_LINK, channel), (link_flags,))
 
@@ -136,6 +146,13 @@ class DeviceThread(QThread):
     def request_store_preset(self, slot: int, name: str) -> None:
         with self._lock:
             self._preset_queue.append(("store", slot, name))
+
+    def request_read_config(self) -> None:
+        # Re-read the live device config without changing the active slot,
+        # used after multi-step edits (e.g. channel-link changes) to refresh
+        # the UI from the device's authoritative state.
+        with self._lock:
+            self._preset_queue.append(("read_config",))
 
     def request_stop(self) -> None:
         self._stop = True
@@ -276,6 +293,29 @@ class DeviceThread(QThread):
                     )
                     dsp.store_preset(slot, name)
                     log.info("store: done")
+                elif kind == "read_config":
+                    # Flush any pending writes (e.g. channel-link commands
+                    # the UI just queued) before we read back state.  The
+                    # poll loop normally drains _pending *after* this
+                    # method, so without an explicit flush a read_config
+                    # queued right after a write would observe the OLD
+                    # state and the UI would snap back as if the write
+                    # never happened.
+                    self._drain_pending(dsp)
+                    log.info("read_config: re-reading live device config")
+                    config = dsp.read_config()
+                    if config is not None:
+                        # Preserve the active_slot the device reports — we are
+                        # not switching presets, just refreshing live state.
+                        log.info(
+                            "read_config: emitting config_loaded keys=%s",
+                            sorted(config.keys()),
+                        )
+                        self.config_loaded.emit(config)
+                    else:
+                        log.warning(
+                            "read_config: dsp.read_config returned None — UI will NOT update"
+                        )
             except DEVICE_ERRORS:
                 log.exception("Preset operation %s failed", entry)
         return did_recall
@@ -307,6 +347,9 @@ class DeviceThread(QThread):
             dsp.set_peq_channel_bypass(channel, args[0])
         elif cmd is CommandType.MATRIX_ROUTE:
             dsp.set_matrix_route(channel, args[0])
+        elif cmd is CommandType.PREPARE_LINK:
+            master_ch, slave_ch = args
+            dsp.prepare_link(master_ch, slave_ch)
         elif cmd is CommandType.CHANNEL_LINK:
             dsp.set_channel_link(channel, args[0])
         elif cmd is CommandType.CHANNEL_NAME:

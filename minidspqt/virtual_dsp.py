@@ -211,6 +211,13 @@ class VirtualDSP:
         self._config["routings"][output_ch - 4] = input_mask
         return True
 
+    def prepare_link(self, master_ch: int, slave_ch: int) -> bool:
+        # Real device requires this 0x2A "declare master/slave pair" handshake
+        # before a 0x3B set_channel_link can establish a new link. Offline,
+        # there's nothing to declare to — set_channel_link mutates link_flags
+        # directly. Kept as a no-op so DeviceThread can dispatch uniformly.
+        return True
+
     def set_channel_link(self, channel: int, link_flags: int) -> bool:
         self._config["link_flags"][channel] = link_flags
         return True

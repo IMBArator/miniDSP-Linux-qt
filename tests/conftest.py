@@ -169,6 +169,10 @@ class FakeDSPmini(VirtualDSP):
         self.calls.append(("set_matrix_route", (output_ch, input_mask)))
         return super().set_matrix_route(output_ch, input_mask)
 
+    def prepare_link(self, master_ch: int, slave_ch: int) -> bool:
+        self.calls.append(("prepare_link", (master_ch, slave_ch)))
+        return super().prepare_link(master_ch, slave_ch)
+
     def set_channel_link(self, channel: int, link_flags: int) -> bool:
         self.calls.append(("set_channel_link", (channel, link_flags)))
         return super().set_channel_link(channel, link_flags)
