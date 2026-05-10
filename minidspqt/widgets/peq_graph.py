@@ -6,10 +6,12 @@ colour, grid, label palette, margin layout) match :class:`GateGraph`
 so the two detail-view feature panels feel like one family.
 
 Coefficients per band are computed locally from the raw protocol
-values via the standard Audio EQ Cookbook biquad formulas (RBJ).
-The graph's sample rate is the device's internal rate; we use 96 kHz
-as a reasonable default for visualisation purposes — the curve shape
-in the audio band (20 Hz – 20 kHz) is virtually identical at 48 kHz.
+values via the standard Audio EQ Cookbook biquad formulas (RBJ),
+evaluated at the device's 48 kHz internal sample rate (see the
+0x38 delay opcode in analysis/protocol.md, which encodes samples
+at 48 kHz).  Using the wrong rate skews the bilinear-transform
+warping near the top of the audio band, so high-frequency PEQ
+bands would render with shifted resonance peaks.
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ from minidsp.protocol import (
 from ..model import PEQBand
 from ..theme import theme_manager
 
-_FS_HZ = 96_000.0  # assumed DSP sample rate for biquad evaluation # TODO: this needs to be changed ... the manual says 48kHz
+_FS_HZ = 48_000.0  # device internal sample rate (per protocol manual)
 
 # Visible frequency range.  We extend a touch beyond the labelled markers
 # on both ends so the first/last grid line doesn't sit flush against the

@@ -36,7 +36,7 @@ from minidsp.protocol import (
 from ..model import PEQBand
 from ..theme import theme_manager
 
-_FS_HZ = 96_000.0
+_FS_HZ = 48_000.0  # device internal sample rate (per protocol manual)
 
 _F_MIN = 10.0
 _F_MAX = 25_000.0

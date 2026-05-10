@@ -277,7 +277,7 @@ The **Bypass** toggle in the panel header bypasses the entire PEQ block for this
 
 #### Frequency-response graph
 
-The graph plots the summed magnitude response of all seven bands at 256 log-spaced frequencies between 10 Hz and 25 kHz. Coefficients are computed locally from the raw protocol values using the Audio EQ Cookbook (RBJ) biquad formulas at a 96 kHz sample rate; the curve shape in the audio band is virtually identical at the device's actual rate.
+The graph plots the summed magnitude response of all seven bands at 256 log-spaced frequencies between 10 Hz and 25 kHz. Coefficients are computed locally from the raw protocol values using the Audio EQ Cookbook (RBJ) biquad formulas, evaluated at the device's 48 kHz internal sample rate so the displayed curve matches what the hardware actually produces.
 
 - **Markers** — small numbered circles at each band's centre frequency (`1`..`7`). Active bands are green; band-bypassed or channel-bypassed bands are dim grey.
 - **Channel-bypass visualisation** — when the channel-wide bypass is engaged the curve renders as a flat 0 dB line at reduced opacity, while the per-band controls remain editable.
