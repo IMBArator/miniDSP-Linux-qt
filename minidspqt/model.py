@@ -88,6 +88,11 @@ class OutputChannelState:
     def xover_active(self) -> bool:
         return self.crossover.hipass_slope != 0 or self.crossover.lopass_slope != 0
 
+    @property
+    def comp_active(self) -> bool:
+        # ratio raw 0 = 1:1.0 = no compression; anything else applies a curve.
+        return self.compressor.ratio > 0
+
 
 @dataclass
 class DeviceState:
