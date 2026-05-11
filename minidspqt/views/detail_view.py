@@ -145,6 +145,7 @@ class DetailView(QWidget):
     peq_band_changed = Signal(int, int, int, int, int, int, bool)
     peq_channel_bypass_changed = Signal(int, bool)
     xover_changed = Signal(int, int, int, int, int)
+    compressor_changed = Signal(int, int, int, int, int, int)
     name_changed = Signal(int, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -195,6 +196,9 @@ class DetailView(QWidget):
             self._on_peq_channel_bypass
         )
         self._xover_panel.xover_changed.connect(self._on_xover_changed)
+        self._compressor_panel.compressor_params_changed.connect(
+            self._on_compressor_params
+        )
 
     # ------------------------------------------------------------------ #
     # Header (identical chrome to HomeView)
@@ -381,6 +385,10 @@ class DetailView(QWidget):
                 xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
             ))
             self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
+            c = ch_state.compressor
+            self._compressor_panel.set_params_silently(
+                c.ratio, c.knee, c.attack, c.release, c.threshold,
+            )
 
         self._apply_slave_lock(is_slave, master_name)
 
@@ -617,6 +625,20 @@ class DetailView(QWidget):
                 hp_freq, hp_slope, lp_freq, lp_slope
             ))
         self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
+
+    def _on_compressor_params(
+        self,
+        ratio: int,
+        knee: int,
+        attack: int,
+        release: int,
+        threshold: int,
+    ) -> None:
+        if not self._is_input:
+            self._output_strip.set_comp_active(ratio > 0)
+        self.compressor_changed.emit(
+            self._channel, ratio, knee, attack, release, threshold
+        )
 
     # ------------------------------------------------------------------ #
     # Helpers
