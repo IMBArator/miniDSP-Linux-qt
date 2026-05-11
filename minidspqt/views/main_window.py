@@ -110,6 +110,7 @@ class MainWindow(QMainWindow):
         self._detail_view.compressor_changed.connect(
             self._on_detail_compressor_changed
         )
+        self._detail_view.delay_changed.connect(self._on_detail_delay_changed)
 
         self._thread.start()
 
@@ -554,9 +555,20 @@ class MainWindow(QMainWindow):
                 strip.set_peq_active(out_state.peq_active)
                 strip.set_xover_active(out_state.xover_active)
                 strip.set_comp_active(out_state.comp_active)
+                strip.set_delay_active(out_state.delay_active)
 
         if self._stack.currentIndex() == 1 and self._detail_view.channel in channels:
             self._detail_view.apply_state(self._state)
+        elif (
+            self._stack.currentIndex() == 1
+            and self._detail_view.channel >= 4
+            and any(4 <= ch < 8 for ch in channels)
+        ):
+            # An output delay (or other output field) changed for a channel
+            # other than the one displayed.  The Delay panel's overview graph
+            # shows all four rows, so refresh it explicitly even though the
+            # main strip/panels don't need a full re-render.
+            self._detail_view.refresh_delay_panel_state()
 
     # --- Channel linking ---
 
