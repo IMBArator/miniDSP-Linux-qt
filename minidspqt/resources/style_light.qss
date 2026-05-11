@@ -158,6 +158,10 @@ ToggleButton[feature="xover"][xover_active="true"] { color: white; background-co
    never re-skins the button. */
 ToggleButton[feature="comp"][comp_active="true"] { color: white; background-color: #1e857a; border: 1px solid #135751; }
 
+/* Delay "active": output delay is non-zero — same light-blue brand hue
+   as the button's :checked colour. */
+ToggleButton[feature="delay"][delay_active="true"] { color: white; background-color: #4d7299; border: 1px solid #324c66; }
+
 /* ---------- Detail view ---------- */
 
 QFrame#detailChannelStrip {
