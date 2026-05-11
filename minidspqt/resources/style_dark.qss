@@ -159,6 +159,11 @@ ToggleButton[feature="peq"][peq_active="true"] { color: white; background-color:
 /* Xover "active": hi-pass or lo-pass not bypassed */
 ToggleButton[feature="xover"][xover_active="true"] { color: white; background-color: #4a8bd0; border: 1px solid #2f578a; }
 
+/* Comp "active": ratio is anything other than 1:1.0 — same teal hue as
+   the button's idle/checked colour so the indicator only signals state,
+   never re-skins the button. */
+ToggleButton[feature="comp"][comp_active="true"] { color: white; background-color: #2fa89b; border: 1px solid #1d675f; }
+
 /* ---------- Detail view ---------- */
 
 QFrame#detailChannelStrip {

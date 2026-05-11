@@ -297,6 +297,14 @@ class OutputChannelStrip(ChannelStrip):
         btn.style().unpolish(btn)
         btn.style().polish(btn)
 
+    def set_comp_active(self, active: bool) -> None:
+        btn = self._toggles.get("comp")
+        if btn is None:
+            return
+        btn.setProperty("comp_active", active)
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
 
 def apply_input_strip_state(
     strip: InputChannelStrip,
@@ -344,4 +352,5 @@ def apply_output_strip_state(
         strip.set_toggle_silent(f, False)
     strip.set_peq_active(ch_state.peq_active)
     strip.set_xover_active(ch_state.xover_active)
+    strip.set_comp_active(ch_state.comp_active)
     strip.set_linked_slave(is_slave, master_name)
