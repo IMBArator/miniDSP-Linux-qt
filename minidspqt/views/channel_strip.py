@@ -305,6 +305,14 @@ class OutputChannelStrip(ChannelStrip):
         btn.style().unpolish(btn)
         btn.style().polish(btn)
 
+    def set_delay_active(self, active: bool) -> None:
+        btn = self._toggles.get("delay")
+        if btn is None:
+            return
+        btn.setProperty("delay_active", active)
+        btn.style().unpolish(btn)
+        btn.style().polish(btn)
+
 
 def apply_input_strip_state(
     strip: InputChannelStrip,
@@ -353,4 +361,5 @@ def apply_output_strip_state(
     strip.set_peq_active(ch_state.peq_active)
     strip.set_xover_active(ch_state.xover_active)
     strip.set_comp_active(ch_state.comp_active)
+    strip.set_delay_active(ch_state.delay_active)
     strip.set_linked_slave(is_slave, master_name)
