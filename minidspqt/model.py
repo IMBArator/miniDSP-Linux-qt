@@ -93,6 +93,10 @@ class OutputChannelState:
         # ratio raw 0 = 1:1.0 = no compression; anything else applies a curve.
         return self.compressor.ratio > 0
 
+    @property
+    def delay_active(self) -> bool:
+        return self.delay_samples > 0
+
 
 @dataclass
 class DeviceState:
