@@ -42,8 +42,21 @@ from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 from ..widgets import LevelMeter
-from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
-from .panels import GatePanel, PEQPanel, PlaceholderPanel, XoverPanel
+from .channel_strip import (
+    ChannelStrip,
+    InputChannelStrip,
+    OutputChannelStrip,
+    apply_input_strip_state,
+    apply_output_strip_state,
+)
+from .panels import (
+    CompressorPanel,
+    DelayPanel,
+    GatePanel,
+    PEQPanel,
+    PlaceholderPanel,
+    XoverPanel,
+)
 from ..widgets.freq_response_graph import CrossoverData
 
 NUM_CHANNELS = 4
@@ -159,10 +172,14 @@ class DetailView(QWidget):
         self._gate_panel = GatePanel()
         self._peq_panel = PEQPanel()
         self._xover_panel = XoverPanel()
+        self._compressor_panel = CompressorPanel()
+        self._delay_panel = DelayPanel()
         self._placeholder_panel = PlaceholderPanel()
         self._content_stack.addWidget(self._gate_panel)
         self._content_stack.addWidget(self._peq_panel)
         self._content_stack.addWidget(self._xover_panel)
+        self._content_stack.addWidget(self._compressor_panel)
+        self._content_stack.addWidget(self._delay_panel)
         self._content_stack.addWidget(self._placeholder_panel)
         content_row.addWidget(self._content_stack, stretch=1)
 
@@ -293,40 +310,7 @@ class DetailView(QWidget):
         self._update_nav_labels(state)
         self._update_routed_meters(state)
 
-        strip = self._strip
-        if self._is_input:
-            ch_state = state.inputs[channel]
-            strip.set_gain_silent(ch_state.gain_raw)
-            strip.set_toggle_silent("mute", ch_state.muted)
-            strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            strip.set_toggle_silent("gate", False)
-            strip.set_gate_active(ch_state.gate.threshold > 0)
-            self._gate_panel.set_params_silently(
-                ch_state.gate.attack,
-                ch_state.gate.release,
-                ch_state.gate.hold,
-                ch_state.gate.threshold,
-            )
-        else:
-            ch_state = state.outputs[channel - 4]
-            strip.set_gain_silent(ch_state.gain_raw)
-            strip.set_toggle_silent("mute", ch_state.muted)
-            strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            for f in ("xover", "peq", "comp", "delay"):
-                strip.set_toggle_silent(f, False)
-            self._peq_panel.set_bands_silently(
-                ch_state.peqs, ch_state.peq_channel_bypass
-            )
-            strip.set_peq_active(ch_state.peq_active)
-            xo = ch_state.crossover
-            self._xover_panel.set_params_silently(
-                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
-            )
-            self._peq_panel.set_crossover(CrossoverData(
-                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
-            ))
-            self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
-            strip.set_xover_active(ch_state.xover_active)
+        self._render_displayed_channel(state)
 
         # Reset _feature_name only if it doesn't apply to the new channel type;
         # otherwise preserve cross-channel navigation context (e.g. user was on
@@ -336,9 +320,107 @@ class DetailView(QWidget):
 
         self._show_feature_panel()
 
-        ch_name = ch_state.name or CHANNEL_NAMES[channel]
-        strip.set_title(ch_name)
+        ch_state = self._current_channel_state(state)
+        ch_name = ch_state.name or CHANNEL_NAMES[channel] if ch_state else CHANNEL_NAMES[channel]
         self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
+
+    def apply_state(self, state: DeviceState) -> None:
+        """Re-render the currently displayed channel from ``state``.
+
+        Used after any change that may have mutated the displayed channel
+        externally \u2014 e.g. a master edit propagating to a slave shown here,
+        a fresh ``read_config`` after channel-linking changes, or a
+        loaded .unt preset. Cheaper than ``set_channel`` because it
+        preserves the current feature selection and nav state.
+        """
+        self._cached_state = state
+        self._update_nav_labels(state)
+        self._update_routed_meters(state)
+        self._render_displayed_channel(state)
+
+    def _current_channel_state(self, state: DeviceState):
+        ch = self._channel
+        if ch < 4 and ch < len(state.inputs):
+            return state.inputs[ch]
+        if ch >= 4 and (ch - 4) < len(state.outputs):
+            return state.outputs[ch - 4]
+        return None
+
+    def _render_displayed_channel(self, state: DeviceState) -> None:
+        """Apply the strip + panels for the current channel from ``state``.
+
+        Shared by :meth:`set_channel` and :meth:`apply_state` so a single
+        code path drives both initial display and refresh-on-master-edit.
+        """
+        ch = self._channel
+        ch_state = self._current_channel_state(state)
+        if ch_state is None:
+            return
+        is_slave = state.is_linked_slave(ch)
+        master_name = self._master_title(state, ch)
+        strip = self._strip
+
+        if self._is_input:
+            apply_input_strip_state(strip, ch, ch_state, master_name, is_slave)
+            self._gate_panel.set_params_silently(
+                ch_state.gate.attack,
+                ch_state.gate.release,
+                ch_state.gate.hold,
+                ch_state.gate.threshold,
+            )
+        else:
+            apply_output_strip_state(strip, ch, ch_state, master_name, is_slave)
+            self._peq_panel.set_bands_silently(
+                ch_state.peqs, ch_state.peq_channel_bypass
+            )
+            xo = ch_state.crossover
+            self._xover_panel.set_params_silently(
+                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+            )
+            self._peq_panel.set_crossover(CrossoverData(
+                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+            ))
+            self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
+
+        self._apply_slave_lock(is_slave, master_name)
+
+    def _apply_slave_lock(self, is_slave: bool, master_name: str) -> None:
+        """Propagate slave-lock state to every feature panel.
+
+        Each panel hides the banner and re-enables its controls when
+        ``is_slave`` is False, so masters and standalone channels look
+        normal even after this method runs.
+        """
+        for panel in (
+            self._gate_panel,
+            self._peq_panel,
+            self._xover_panel,
+            self._compressor_panel,
+            self._delay_panel,
+        ):
+            panel.set_linked_slave(is_slave, master_name)
+
+    @staticmethod
+    def _master_title(state: DeviceState, channel: int) -> str:
+        """Resolve the display name of ``channel``'s master, or "".
+
+        Mirrors :meth:`HomeView._master_title` but works from the raw
+        state instead of a pre-built strip list \u2014 DetailView only has
+        one strip at a time so no list lookup is needed.
+        """
+        if channel >= len(state.link_info):
+            return ""
+        info = state.link_info[channel]
+        master_ch = info.get("master")
+        if master_ch is None:
+            return ""
+        if master_ch < 4 and master_ch < len(state.inputs):
+            ch_state = state.inputs[master_ch]
+        elif master_ch >= 4 and (master_ch - 4) < len(state.outputs):
+            ch_state = state.outputs[master_ch - 4]
+        else:
+            return ""
+        return ch_state.name or CHANNEL_NAMES[master_ch]
 
     def update_levels(self, payload: dict) -> None:
         inputs = payload.get("inputs", [])
@@ -544,7 +626,7 @@ class DetailView(QWidget):
     def _feature_available(feature: str, is_input: bool) -> bool:
         if feature == "Gate":
             return is_input
-        if feature in ("PEQ", "Xover"):
+        if feature in ("PEQ", "Xover", "Comp", "Delay"):
             return not is_input
         return False
 
@@ -558,6 +640,12 @@ class DetailView(QWidget):
                 return
             if self._feature_name == "Xover":
                 self._content_stack.setCurrentWidget(self._xover_panel)
+                return
+            if self._feature_name == "Comp":
+                self._content_stack.setCurrentWidget(self._compressor_panel)
+                return
+            if self._feature_name == "Delay":
+                self._content_stack.setCurrentWidget(self._delay_panel)
                 return
         self._placeholder_panel.set_message(
             f"{self._feature_name} is not available for this channel."

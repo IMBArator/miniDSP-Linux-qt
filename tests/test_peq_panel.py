@@ -106,11 +106,17 @@ class TestFeatureAvailability:
         assert detail._feature_available("PEQ", True) is False
         assert detail._feature_available("PEQ", False) is True
 
-    def test_unknown_feature_unavailable(self, detail):
+    def test_output_features_available_for_output_only(self, detail):
         assert detail._feature_available("Xover", False) is True
         assert detail._feature_available("Xover", True) is False
-        assert detail._feature_available("Comp", False) is False
+        assert detail._feature_available("Comp", False) is True
         assert detail._feature_available("Comp", True) is False
+        assert detail._feature_available("Delay", False) is True
+        assert detail._feature_available("Delay", True) is False
+
+    def test_unknown_feature_unavailable(self, detail):
+        assert detail._feature_available("Bogus", True) is False
+        assert detail._feature_available("Bogus", False) is False
 
 
 class TestPEQActive:
