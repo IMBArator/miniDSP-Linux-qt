@@ -312,6 +312,49 @@ def test_compressor_active_propagates_to_slave_strips(window):
         assert btn.property("comp_active") is False
 
 
+# ---------------------------------------------------------------------------
+# Delay
+# ---------------------------------------------------------------------------
+
+
+def test_delay_panel_edit_fans_out(window, monkeypatch):
+    """Driving the real DelayPanel must reach all linked channels.
+
+    Verifies the full signal path:
+      panel.delay_changed
+        → detail_view._on_delay_changed
+        → detail_view.delay_changed
+        → main_window._on_detail_delay_changed
+        → thread.request_delay / model mutate_with_links.
+    """
+    calls: list[tuple] = []
+    monkeypatch.setattr(window._thread, "request_delay", lambda *a: calls.append(a))
+
+    window._show_detail(4)  # Out0 master
+    panel = window._detail_view._delay_panel
+    panel._knob.setValue(960)  # 20 ms
+
+    assert sorted(c[0] for c in calls) == [4, 5, 6]
+    for ch, samples in calls:
+        assert samples == 960
+    for out_idx in (0, 1, 2):
+        assert window._state.outputs[out_idx].delay_samples == 960
+
+
+def test_delay_active_propagates_to_slave_strips(window):
+    """Setting delay_samples > 0 on a master must light the Delay LED everywhere."""
+    window._on_detail_delay_changed(4, 240)
+    for out_idx in (0, 1, 2):
+        btn = window._home_view._output_strips[out_idx]._toggles["delay"]
+        assert btn.property("delay_active") is True
+
+    # And clearing it darkens all three.
+    window._on_detail_delay_changed(4, 0)
+    for out_idx in (0, 1, 2):
+        btn = window._home_view._output_strips[out_idx]._toggles["delay"]
+        assert btn.property("delay_active") is False
+
+
 def test_delay_handler_scaffolds_fan_out(window, monkeypatch):
     calls: list[tuple] = []
     monkeypatch.setattr(window._thread, "request_delay", lambda *a: calls.append(a))

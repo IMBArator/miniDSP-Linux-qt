@@ -211,3 +211,24 @@ def test_comp_active_ratio_nonzero_is_active(preset_cfg):
 
     state.outputs[0].compressor.ratio = 15  # Limit
     assert state.outputs[0].comp_active is True
+
+
+# ---------------------------------------------------------------------------
+# delay_active property
+# ---------------------------------------------------------------------------
+
+
+def test_delay_active_zero_is_inactive(preset_cfg):
+    """No delay (0 samples) -> indicator stays dark."""
+    state = DeviceState.from_config(preset_cfg)
+    state.outputs[0].delay_samples = 0
+    assert state.outputs[0].delay_active is False
+
+
+def test_delay_active_nonzero_is_active(preset_cfg):
+    state = DeviceState.from_config(preset_cfg)
+    state.outputs[0].delay_samples = 1  # 1 sample ≈ 0.02 ms — still "on"
+    assert state.outputs[0].delay_active is True
+
+    state.outputs[0].delay_samples = 32640  # protocol max
+    assert state.outputs[0].delay_active is True
