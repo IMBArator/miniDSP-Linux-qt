@@ -64,6 +64,7 @@ from minidsp.protocol import (
 from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
+from ._slave_lock import apply_link_state, install_link_banner
 
 NUM_BANDS = 7
 
@@ -161,6 +162,8 @@ class PEQPanel(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
+
+        self._link_banner = install_link_banner(root)
 
         root.addLayout(self._build_header())
 
@@ -421,3 +424,18 @@ class PEQPanel(QWidget):
 
     def set_crossover(self, xo: CrossoverData) -> None:
         self._graph.set_crossover(xo)
+
+    def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
+        """Lock the panel when displaying a slave channel's PEQ.
+
+        Disables every per-band control plus the channel-bypass toggle.
+        The summed response graph stays visible (read-only by nature) so
+        the user still sees what the slave is doing.
+        """
+        interactive: list[QWidget] = [self._channel_bypass]
+        interactive.extend(self._type_combos)
+        interactive.extend(self._freq_knobs)
+        interactive.extend(self._gain_knobs)
+        interactive.extend(self._q_knobs)
+        interactive.extend(self._bypass_toggles)
+        apply_link_state(self._link_banner, is_slave, master_name, interactive)

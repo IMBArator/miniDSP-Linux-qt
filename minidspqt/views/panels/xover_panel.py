@@ -33,6 +33,7 @@ from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
 
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
+from ._slave_lock import apply_link_state, install_link_banner
 
 _SLOPE_ITEMS = [SLOPE_NAMES[i] for i in sorted(SLOPE_NAMES) if i != 0]
 
@@ -81,6 +82,8 @@ class XoverPanel(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
+
+        self._link_banner = install_link_banner(root)
 
         title = QLabel("Xover Settings")
         title.setObjectName("panelTitle")
@@ -204,3 +207,19 @@ class XoverPanel(QWidget):
 
     def set_bands(self, bands, channel_bypass: bool) -> None:
         self._graph.set_bands(bands, channel_bypass)
+
+    def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
+        """Lock the panel when displaying a slave channel's crossover.
+
+        Disables both Hi-Pass and Lo-Pass rows (freq knob, slope combo,
+        bypass toggle). The summed response graph stays visible.
+        """
+        apply_link_state(
+            self._link_banner,
+            is_slave,
+            master_name,
+            [
+                self._hp_freq, self._hp_slope, self._hp_bypass,
+                self._lp_freq, self._lp_slope, self._lp_bypass,
+            ],
+        )

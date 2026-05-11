@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import gate_threshold_to_db, gate_time_to_ms
 
 from ...widgets import GateGraph, ParamKnob
+from ._slave_lock import apply_link_state, install_link_banner
 
 
 def _fmt_threshold(raw: int) -> str:
@@ -82,6 +83,8 @@ class GatePanel(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(8)
+
+        self._link_banner = install_link_banner(root)
 
         title = QLabel("Gate Settings")
         title.setObjectName("panelTitle")
@@ -188,3 +191,17 @@ class GatePanel(QWidget):
         self._knob_hold.setValueSilently(hold)
         self._knob_release.setValueSilently(release)
         self._graph.set_threshold(threshold)
+
+    def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
+        """Lock the panel when showing a slave channel.
+
+        Slaves are read-only mirrors of their master; the knobs stay
+        visible so the user can see the inherited values but cannot
+        change them. A banner above the panel explains the lock.
+        """
+        apply_link_state(
+            self._link_banner,
+            is_slave,
+            master_name,
+            [self._knob_threshold, self._knob_attack, self._knob_hold, self._knob_release],
+        )
