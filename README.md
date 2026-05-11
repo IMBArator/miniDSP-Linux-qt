@@ -1,6 +1,6 @@
 # miniDSP-Linux-qt
 
-> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters), preset management, and the channel detail view are functional. The detail view ships with the **Gate** panel for inputs and the **PEQ** panel (7 bands + summed frequency-response graph), **Crossover** panel, and **Compressor** panel for outputs. The Delay panel is the last remaining placeholder.
+> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters), preset management, and the channel detail view are functional. The detail view ships with the **Gate** panel for inputs and the **PEQ** panel (7 bands + summed frequency-response graph), **Crossover**, **Compressor**, and **Delay** panels for outputs. All per-channel features are now implemented.
 
 Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
 
@@ -53,10 +53,11 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
   - **PEQ** (outputs) — 7 bands of (Type / Freq / Gain / Q / Bypass) below a summed frequency-response graph, plus a channel-bypass toggle in the panel header. Per-band atomic emit (protocol command 0x33). Shelves and pass filters cap Q at 3.0 to match the official editor; Peak and the two allpass forms keep the full Q range
   - **Crossover** (outputs) — Hi-Pass and Lo-Pass rows, each with frequency knob, slope selector (BW 6 / BL 6 / BW 12 / BL 12 / LR 12 / BW 18 / BL 18 / BW 24 / BL 24 / LR 24), and bypass toggle. Bypass is independent of the slope selector (matching the manufacturer software). Both the Xover and PEQ panels share a combined frequency-response graph that shows the summed crossover + PEQ curve
   - **Compressor** (outputs) — Threshold (−90 to +20 dB) and Knee (0 – 12 dB) knobs, a Ratio combo (16 named ratios from 1:1.0 to Limit), and Attack (1–999 ms) / Release (10–3000 ms) knobs. All five parameters are sent atomically (protocol command 0x30) and visualised on a live input-vs-output transfer-function graph that renders the soft/hard knee elbow and the Limit clamp
-  - A **placeholder panel** is shown when the active feature does not apply to the selected channel (e.g. Gate on an output) and for the not-yet-implemented Delay panel
+  - **Delay** (outputs) — Single edit knob (0 – 680 ms, 3-decimal ms display, typed input accepts `"12.5 ms"` or `"601 sa"`) targeting the displayed output, plus an overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms above the largest active delay; clamps at 680 ms). The graph re-targets to whichever output the strip nav buttons select, so a single panel covers all four outputs without per-channel duplication
+  - A **placeholder panel** is shown when the active feature does not apply to the selected channel (e.g. Gate on an output)
 - Routed-channel level meters — outputs to the right of an input, inputs to the left of an output, driven by the routing matrix
-- Strip-level "active" indicators: the input Gate button fills green when the gate threshold is above the noise floor; the output PEQ button fills purple when at least one band has non-zero gain and is not bypassed; the output Xover button fills blue when either hi-pass or lo-pass is not bypassed; the output Comp button fills teal when the ratio is anything other than 1:1.0
-- Master → slave parameter fan-out: editing any compressor (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests, since the hardware emits no telemetry for its own master-to-slave copy
+- Strip-level "active" indicators: the input Gate button fills green when the gate threshold is above the noise floor; the output PEQ button fills purple when at least one band has non-zero gain and is not bypassed; the output Xover button fills blue when either hi-pass or lo-pass is not bypassed; the output Comp button fills teal when the ratio is anything other than 1:1.0; the output Delay button fills light blue when the delay is non-zero
+- Master → slave parameter fan-out: editing any compressor / delay (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests, since the hardware emits no telemetry for its own master-to-slave copy
 
 ### Preset management
 
@@ -134,7 +135,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-198 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), and .unt read/write round-trip.
+243 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -160,16 +161,16 @@ minidspqt/                     Main package
       peq_panel.py             7 bands × (Type / Freq / Gain / Q / Byp) + channel bypass + summed-response graph
       xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
       compressor_panel.py      Threshold / Ratio (combo) / Knee / Attack / Release + transfer-function graph
-      delay_panel.py           Placeholder for the upcoming delay panel
+      delay_panel.py           Single edit knob for the displayed output + overview graph of all four delays
       _slave_lock.py           Shared "Linked to <master> — read-only" banner used by every feature panel
       placeholder_panel.py     Shown when the active feature is N/A for the selected channel
-  widgets/                     Custom Qt widgets (CompressorGraph, FreqResponseGraph, GainKnob, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
+  widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GainKnob, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
   resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (198 tests)
+tests/                         pytest suite (243 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
-  test_model.py                DeviceState.from_config parsing, comp_active / linked-mutator helpers
+  test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
   test_virtual_dsp.py          State persistence, load/store round-trip
   test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
   test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
@@ -177,8 +178,10 @@ tests/                         pytest suite (198 tests)
   test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
   test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
   test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
+  test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock
+  test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
   test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
-  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / gain / mute, link banner + slave-lock plumbing
+  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
   test_unt_loader.py           .unt parsing and validation
   test_unt_writer.py           Byte-identical round-trip, field-level edits
 
@@ -215,21 +218,21 @@ doc/
 | Channel detail view (PEQ) | `set_peq_band`, `set_peq_channel_bypass` | 7-band PEQ panel for output channels with per-band Type / Freq / Gain / Q / Byp controls, channel-wide bypass, and a summed frequency-response graph. Per-band atomic emit, shelf/pass Q capped at 3.0, output strip's PEQ button lights up when any band is shaping signal |
 | Channel detail view (Crossover) | `set_hipass`, `set_lopass` | Hi-Pass / Lo-Pass panel for output channels with frequency knob, slope selector (9 slope types), and per-filter bypass toggle. Shared frequency-response graph shows summed crossover + PEQ curve on both the Xover and PEQ panels. Output strip's Xover button lights up when either filter is active |
 | Channel detail view (Compressor) | `set_compressor` | Threshold / Knee / Attack / Release knobs + 16-entry Ratio combo (1:1.0 … 1:20.0 / Limit), atomic 5-value emit (protocol command 0x30). Live input-vs-output transfer-function graph with soft/hard knee elbow and Limit clamp. Output strip's Comp button lights teal when the ratio is not 1:1.0 |
+| Channel detail view (Delay) | `set_delay` | Single edit knob (0 – 680 ms / 0 – 32 640 samples, protocol command 0x38) for the displayed output. Overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms, clamps at 680 ms protocol max) — same panel re-targets when the user navigates between output strips. Typed input accepts ms or samples; output strip's Delay button lights light blue when delay > 0 |
 | Master → slave parameter sync | `mutate_with_links` (model) | Editing any parameter on a master channel mirrors the change to every linked slave in both DeviceState and the device queue — required because the hardware emits no telemetry for its own master-to-slave copy. Slave feature panels are read-only and show a "Linked to <master>" banner |
+| Channel linking UI | `prepare_link` + `set_channel_link` | Menu-driven dialog (`Menu ≡ → Channel linking…`) with two triangular radio matrices for inputs and outputs. Apply sends `OP_PREPARE_LINK` (0x2A) for every new pair followed by `OP_LINK` (0x3B) for each affected channel, then re-reads the device config so the dialog reflects what the device actually committed; forbidden configurations (chained slaves, demoting an active master) are greyed out at compose time |
 | EQ curve visualisation | — | QPainter log-frequency / dB graph driven by local biquad coefficient math (Audio EQ Cookbook formulas) — shared by PEQ and Crossover panels via `FreqResponseGraph` widget |
 
 ### High priority
 
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
-| **Detail view: Delay panel** | `set_delay` | Output-channel feature panel. Detail-view scaffolding (navigation, routed meters, placeholder fallback, MainWindow wiring) is already in place; backend fully exists in DeviceThread, VirtualDSP, and model |
 | **PEQ extras** | — | "Reset EQ" button (7× flat bands), copy-band / paste-band, A/B compare, draggable graph markers |
 
 ### Medium priority
 
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
-| **Channel linking UI** | `prepare_link` + `set_channel_link` | Context menu or link button; `request_prepare_link()` missing from DeviceThread |
 | **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
 | **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster |
 
