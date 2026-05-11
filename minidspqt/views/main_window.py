@@ -107,6 +107,9 @@ class MainWindow(QMainWindow):
             self._on_detail_peq_channel_bypass
         )
         self._detail_view.xover_changed.connect(self._on_detail_xover_changed)
+        self._detail_view.compressor_changed.connect(
+            self._on_detail_compressor_changed
+        )
 
         self._thread.start()
 
@@ -550,6 +553,7 @@ class MainWindow(QMainWindow):
                 strip = self._home_view._output_strips[ch - 4]
                 strip.set_peq_active(out_state.peq_active)
                 strip.set_xover_active(out_state.xover_active)
+                strip.set_comp_active(out_state.comp_active)
 
         if self._stack.currentIndex() == 1 and self._detail_view.channel in channels:
             self._detail_view.apply_state(self._state)
