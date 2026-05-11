@@ -16,7 +16,13 @@ from PySide6.QtWidgets import (
 )
 
 from ..device_thread import DeviceThread
-from ..model import DeviceState, PEQBand
+from ..model import (
+    CompressorState,
+    CrossoverState,
+    DeviceState,
+    GateState,
+    PEQBand,
+)
 from ..theme import theme_manager
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
@@ -165,7 +171,7 @@ class MainWindow(QMainWindow):
             self._state.active_slot,
             [ch.gain_raw for ch in self._state.inputs + self._state.outputs],
         )
-        self._home_view.apply_state(self._state)
+        self._apply_state_to_views()
         self._sync_linking_dialog()
 
     def _sync_linking_dialog(self) -> None:
@@ -203,7 +209,7 @@ class MainWindow(QMainWindow):
             except Exception:
                 log.exception("Failed to parse config from loaded .unt")
                 return
-            self._home_view.apply_state(self._state)
+            self._apply_state_to_views()
             self._sync_linking_dialog()
             self._save_action.setEnabled(True)
             return
@@ -218,7 +224,7 @@ class MainWindow(QMainWindow):
         self._state = DeviceState.from_config(cfg)
         self._state.connected = False
         self._home_view.set_connected(False)
-        self._home_view.apply_state(self._state)
+        self._apply_state_to_views()
         self._sync_linking_dialog()
         self._home_view.show_preview_banner(Path(path).name)
 
@@ -294,7 +300,7 @@ class MainWindow(QMainWindow):
             idx = slot - 1
             if 0 <= idx < len(names):
                 names[idx] = dlg.chosen_name
-            self._home_view.apply_state(self._state)
+            self._apply_state_to_views()
 
     def _on_about(self) -> None:
         QMessageBox.about(
@@ -349,14 +355,15 @@ class MainWindow(QMainWindow):
     def _on_detail_gate_params(
         self, channel: int, attack: int, release: int, hold: int, threshold: int
     ) -> None:
-        if 0 <= channel < 4 and channel < len(self._state.inputs):
-            gate = self._state.inputs[channel].gate
-            gate.attack = attack
-            gate.release = release
-            gate.hold = hold
-            gate.threshold = threshold
-        self._thread.request_gate(channel, attack, release, hold, threshold)
-        self._home_view._input_strips[channel].set_gate_active(threshold > 0)
+        def _mutate(obj) -> None:
+            obj.gate = GateState(
+                attack=attack, release=release, hold=hold, threshold=threshold
+            )
+
+        affected = self._state.mutate_with_links(channel, _mutate)
+        for ch in affected:
+            self._thread.request_gate(ch, attack, release, hold, threshold)
+        self._refresh_active_states(affected)
 
     def _on_output_feature_toggled(
         self, channel: int, feature: str, checked: bool
@@ -365,19 +372,23 @@ class MainWindow(QMainWindow):
         # The strip auto-unchecks PEQ; only act on the press (checked=True).
         if not checked:
             return
-        if feature == "peq":
-            self._show_detail(channel)
-            self._detail_view.show_feature(channel, "PEQ")
-        elif feature == "xover":
-            self._show_detail(channel)
-            self._detail_view.show_feature(channel, "Xover")
-        else:
+        feature_titles = {
+            "peq": "PEQ",
+            "xover": "Xover",
+            "comp": "Comp",
+            "delay": "Delay",
+        }
+        title = feature_titles.get(feature)
+        if title is None:
             log.info(
                 "Output feature ch=%d feature=%s checked=%s (no panel yet)",
                 channel,
                 feature,
                 checked,
             )
+            return
+        self._show_detail(channel)
+        self._detail_view.show_feature(channel, title)
 
     def _on_detail_peq_band(
         self,
@@ -389,51 +400,100 @@ class MainWindow(QMainWindow):
         filter_type: int,
         bypass: bool,
     ) -> None:
-        out_idx = channel - 4
-        if 0 <= out_idx < len(self._state.outputs):
-            peqs = self._state.outputs[out_idx].peqs
-            while len(peqs) <= band:
-                peqs.append(PEQBand())
-            peqs[band] = PEQBand(
-                gain_raw=gain_raw,
-                freq_raw=freq_raw,
-                q_raw=q_raw,
-                filter_type=filter_type,
-                bypass=bypass,
-            )
-            self._home_view._output_strips[out_idx].set_peq_active(
-                self._state.outputs[out_idx].peq_active
-            )
-        self._thread.request_peq_band(
-            channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
+        new_band = PEQBand(
+            gain_raw=gain_raw,
+            freq_raw=freq_raw,
+            q_raw=q_raw,
+            filter_type=filter_type,
+            bypass=bypass,
         )
 
-    def _on_detail_peq_channel_bypass(self, channel: int, bypass: bool) -> None:
-        out_idx = channel - 4
-        if 0 <= out_idx < len(self._state.outputs):
-            self._state.outputs[out_idx].peq_channel_bypass = bypass
-            self._home_view._output_strips[out_idx].set_peq_active(
-                self._state.outputs[out_idx].peq_active
+        def _mutate(obj) -> None:
+            while len(obj.peqs) <= band:
+                obj.peqs.append(PEQBand())
+            obj.peqs[band] = PEQBand(
+                gain_raw=new_band.gain_raw,
+                freq_raw=new_band.freq_raw,
+                q_raw=new_band.q_raw,
+                filter_type=new_band.filter_type,
+                bypass=new_band.bypass,
             )
-        self._thread.request_peq_channel_bypass(channel, bypass)
+
+        affected = self._state.mutate_with_links(channel, _mutate)
+        for ch in affected:
+            self._thread.request_peq_band(
+                ch, band, gain_raw, freq_raw, q_raw, filter_type, bypass
+            )
+        self._refresh_active_states(affected)
+
+    def _on_detail_peq_channel_bypass(self, channel: int, bypass: bool) -> None:
+        affected = self._state.mutate_with_links(
+            channel, lambda obj: setattr(obj, "peq_channel_bypass", bypass)
+        )
+        for ch in affected:
+            self._thread.request_peq_channel_bypass(ch, bypass)
+        self._refresh_active_states(affected)
 
     def _on_detail_xover_changed(
         self, channel: int, hp_freq: int, hp_slope: int, lp_freq: int, lp_slope: int
     ) -> None:
-        out_idx = channel - 4
-        if 0 <= out_idx < len(self._state.outputs):
-            xo = self._state.outputs[out_idx].crossover
-            xo.hipass_freq = hp_freq
-            xo.hipass_slope = hp_slope
-            xo.lopass_freq = lp_freq
-            xo.lopass_slope = lp_slope
-            self._home_view._output_strips[out_idx].set_xover_active(
-                self._state.outputs[out_idx].xover_active
+        def _mutate(obj) -> None:
+            obj.crossover = CrossoverState(
+                hipass_freq=hp_freq,
+                hipass_slope=hp_slope,
+                lopass_freq=lp_freq,
+                lopass_slope=lp_slope,
             )
-        if hp_slope != 0:
-            self._thread.request_hipass(channel, hp_freq, hp_slope)
-        if lp_slope != 0:
-            self._thread.request_lopass(channel, lp_freq, lp_slope)
+
+        affected = self._state.mutate_with_links(channel, _mutate)
+        # slope=0 IS the bypass command on the device side (protocol §0x31/0x32).
+        # Skipping it leaves the device's last-active slope intact, so a restart
+        # would re-load the old slope and the channel would still be filtering —
+        # always push the value through so bypass is honoured.
+        for ch in affected:
+            self._thread.request_hipass(ch, hp_freq, hp_slope)
+            self._thread.request_lopass(ch, lp_freq, lp_slope)
+        self._refresh_active_states(affected)
+
+    def _on_detail_compressor_changed(
+        self,
+        channel: int,
+        ratio: int,
+        knee: int,
+        attack: int,
+        release: int,
+        threshold: int,
+    ) -> None:
+        """Scaffolded handler for the future compressor panel.
+
+        No UI emits this signal yet, but the linked fan-out + device
+        request pattern is wired so the panel only needs to connect a
+        signal when it lands.
+        """
+        def _mutate(obj) -> None:
+            obj.compressor = CompressorState(
+                ratio=ratio,
+                knee=knee,
+                attack=attack,
+                release=release,
+                threshold=threshold,
+            )
+
+        affected = self._state.mutate_with_links(channel, _mutate)
+        for ch in affected:
+            self._thread.request_compressor(
+                ch, ratio, knee, attack, release, threshold
+            )
+        self._refresh_active_states(affected)
+
+    def _on_detail_delay_changed(self, channel: int, samples: int) -> None:
+        """Scaffolded handler for the future delay panel."""
+        affected = self._state.mutate_with_links(
+            channel, lambda obj: setattr(obj, "delay_samples", samples)
+        )
+        for ch in affected:
+            self._thread.request_delay(ch, samples)
+        self._refresh_active_states(affected)
 
     def _on_name_changed(self, channel: int, name: str) -> None:
         self._state.set_field(channel, "name", name)
@@ -457,6 +517,42 @@ class MainWindow(QMainWindow):
         strips = self._home_view._all_strips()
         if 0 <= channel < len(strips):
             strips[channel].set_toggle_silent(feature, checked)
+
+    def _apply_state_to_views(self) -> None:
+        """Push the current :class:`DeviceState` to both views.
+
+        The detail view's ``apply_state`` is a no-op if no channel is
+        currently shown, so this is safe to call after every state
+        replacement (config load, .unt load, preset store).
+        """
+        self._home_view.apply_state(self._state)
+        self._detail_view.apply_state(self._state)
+
+    def _refresh_active_states(self, channels: list[int]) -> None:
+        """Re-derive Gate/PEQ/Xover active styling for the given channels.
+
+        Cheaper than a full ``_apply_state_to_views`` and crucially does
+        not call ``set_*_silent`` on knobs/toggles — that would interrupt
+        the user mid-drag if their edit was the trigger. Only the
+        coloured indicator changes here. The detail view's displayed
+        strip + panels are updated too when one of ``channels`` is the
+        currently shown channel, so slave panels reflect the master's
+        new values immediately.
+        """
+        for ch in channels:
+            if 0 <= ch < 4 and ch < len(self._state.inputs):
+                in_state = self._state.inputs[ch]
+                self._home_view._input_strips[ch].set_gate_active(
+                    in_state.gate.threshold > 0
+                )
+            elif 4 <= ch < 8 and (ch - 4) < len(self._state.outputs):
+                out_state = self._state.outputs[ch - 4]
+                strip = self._home_view._output_strips[ch - 4]
+                strip.set_peq_active(out_state.peq_active)
+                strip.set_xover_active(out_state.xover_active)
+
+        if self._stack.currentIndex() == 1 and self._detail_view.channel in channels:
+            self._detail_view.apply_state(self._state)
 
     # --- Channel linking ---
 
