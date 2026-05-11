@@ -10,6 +10,7 @@ inputs 0–3, outputs 4–7. `gates` is input-only; `delays`, `crossovers`,
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Callable
 
 from minidsp.protocol import decode_link_groups, decode_routing_matrix
 
@@ -148,19 +149,49 @@ class DeviceState:
         setattr(obj, field, value)
         return True
 
+    def mutate_with_links(
+        self,
+        channel: int,
+        mutator: Callable[[InputChannelState | OutputChannelState], None],
+    ) -> list[int]:
+        """Apply ``mutator`` to ``channel`` and every channel linked as a slave.
+
+        The mutator receives a channel state object and is expected to set
+        parameter fields on it (e.g. ``obj.gate.threshold = 50``). The same
+        mutator runs on the master and each slave, which keeps them in lock-
+        step without copying a snapshot.
+
+        Returns the list of affected channels (originating channel first).
+        Returns ``[]`` if ``channel`` is out of range.
+
+        Mutators must touch only parameter fields — never ``link_flags``.
+        Mutating ``link_flags`` here would corrupt the link topology cache
+        and is the dialog's job, not a parameter handler's.
+
+        If ``channel`` is itself a slave, the mutator runs on self only;
+        slaves are read-only mirrors of the master and shouldn't drive
+        fan-out.
+        """
+        obj = self._channel_obj(channel)
+        if obj is None:
+            return []
+        mutator(obj)
+        affected = [channel]
+        for slave in self.get_linked_slaves(channel):
+            slave_obj = self._channel_obj(slave)
+            if slave_obj is not None:
+                mutator(slave_obj)
+                affected.append(slave)
+        return affected
+
     def set_field_with_links(self, channel: int, field: str, value) -> list[int]:
         """Mutate `field` on `channel` and every channel linked to it as a slave.
 
-        Returns the list of affected channels (originating channel first), so
-        the caller can fan out to the device thread and UI in one pass.
+        Thin wrapper around :meth:`mutate_with_links` for flat-attribute
+        edits (gain, mute, phase). Returns the affected-channel list so the
+        caller can fan out to the device thread and UI in one pass.
         """
-        if not self.set_field(channel, field, value):
-            return []
-        affected = [channel]
-        for slave in self.get_linked_slaves(channel):
-            if self.set_field(slave, field, value):
-                affected.append(slave)
-        return affected
+        return self.mutate_with_links(channel, lambda obj: setattr(obj, field, value))
 
     @property
     def routing_info(self) -> list[dict]:

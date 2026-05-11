@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 
-from minidspqt.model import DeviceState
+from minidspqt.model import DeviceState, GateState, PEQBand
 
 
 def _linked_cfg(preset_cfg):
@@ -112,3 +112,81 @@ def test_set_field_with_links_slave_only_self(preset_cfg):
 def test_set_field_with_links_out_of_range(preset_cfg):
     state = DeviceState.from_config(preset_cfg)
     assert state.set_field_with_links(99, "muted", True) == []
+
+
+# ---------------------------------------------------------------------------
+# mutate_with_links — generic linked mutator for nested-param fan-out
+# ---------------------------------------------------------------------------
+
+
+def test_mutate_with_links_gate_propagates(preset_cfg):
+    """Setting gate threshold on a master should mirror to every slave.
+
+    We mutate via the dedicated GateState assignment because a single edit
+    on the panel emits all four gate fields atomically (device opcode 0x3E
+    is also atomic) — the test mirrors that shape.
+    """
+    state = DeviceState.from_config(_linked_cfg(preset_cfg))
+
+    def _mutate(obj):
+        obj.gate = GateState(attack=10, release=20, hold=30, threshold=120)
+
+    affected = state.mutate_with_links(0, _mutate)
+    assert set(affected) == {0, 1}
+    assert affected[0] == 0
+    assert state.inputs[0].gate.threshold == 120
+    assert state.inputs[1].gate.threshold == 120
+    assert state.inputs[1].gate.attack == 10
+
+
+def test_mutate_with_links_peq_band_grows_list(preset_cfg):
+    """PEQ band index beyond the slave's existing list must grow it."""
+    state = DeviceState.from_config(_linked_cfg(preset_cfg))
+    # Truncate slave's peqs so the fan-out has to grow it
+    state.outputs[1].peqs = []
+
+    def _mutate(obj):
+        while len(obj.peqs) <= 3:
+            obj.peqs.append(PEQBand())
+        obj.peqs[3] = PEQBand(gain_raw=160, freq_raw=170, q_raw=20, filter_type=0)
+
+    affected = state.mutate_with_links(4, _mutate)
+    assert set(affected) == {4, 5, 6}
+    for ch_idx in (0, 1, 2):
+        assert len(state.outputs[ch_idx].peqs) >= 4
+        assert state.outputs[ch_idx].peqs[3].gain_raw == 160
+
+
+def test_mutate_with_links_does_not_touch_link_flags(preset_cfg):
+    """A well-behaved mutator should never alter link_flags.
+
+    The contract is that link_flags are owned by the channel-linking
+    dialog, not parameter handlers. Verify the topology survives a
+    routine param fan-out.
+    """
+    state = DeviceState.from_config(_linked_cfg(preset_cfg))
+    before = [ch.link_flags for ch in state.inputs] + [ch.link_flags for ch in state.outputs]
+
+    state.mutate_with_links(0, lambda obj: setattr(obj, "muted", True))
+
+    after = [ch.link_flags for ch in state.inputs] + [ch.link_flags for ch in state.outputs]
+    assert after == before
+
+
+def test_mutate_with_links_slave_only_self(preset_cfg):
+    """Calling mutate_with_links on a slave should not reach back to the master."""
+    state = DeviceState.from_config(_linked_cfg(preset_cfg))
+
+    def _mutate(obj):
+        obj.gate = GateState(threshold=99)
+
+    affected = state.mutate_with_links(1, _mutate)
+    assert affected == [1]
+    assert state.inputs[1].gate.threshold == 99
+    # Master must be untouched
+    assert state.inputs[0].gate.threshold != 99
+
+
+def test_mutate_with_links_out_of_range(preset_cfg):
+    state = DeviceState.from_config(preset_cfg)
+    assert state.mutate_with_links(99, lambda obj: None) == []
