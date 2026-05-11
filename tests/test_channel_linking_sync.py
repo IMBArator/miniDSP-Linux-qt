@@ -269,6 +269,49 @@ def test_compressor_handler_scaffolds_fan_out(window, monkeypatch):
         assert window._state.outputs[out_idx].compressor.ratio == 4
 
 
+def test_compressor_panel_edit_fans_out(window, monkeypatch):
+    """Driving the real CompressorPanel must reach all linked channels.
+
+    Verifies the end-to-end signal path:
+      panel.compressor_params_changed
+        → detail_view._on_compressor_params
+        → detail_view.compressor_changed
+        → main_window._on_detail_compressor_changed
+        → thread.request_compressor / model mutate_with_links.
+    """
+    calls: list[tuple] = []
+    monkeypatch.setattr(window._thread, "request_compressor", lambda *a: calls.append(a))
+
+    window._show_detail(4)  # Out0 master
+    panel = window._detail_view._compressor_panel
+    panel.set_params_silently(ratio=0, knee=0, attack=49, release=499, threshold=220)
+    panel._knob_threshold.setValue(150)  # any control change fires the signal
+
+    assert sorted(c[0] for c in calls) == [4, 5, 6]
+    for ch, ratio, knee, attack, release, threshold in calls:
+        assert (ratio, knee, attack, release, threshold) == (0, 0, 49, 499, 150)
+    for out_idx in (0, 1, 2):
+        assert window._state.outputs[out_idx].compressor.threshold == 150
+
+
+def test_compressor_active_propagates_to_slave_strips(window):
+    """Setting ratio > 0 on a master must light the Comp button on every slave."""
+    window._on_detail_compressor_changed(
+        4, ratio=5, knee=0, attack=49, release=499, threshold=180
+    )
+    for out_idx in (0, 1, 2):
+        btn = window._home_view._output_strips[out_idx]._toggles["comp"]
+        assert btn.property("comp_active") is True
+
+    # And clearing it darkens all three.
+    window._on_detail_compressor_changed(
+        4, ratio=0, knee=0, attack=49, release=499, threshold=220
+    )
+    for out_idx in (0, 1, 2):
+        btn = window._home_view._output_strips[out_idx]._toggles["comp"]
+        assert btn.property("comp_active") is False
+
+
 def test_delay_handler_scaffolds_fan_out(window, monkeypatch):
     calls: list[tuple] = []
     monkeypatch.setattr(window._thread, "request_delay", lambda *a: calls.append(a))

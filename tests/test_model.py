@@ -190,3 +190,24 @@ def test_mutate_with_links_slave_only_self(preset_cfg):
 def test_mutate_with_links_out_of_range(preset_cfg):
     state = DeviceState.from_config(preset_cfg)
     assert state.mutate_with_links(99, lambda obj: None) == []
+
+
+# ---------------------------------------------------------------------------
+# comp_active property
+# ---------------------------------------------------------------------------
+
+
+def test_comp_active_ratio_zero_is_inactive(preset_cfg):
+    """Raw ratio 0 = 1:1.0 = no compression -> indicator stays dark."""
+    state = DeviceState.from_config(preset_cfg)
+    state.outputs[0].compressor.ratio = 0
+    assert state.outputs[0].comp_active is False
+
+
+def test_comp_active_ratio_nonzero_is_active(preset_cfg):
+    state = DeviceState.from_config(preset_cfg)
+    state.outputs[0].compressor.ratio = 5  # 1:2.0
+    assert state.outputs[0].comp_active is True
+
+    state.outputs[0].compressor.ratio = 15  # Limit
+    assert state.outputs[0].comp_active is True
