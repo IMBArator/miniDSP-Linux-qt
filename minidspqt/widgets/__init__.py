@@ -1,5 +1,6 @@
 """Custom-painted widgets promoted in Qt Designer forms."""
 
+from .compressor_graph import CompressorGraph
 from .freq_response_graph import FreqResponseGraph
 from .gain_knob import GainKnob
 from .gate_graph import GateGraph
@@ -11,6 +12,7 @@ from .routing_matrix import RoutingMatrix
 from .toggle_button import ToggleButton
 
 __all__ = [
+    "CompressorGraph",
     "FreqResponseGraph",
     "GainKnob",
     "GateGraph",
