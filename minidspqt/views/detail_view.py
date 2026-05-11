@@ -433,11 +433,15 @@ class DetailView(QWidget):
     def update_levels(self, payload: dict) -> None:
         inputs = payload.get("inputs", [])
         outputs = payload.get("outputs", [])
+        limiter_mask = payload.get("limiter_mask", 0)
         ch = self._channel
         if ch < 4 and ch < len(inputs):
             self._strip.update_level(inputs[ch])
         elif ch >= 4 and (ch - 4) < len(outputs):
             self._strip.update_level(outputs[ch - 4])
+            self._output_strip.set_limiter_active(
+                bool(limiter_mask & (1 << (ch - 4)))
+            )
 
         self._left_meters.update_levels(payload)
         self._right_meters.update_levels(payload)
