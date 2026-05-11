@@ -146,6 +146,7 @@ class DetailView(QWidget):
     peq_channel_bypass_changed = Signal(int, bool)
     xover_changed = Signal(int, int, int, int, int)
     compressor_changed = Signal(int, int, int, int, int, int)
+    delay_changed = Signal(int, int)
     name_changed = Signal(int, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
@@ -199,6 +200,7 @@ class DetailView(QWidget):
         self._compressor_panel.compressor_params_changed.connect(
             self._on_compressor_params
         )
+        self._delay_panel.delay_changed.connect(self._on_delay_changed)
 
     # ------------------------------------------------------------------ #
     # Header (identical chrome to HomeView)
@@ -389,8 +391,50 @@ class DetailView(QWidget):
             self._compressor_panel.set_params_silently(
                 c.ratio, c.knee, c.attack, c.release, c.threshold,
             )
+            self._push_delay_state(state)
 
         self._apply_slave_lock(is_slave, master_name)
+
+    def _push_delay_state(self, state: DeviceState) -> None:
+        """Populate the Delay panel's overview graph + active row.
+
+        Called from :meth:`_render_displayed_channel` and from
+        :meth:`refresh_delay_panel_state`; both share the same body so the
+        panel can be updated either on full re-render or on a model-only
+        fan-out refresh without re-running unrelated panel work.
+        """
+        out_idx = self._channel - 4
+        if out_idx < 0 or out_idx >= len(state.outputs):
+            return
+        names = [
+            (state.outputs[i].name or CHANNEL_NAMES[4 + i])
+            for i in range(min(4, len(state.outputs)))
+        ]
+        # Pad if the state has fewer than 4 outputs (defensive — the device
+        # always exposes 4, but this keeps the API safe in tests).
+        while len(names) < 4:
+            names.append(CHANNEL_NAMES[4 + len(names)])
+        samples = [s.delay_samples for s in state.outputs[:4]]
+        while len(samples) < 4:
+            samples.append(0)
+        self._delay_panel.set_channel_names(names)
+        self._delay_panel.set_delays_silently(samples)
+        self._delay_panel.set_active_channel(
+            out_idx, names[out_idx], samples[out_idx]
+        )
+
+    def refresh_delay_panel_state(self) -> None:
+        """Re-push delay values from the cached state into the panel.
+
+        MainWindow calls this after a delay edit fans out via
+        ``mutate_with_links`` so the graph's non-active rows reflect the
+        new slave values even though the user only moved the master's
+        knob.  No-op if no state is cached or the displayed channel is
+        not an output.
+        """
+        if self._cached_state is None or self._is_input:
+            return
+        self._push_delay_state(self._cached_state)
 
     def _apply_slave_lock(self, is_slave: bool, master_name: str) -> None:
         """Propagate slave-lock state to every feature panel.
@@ -643,6 +687,13 @@ class DetailView(QWidget):
         self.compressor_changed.emit(
             self._channel, ratio, knee, attack, release, threshold
         )
+
+    def _on_delay_changed(self, samples: int) -> None:
+        # Light the output strip's Delay LED immediately for snappy feedback;
+        # the model fan-out in MainWindow refreshes everything else.
+        if not self._is_input:
+            self._output_strip.set_delay_active(samples > 0)
+        self.delay_changed.emit(self._channel, samples)
 
     # ------------------------------------------------------------------ #
     # Helpers
