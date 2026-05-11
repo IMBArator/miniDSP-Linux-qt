@@ -231,6 +231,7 @@ doc/
 |---------|------------|----------------|
 | **Channel linking UI** | `prepare_link` + `set_channel_link` | Context menu or link button; `request_prepare_link()` missing from DeviceThread |
 | **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
+| **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster |
 
 ### Low priority
 
