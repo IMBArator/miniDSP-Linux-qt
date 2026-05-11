@@ -234,7 +234,7 @@ doc/
 | Feature | Library API | What's missing |
 |---------|------------|----------------|
 | **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
-| **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster |
+| **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster, double click on knobs to reset to default, refactor linking indicator: right from header pill with text, Detail View: mark with underline the currently edited feature |
 
 ### Low priority
 
