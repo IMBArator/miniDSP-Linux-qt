@@ -141,7 +141,7 @@ The arc fills with blue as gain increases from minimum to maximum. The needle in
 
 Each channel has a horizontal LED-style level meter with 20 segments:
 
-- **Green** (15 segments): -60 dB to 0 dB
+- **Green** (15 segments): -50 dB to 0 dB
 - **Yellow** (4 segments): 0 dB to +15 dB
 - **Red** (1 segment): clip indicator (+15 dB)
 

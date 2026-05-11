@@ -5,7 +5,7 @@ The dB scale is calibrated against the `level_uint16_to_dbu()` conversion
 from the protocol library.
 
 Segment layout (20 LEDs):
-  - 15 green : -60 dB  →  0 dB
+  - 15 green : -50 dB  →  0 dB
   -  4 yellow:   0 dB  → +15 dB   (3.75 dB per segment)
   -  1 red   : +15 dB              (clip indicator)
 
@@ -22,23 +22,23 @@ from minidsp.protocol import level_uint16_to_dbu
 
 from ..theme import theme_manager
 
-EMA_ALPHA = 0.55  # Exponential moving average smoothing for the raw level
-#   1.0 = no smoothing, 0.0 = frozen
-LED_PEAK_DECAY = 0.93  # LED peak indicator: multiplicative decay per 150 ms frame
-#   half-life ≈ 150 ms × log(0.5)/log(0.93) ≈ 1.5 s
-LED_PEAK_HOLD = 7  # LED peak indicator: frames to hold before decaying
-#   at 150 ms polling → ≈ 1.05 s hold
-DB_DISPLAY_HOLD = 7  # Numeric dB readout: frames to hold the peak before decaying
-#   at 150 ms polling → ≈ 1.05 s hold
+EMA_ALPHA = 0.75         # Exponential moving average smoothing for the raw level
+                         #   1.0 = no smoothing, 0.0 = frozen
+LED_PEAK_DECAY = 0.93    # LED peak indicator: multiplicative decay per 150 ms frame
+                         #   half-life ≈ 150 ms × log(0.5)/log(0.93) ≈ 1.5 s
+LED_PEAK_HOLD = 7        # LED peak indicator: frames to hold before decaying
+                         #   at 150 ms polling → ≈ 1.05 s hold
 DB_DISPLAY_DECAY = 0.93  # Numeric dB readout: multiplicative decay per frame after hold
-#   same factor as LED peak → same visual decay rate
+                         #   same factor as LED peak → same visual decay rate
+DB_DISPLAY_HOLD = 7      # Numeric dB readout: frames to hold the peak before decaying
+                         #   at 150 ms polling → ≈ 1.05 s hold
 
 NUM_SEGMENTS = 20
 GREEN_SEGMENTS = 15
 YELLOW_SEGMENTS = 4
 RED_SEGMENTS = 1
 
-DB_FLOOR = -60.0
+DB_FLOOR = -50.0
 DB_CEIL = 15.0
 
 SEGMENT_GAP = 2
