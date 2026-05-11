@@ -19,6 +19,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Gate Panel](#gate-panel)
   - [PEQ Panel](#peq-panel)
   - [Crossover Panel](#crossover-panel)
+  - [Compressor Panel](#compressor-panel)
 - [Routing Matrix](#routing-matrix)
 - [Preset Management](#preset-management)
   - [Recalling a Preset](#recalling-a-preset)
@@ -149,7 +150,7 @@ A white peak-hold marker tracks the highest recent level and decays slowly (~1.5
 
 ### Limiter Indicator (Outputs Only)
 
-Output channel strips display a small red LED labeled **Lim** to the right of the dB readout. This indicator lights up when the compressor/limiter on that output channel is actively limiting the signal. The data comes from the device's `limiter_mask` bitmask in the level polling response (~150 ms update rate).
+Output channel strips display a small red LED labeled **Lim** to the right of the dB readout. This indicator lights up when the compressor/limiter on that output channel is actively limiting the signal. The data comes from the device's `limiter_mask` bitmask in the level polling response (~150 ms update rate). The LED tracks the displayed channel in both the home view (all four output strips simultaneously) and the channel detail view's header strip.
 
 | LED State | Meaning |
 |-----------|---------|
@@ -177,8 +178,9 @@ Two of the buttons act as **navigation buttons** rather than stateful toggles �
 - **Gate** (input strips) opens the Gate panel. The button fills green whenever the gate is "armed" (threshold above the noise floor), regardless of whether the detail view is open.
 - **PEQ** (output strips) opens the PEQ panel. The button fills purple whenever any band has non-zero gain and is not bypassed (and channel-bypass is off).
 - **Xover** (output strips) opens the Crossover panel. The button fills blue whenever either the hi-pass or lo-pass filter is not bypassed.
+- **Comp** (output strips) opens the Compressor panel. The button fills teal whenever the compressor's ratio is anything other than 1:1.0.
 
-> **Note:** The Comp and Delay buttons on output strips are still placeholders — toggling them does not yet control DSP parameters.
+> **Note:** The Delay button on output strips is still a placeholder — toggling it opens an empty panel.
 
 ### Channel Names
 
@@ -194,7 +196,7 @@ To **edit** which channels are linked, open **Menu ≡ → Channel linking…** 
 
 ## Channel Detail View
 
-Click the **Gate** button on an input strip — or the **PEQ** / **Xover** button on an output strip — in the home view to open the channel detail view:
+Click the **Gate** button on an input strip — or the **PEQ** / **Xover** / **Comp** button on an output strip — in the home view to open the channel detail view:
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -218,7 +220,7 @@ Layout:
 - **Channel navigation** — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view. The active feature is preserved across channel switches when valid for the new channel type (e.g. moving Out1 → Out2 keeps you on the PEQ panel; moving Out1 → InA falls back to Gate)
 - **Channel strip** — same widget as on the home view, kept synchronised with all gain / mute / phase / name edits
 - **Routed meters** — when an input is selected, vertical meters for every output it routes to appear on the right; when an output is selected, meters for every input feeding it appear on the left
-- **Feature panel** — the **Gate** panel for input channels, the **PEQ** or **Crossover** panel for output channels, or a **placeholder** ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type
+- **Feature panel** — the **Gate** panel for input channels, the **PEQ**, **Crossover**, or **Compressor** panel for output channels, or a **placeholder** ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type
 
 Press **←** in the header to return to the home view.
 
@@ -331,6 +333,57 @@ Both the **Crossover** and **PEQ** panels share a combined frequency-response gr
 #### "Xover active" indicator on the output strip
 
 The Xover button on the output channel strip lights up blue whenever **either** the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.
+
+### Compressor Panel
+
+The Compressor panel exposes the per-output dynamics processor. The hardware sends all five compressor parameters in a single atomic frame (protocol command `0x30`), so a change to any one knob re-emits the full block — there is no per-parameter coalescing for the compressor.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Compressor Settings                                            │
+├─────────────────────────────────────────────────────────────────┤
+│   +20 dB ┊                                                  ╱  │
+│     0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─╱─ ─ ─│
+│   -20 dB ┊·····················································│
+│   -40 dB ┊·······························╱·············│       │
+│   -60 dB ┊··················╱·······│ knee elbow │            │
+│   -80 dB ┊·····╱·····│ identity below threshold │             │
+│   -90 dB └─────┬──────┬──────┬──────┬──────┬──────┬─────────│
+│              -90    -80   -60   -40   -20    0   +20  (dB in) │
+├─────────────────────────────────────────────────────────────────┤
+│   Threshold    Ratio        Knee      Attack    Release         │
+│      ◍       [1:4.0 ▾]       ◍         ◍          ◍             │
+│   −10.0 dB                  4 dB      50 ms     500 ms          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Controls
+
+| Control | Range | Notes |
+|---------|-------|-------|
+| **Threshold** | −90.0 dB to +20.0 dB | 0.5 dB step. Click the value below the knob to type an exact dB value |
+| **Ratio** | 16 named ratios | `1:1.0` (no compression), `1:1.1`, `1:1.3`, `1:1.5`, `1:1.7`, `1:2.0`, `1:2.5`, `1:3.0`, `1:3.5`, `1:4.0`, `1:5.0`, `1:6.0`, `1:8.0`, `1:10.0`, `1:20.0`, `Limit` (hard limiter; clamps output at the threshold). Selected via a drop-down combo for parity with the PEQ / Crossover type selectors |
+| **Knee** | 0 – 12 dB | 0 = hard knee (instant break at threshold); higher values smooth the elbow symmetrically around the threshold |
+| **Attack** | 1 – 999 ms | Time constant for engaging compression once the input exceeds the threshold |
+| **Release** | 10 – 3000 ms | Time constant for releasing compression after the input falls back below the threshold |
+
+#### Transfer-function graph
+
+The graph plots **input level (dB) → output level (dB)** over the full −90..+20 dB range with grid lines and labels every 20 dB. Three reference layers are drawn:
+
+- **Dashed 45° diagonal** — the no-compression baseline; the curve sits on this line for inputs below the threshold minus half the knee width
+- **Solid curve** — the compressor's static transfer function, computed locally from the current threshold / ratio / knee values. Above the threshold + half-knee the slope is `1/ratio`; inside the knee window the elbow is smoothed quadratically. `Limit` flattens the curve to a horizontal line at the threshold
+- **Vertical dashed marker** — the current threshold, labelled with the dB value
+
+Attack and release are time-domain parameters and have no effect on the static curve — only threshold, ratio, and knee reshape the graph.
+
+#### "Compressor active" indicator on the output strip
+
+The Comp button on the output channel strip lights up teal whenever the ratio is anything other than **1:1.0** (i.e., the device is at least nominally compressing). The indicator hue matches the button's brand colour — only the fill changes, never the colour.
+
+#### Linked-channel sync
+
+The hardware copies a master channel's compressor settings to its slaves internally but emits no telemetry for that copy. The application mirrors the master-to-slave fan-out on every live edit: a change to the master's Threshold / Ratio / Knee / Attack / Release re-emits the full block to every linked slave, both in the on-screen model and on the wire. When the detail view shows a slave channel, the Compressor panel locks (all five controls disabled) and a `🔗 Linked to <master> — read-only` banner appears above the panel.
 
 ---
 
