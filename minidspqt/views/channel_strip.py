@@ -3,6 +3,12 @@
 :class:`ChannelStrip` is the shared base with gain knob, level meter, and
 toggle buttons.  :class:`InputChannelStrip` and :class:`OutputChannelStrip`
 configure the toggles and specialize the gate-button behavior.
+
+Module-level helpers :func:`apply_input_strip_state` and
+:func:`apply_output_strip_state` provide a single source of truth for
+rendering a channel-state object onto a strip — used by both the home
+view's overview and the detail view's header strip so any new field only
+needs to be wired in once.
 """
 
 from __future__ import annotations
@@ -18,6 +24,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from minidsp.protocol import CHANNEL_NAMES
 
 from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
 
@@ -267,20 +275,19 @@ class OutputChannelStrip(ChannelStrip):
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
         super().__init__(title, parent)
-        peq_btn = self._toggles.get("peq")
-        if peq_btn is not None:
-            peq_btn.toggled.connect(self._on_peq_toggled)
-        xover_btn = self._toggles.get("xover")
-        if xover_btn is not None:
-            xover_btn.toggled.connect(self._on_xover_toggled)
+        # Xover/PEQ/Comp/Delay are navigation buttons — they open the
+        # corresponding detail-view panel and immediately uncheck so the
+        # next press fires again. Phase and Mute remain real toggles.
+        for nav in ("xover", "peq", "comp", "delay"):
+            btn = self._toggles.get(nav)
+            if btn is not None:
+                btn.toggled.connect(
+                    lambda checked, f=nav: self._on_nav_toggled(f, checked)
+                )
 
-    def _on_peq_toggled(self, checked: bool) -> None:
+    def _on_nav_toggled(self, feature: str, checked: bool) -> None:
         if checked:
-            self.set_toggle_silent("peq", False)
-
-    def _on_xover_toggled(self, checked: bool) -> None:
-        if checked:
-            self.set_toggle_silent("xover", False)
+            self.set_toggle_silent(feature, False)
 
     def set_xover_active(self, active: bool) -> None:
         btn = self._toggles.get("xover")
@@ -289,3 +296,52 @@ class OutputChannelStrip(ChannelStrip):
         btn.setProperty("xover_active", active)
         btn.style().unpolish(btn)
         btn.style().polish(btn)
+
+
+def apply_input_strip_state(
+    strip: InputChannelStrip,
+    channel: int,
+    ch_state,
+    master_name: str,
+    is_slave: bool,
+) -> None:
+    """Render an :class:`InputChannelState` onto an input strip.
+
+    Single source of truth shared by HomeView (4 strips at once) and
+    DetailView (1 strip + nav). Sets title, silent control values, the
+    gate-active indicator and the link indicator. Mute/phase/gate toggles
+    are set silently to avoid feedback loops when called during a
+    state refresh.
+    """
+    strip.set_title(ch_state.name or CHANNEL_NAMES[channel])
+    strip.set_gain_silent(ch_state.gain_raw)
+    strip.set_toggle_silent("mute", ch_state.muted)
+    strip.set_toggle_silent("phase", ch_state.phase_inverted)
+    strip.set_toggle_silent("gate", False)
+    strip.set_gate_active(ch_state.gate.threshold > 0)
+    strip.set_linked_slave(is_slave, master_name)
+
+
+def apply_output_strip_state(
+    strip: OutputChannelStrip,
+    channel: int,
+    ch_state,
+    master_name: str,
+    is_slave: bool,
+) -> None:
+    """Render an :class:`OutputChannelState` onto an output strip.
+
+    Sister of :func:`apply_input_strip_state` for output channels. Active-
+    state indicators (PEQ, Xover) are derived from the state object's
+    computed properties so they stay consistent with the values the
+    feature panels show.
+    """
+    strip.set_title(ch_state.name or CHANNEL_NAMES[channel])
+    strip.set_gain_silent(ch_state.gain_raw)
+    strip.set_toggle_silent("mute", ch_state.muted)
+    strip.set_toggle_silent("phase", ch_state.phase_inverted)
+    for f in ("xover", "peq", "comp", "delay"):
+        strip.set_toggle_silent(f, False)
+    strip.set_peq_active(ch_state.peq_active)
+    strip.set_xover_active(ch_state.xover_active)
+    strip.set_linked_slave(is_slave, master_name)

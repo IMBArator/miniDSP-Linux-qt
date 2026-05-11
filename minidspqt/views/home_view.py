@@ -22,7 +22,13 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
-from .channel_strip import ChannelStrip, InputChannelStrip, OutputChannelStrip
+from .channel_strip import (
+    ChannelStrip,
+    InputChannelStrip,
+    OutputChannelStrip,
+    apply_input_strip_state,
+    apply_output_strip_state,
+)
 
 NUM_CHANNELS = 4
 
@@ -198,26 +204,22 @@ class HomeView(QWidget):
         self._cached_state = state
         strips = self._all_strips()
         for i, ch_state in enumerate(state.inputs):
-            strip = self._input_strips[i]
-            strip.set_title(ch_state.name or CHANNEL_NAMES[i])
-            strip.set_gain_silent(ch_state.gain_raw)
-            strip.set_toggle_silent("mute", ch_state.muted)
-            strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            strip.set_toggle_silent("gate", False)
-            strip.set_gate_active(ch_state.gate.threshold > 0)
-            master_name = self._master_title(state, i, strips)
-            strip.set_linked_slave(state.is_linked_slave(i), master_name)
+            apply_input_strip_state(
+                self._input_strips[i],
+                i,
+                ch_state,
+                self._master_title(state, i, strips),
+                state.is_linked_slave(i),
+            )
 
         for i, ch_state in enumerate(state.outputs):
-            strip = self._output_strips[i]
-            strip.set_title(ch_state.name or CHANNEL_NAMES[i + 4])
-            strip.set_gain_silent(ch_state.gain_raw)
-            strip.set_toggle_silent("mute", ch_state.muted)
-            strip.set_toggle_silent("phase", ch_state.phase_inverted)
-            strip.set_toggle_silent("peq", False)
-            strip.set_peq_active(ch_state.peq_active)
-            master_name = self._master_title(state, i + 4, strips)
-            strip.set_linked_slave(state.is_linked_slave(i + 4), master_name)
+            apply_output_strip_state(
+                self._output_strips[i],
+                i + 4,
+                ch_state,
+                self._master_title(state, i + 4, strips),
+                state.is_linked_slave(i + 4),
+            )
 
         self.routingMatrix.set_routing([ch.routing_mask for ch in state.outputs])
 
