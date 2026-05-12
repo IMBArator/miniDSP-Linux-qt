@@ -220,6 +220,9 @@ class PEQGraph(QWidget):
         active_bands = [b for b in self._bands if not b.bypass]
         coeffs = [_biquad_coeffs_from_band(b) for b in active_bands]
 
+        p.save()
+        p.setClipRect(rect)
+
         poly = QPolygonF()
         for i in range(_NUM_SAMPLES):
             frac = i / (_NUM_SAMPLES - 1)
@@ -230,7 +233,7 @@ class PEQGraph(QWidget):
             for c in coeffs:
                 db += _biquad_magnitude_db(c, omega)
             x = rect.left() + frac * rect.width()
-            y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
+            y = self._db_to_y(db)
             poly.append(QPointF(x, y))
 
         pen = QPen(theme.graph_curve_peq, _CURVE_WIDTH)
@@ -239,6 +242,8 @@ class PEQGraph(QWidget):
         p.setPen(pen)
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawPolyline(poly)
+
+        p.restore()
 
     # ------------------------------------------------------------------ #
     # Per-band markers

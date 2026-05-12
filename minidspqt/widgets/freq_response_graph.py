@@ -330,6 +330,9 @@ class FreqResponseGraph(QWidget):
             p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
             return
 
+        p.save()
+        p.setClipRect(rect)
+
         poly = QPolygonF()
         for i in range(_NUM_SAMPLES):
             frac = i / (_NUM_SAMPLES - 1)
@@ -338,7 +341,7 @@ class FreqResponseGraph(QWidget):
             for c in all_coeffs:
                 db += _biquad_magnitude_db(c, omega)
             x = rect.left() + frac * rect.width()
-            y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
+            y = self._db_to_y(db)
             poly.append(QPointF(x, y))
 
         pen = QPen(curve_color, _CURVE_WIDTH)
@@ -347,6 +350,8 @@ class FreqResponseGraph(QWidget):
         p.setPen(pen)
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawPolyline(poly)
+
+        p.restore()
 
     def _draw_xover_markers(self, p: QPainter, rect: QRectF) -> None:
         xo = self._crossover
