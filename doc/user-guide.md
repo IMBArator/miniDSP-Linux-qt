@@ -433,7 +433,7 @@ When two or more outputs are linked, editing the master's delay mirrors the new 
 
 ### Reset to Factory Defaults
 
-Every feature panel **except Delay** (Gate, PEQ, Crossover, Compressor) has a **Reset** button at the right edge of its header. Clicking it pops a confirmation dialog (`Reset <feature> to factory defaults for this channel?`); on **Yes**, that feature's parameters on the **currently displayed channel** (and any linked slaves) snap back to the F00 factory preset values for that feature alone — no other channels or other features are touched.
+Every feature panel (Gate, PEQ, Crossover, Compressor, Delay) has a **Reset** button at the right edge of its header. Clicking it pops a confirmation dialog (`Reset <feature> to factory defaults for this channel?`); on **Yes**, that feature's parameters on the **currently displayed channel** (and any linked slaves) snap back to the F00 factory preset values for that feature alone — no other channels or other features are touched.
 
 The defaults are read live from `minidsp.defaults.load_factory_defaults()` in the protocol library (parsed from the bundled `factory_defaults.toml`), so the values stay in sync with whatever the firmware considers "blank":
 
@@ -443,10 +443,9 @@ The defaults are read live from `minidsp.defaults.load_factory_defaults()` in th
 | **PEQ** | All 7 bands: 0 dB gain, Q ≈ 1.0, Peak type, not bypassed, frequencies spread across the audible range; channel bypass off |
 | **Crossover** | Hi-Pass and Lo-Pass both bypassed (slope = Off); freq markers reset to 19.7 Hz / 20.16 kHz |
 | **Compressor** | Ratio 1:1.0 (no compression), Knee 0 dB, Attack 50 ms, Release 500 ms, Threshold +20 dB |
+| **Delay** | 0 ms (0 samples) on the displayed output only — the other three rows in the overview graph are untouched |
 
 The Reset button reaches the device through the normal edit path — the same `mutate_with_links` fan-out, the same atomic protocol frames — so undoing a reset is simply a matter of re-editing the affected knobs. Linked slaves receive the same reset automatically when their master is reset; resetting a feature on a slave is not possible because the Reset button is disabled on slave channels (consistent with every other interactive control: slaves are read-only mirrors of their master).
-
-The Delay panel has no Reset button because its 0 ms factory default is trivially reached by dragging the knob to zero, and because the panel already shows every output's delay at once — a dedicated reset would add UI weight without saving any clicks.
 
 ---
 
