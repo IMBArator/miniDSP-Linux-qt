@@ -167,7 +167,7 @@ Toggle buttons are color-coded per feature:
 | **Gate** | Green | Yes | — |
 | **Phase** | Gold | Yes | Yes |
 | **Mute** | Red | Yes | Yes |
-| **Xover** | Blue | — | Yes |
+| **Xover** | Amber | — | Yes |
 | **PEQ** | Purple | — | Yes |
 | **Comp** | Teal | — | Yes |
 | **Delay** | Light blue | — | Yes |
@@ -178,7 +178,7 @@ Two of the buttons act as **navigation buttons** rather than stateful toggles �
 
 - **Gate** (input strips) opens the Gate panel. The button fills green whenever the gate is "armed" (threshold above the noise floor), regardless of whether the detail view is open.
 - **PEQ** (output strips) opens the PEQ panel. The button fills purple whenever any band has non-zero gain and is not bypassed (and channel-bypass is off).
-- **Xover** (output strips) opens the Crossover panel. The button fills blue whenever either the hi-pass or lo-pass filter is not bypassed.
+- **Xover** (output strips) opens the Crossover panel. The button fills amber whenever either the hi-pass or lo-pass filter is not bypassed.
 - **Comp** (output strips) opens the Compressor panel. The button fills teal whenever the compressor's ratio is anything other than 1:1.0.
 - **Delay** (output strips) opens the Delay panel. The button fills light blue whenever the output's delay is non-zero.
 
@@ -332,7 +332,7 @@ Both the **Crossover** and **PEQ** panels share a combined frequency-response gr
 
 #### "Xover active" indicator on the output strip
 
-The Xover button on the output channel strip lights up blue whenever **either** the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.
+The Xover button on the output channel strip lights up amber whenever **either** the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.
 
 ### Compressor Panel
 

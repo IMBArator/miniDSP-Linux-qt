@@ -133,9 +133,9 @@ ToggleButton:hover { background-color: #48484d; }
 
 /* Inactive: accent-colored border and text on the dark base fill */
 ToggleButton[feature="mute"]:!checked    { color: #cc2424; border-color: #cc2424; }
-ToggleButton[feature="phase"]:!checked   { color: #d5a021; border-color: #d5a021; }
+ToggleButton[feature="phase"]:!checked   { color: #e0b820; border-color: #e0b820; }
 ToggleButton[feature="gate"]:!checked    { color: #2fa84a; border-color: #2fa84a; }
-ToggleButton[feature="xover"]:!checked   { color: #4a8bd0; border-color: #4a8bd0; }
+ToggleButton[feature="xover"]:!checked   { color: #e87223; border-color: #e87223; }
 ToggleButton[feature="peq"]:!checked     { color: #8a5ad2; border-color: #8a5ad2; }
 ToggleButton[feature="comp"]:!checked    { color: #2fa89b; border-color: #2fa89b; }
 ToggleButton[feature="delay"]:!checked   { color: #6c92c2; border-color: #6c92c2; }
@@ -143,9 +143,9 @@ ToggleButton[feature="delay"]:!checked   { color: #6c92c2; border-color: #6c92c2
 /* Active: filled with the same accent */
 ToggleButton:checked                    { color: white; background-color: #5a7ab0; border: 1px solid #344a6b; }
 ToggleButton[feature="mute"]:checked    { background-color: #cc2424; border: 1px solid #801515; }
-ToggleButton[feature="phase"]:checked   { background-color: #d5a021; border: 1px solid #8d6b15; }
+ToggleButton[feature="phase"]:checked   { background-color: #e0b820; border: 1px solid #967b15; }
 ToggleButton[feature="gate"]:checked    { background-color: #2fa84a; border: 1px solid #1e6b30; }
-ToggleButton[feature="xover"]:checked   { background-color: #4a8bd0; border: 1px solid #2f578a; }
+ToggleButton[feature="xover"]:checked   { background-color: #e87223; border: 1px solid #9c4d18; }
 ToggleButton[feature="peq"]:checked     { background-color: #8a5ad2; border: 1px solid #563789; }
 ToggleButton[feature="comp"]:checked    { background-color: #2fa89b; border: 1px solid #1d675f; }
 ToggleButton[feature="delay"]:checked   { background-color: #6c92c2; border: 1px solid #44587a; }
@@ -157,7 +157,7 @@ ToggleButton[feature="gate"][gate_active="true"] { color: white; background-colo
 ToggleButton[feature="peq"][peq_active="true"] { color: white; background-color: #8a5ad2; border: 1px solid #563789; }
 
 /* Xover "active": hi-pass or lo-pass not bypassed */
-ToggleButton[feature="xover"][xover_active="true"] { color: white; background-color: #4a8bd0; border: 1px solid #2f578a; }
+ToggleButton[feature="xover"][xover_active="true"] { color: white; background-color: #e87223; border: 1px solid #9c4d18; }
 
 /* Comp "active": ratio is anything other than 1:1.0 — same teal hue as
    the button's idle/checked colour so the indicator only signals state,
