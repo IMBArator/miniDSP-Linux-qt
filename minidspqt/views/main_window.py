@@ -22,6 +22,7 @@ from ..model import (
     DeviceState,
     GateState,
     PEQBand,
+    TestToneState,
 )
 from ..theme import theme_manager
 from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
@@ -31,6 +32,7 @@ from .channel_linking_dialog import ChannelLinkingDialog
 from .detail_view import DetailView
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
+from .test_tone_dialog import TestToneDialog
 
 log = logging.getLogger(__name__)
 
@@ -122,6 +124,8 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction("Channel linking\u2026").triggered.connect(self._on_channel_linking)
         self._linking_dialog: ChannelLinkingDialog | None = None
+        menu.addAction("Test tone\u2026").triggered.connect(self._on_test_tone)
+        self._test_tone_dialog: TestToneDialog | None = None
         menu.addSeparator()
         self._build_theme_menu(menu)
         menu.addSeparator()
@@ -177,6 +181,7 @@ class MainWindow(QMainWindow):
         )
         self._apply_state_to_views()
         self._sync_linking_dialog()
+        self._sync_test_tone_dialog()
 
     def _sync_linking_dialog(self) -> None:
         """Refresh the channel-linking dialog if it's currently open.
@@ -188,6 +193,17 @@ class MainWindow(QMainWindow):
         """
         if self._linking_dialog is not None and self._linking_dialog.isVisible():
             self._linking_dialog.refresh(self._state)
+
+    def _sync_test_tone_dialog(self) -> None:
+        """Refresh the test-tone dialog if it's currently open.
+
+        Same contract as :meth:`_sync_linking_dialog`: snap the dialog to
+        the device's authoritative state after every config reload so
+        the panic button's enabled state and the freq spin-box reflect
+        what the generator is actually doing.
+        """
+        if self._test_tone_dialog is not None and self._test_tone_dialog.isVisible():
+            self._test_tone_dialog.refresh(self._state)
 
     def _on_load_unt(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -230,6 +246,7 @@ class MainWindow(QMainWindow):
         self._home_view.set_connected(False)
         self._apply_state_to_views()
         self._sync_linking_dialog()
+        self._sync_test_tone_dialog()
         self._home_view.show_preview_banner(Path(path).name)
 
     def _on_save_unt(self) -> None:
@@ -622,6 +639,45 @@ class MainWindow(QMainWindow):
 
         # Step 3: refresh from the device so the UI snaps to the truth.
         self._thread.request_read_config()
+
+    # --- Test tone ---
+
+    def _on_test_tone(self) -> None:
+        """Open the test-tone dialog (creating it on first use)."""
+        if self._test_tone_dialog is None:
+            self._test_tone_dialog = TestToneDialog(self, self._state)
+            self._test_tone_dialog.applyRequested.connect(self._apply_test_tone)
+            self._test_tone_dialog.disableRequested.connect(self._disable_test_tone)
+        else:
+            self._test_tone_dialog.refresh(self._state)
+        self._test_tone_dialog.show()
+        self._test_tone_dialog.raise_()
+        self._test_tone_dialog.activateWindow()
+
+    def _apply_test_tone(self, mode: int, freq_index: int) -> None:
+        """Write a new tone-generator setting to the device.
+
+        Updates local state immediately so the dialog's stop button arms
+        (or disarms) without waiting for a config round-trip.
+        """
+        self._state.test_tone = TestToneState(
+            mode=mode, sine_freq_index=freq_index
+        )
+        self._thread.request_test_tone(mode, freq_index)
+        self._sync_test_tone_dialog()
+
+    def _disable_test_tone(self) -> None:
+        """Hard-stop the generator. Preserves the last sine freq index.
+
+        The device retains the sine freq in config even when mode=Off, so
+        sending the current freq alongside TONE_OFF keeps it sticky for
+        the next time the user picks Sine.
+        """
+        keep_freq = self._state.test_tone.sine_freq_index
+        self._state.test_tone = TestToneState(
+            mode=0, sine_freq_index=keep_freq
+        )
+        self._thread.request_test_tone(0, keep_freq)
 
     @staticmethod
     def _find_new_master(
