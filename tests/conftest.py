@@ -181,6 +181,10 @@ class FakeDSPmini(VirtualDSP):
         self.calls.append(("set_channel_name", (channel, name)))
         return super().set_channel_name(channel, name)
 
+    def set_test_tone(self, mode: int, freq_index: int = 0) -> bool:
+        self.calls.append(("set_test_tone", (mode, freq_index)))
+        return super().set_test_tone(mode, freq_index)
+
     def load_preset(self, slot: int) -> dict | None:
         self.calls.append(("load_preset", (slot,)))
         return super().load_preset(slot)

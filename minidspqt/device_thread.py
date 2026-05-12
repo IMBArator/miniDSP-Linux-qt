@@ -42,6 +42,7 @@ class CommandType(Enum):
     PREPARE_LINK = auto()
     CHANNEL_LINK = auto()
     CHANNEL_NAME = auto()
+    TEST_TONE = auto()
 
 
 class DeviceThread(QThread):
@@ -138,6 +139,11 @@ class DeviceThread(QThread):
 
     def request_channel_name(self, channel: int, name: str) -> None:
         self._enqueue((CommandType.CHANNEL_NAME, channel), (name,))
+
+    def request_test_tone(self, mode: int, freq_index: int) -> None:
+        # Device-wide command (no channel); pin to slot 0 so rapid changes
+        # coalesce into a single send and _dispatch's key[1] unpack still works.
+        self._enqueue((CommandType.TEST_TONE, 0), (mode, freq_index))
 
     def request_load_preset(self, slot: int) -> None:
         with self._lock:
@@ -354,5 +360,7 @@ class DeviceThread(QThread):
             dsp.set_channel_link(channel, args[0])
         elif cmd is CommandType.CHANNEL_NAME:
             dsp.set_channel_name(channel, args[0])
+        elif cmd is CommandType.TEST_TONE:
+            dsp.set_test_tone(args[0], args[1])
         else:
             log.warning("Unknown command key %s", key)

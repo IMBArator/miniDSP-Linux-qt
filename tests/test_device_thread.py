@@ -141,6 +141,25 @@ def test_read_config_flushes_pending_writes_first(thread, fake_dsp, qtbot):
     ]
 
 
+def test_request_test_tone_dispatches_mode_and_freq(thread, fake_dsp):
+    thread.request_test_tone(3, 17)  # sine @ 1 kHz
+    thread._drain_pending(fake_dsp)
+
+    calls = [c for c in fake_dsp.calls if c[0] == "set_test_tone"]
+    assert calls == [("set_test_tone", (3, 17))]
+
+
+def test_request_test_tone_coalesces(thread, fake_dsp):
+    # Rapid changes during a slider drag should collapse to the latest.
+    thread.request_test_tone(3, 0)
+    thread.request_test_tone(3, 5)
+    thread.request_test_tone(3, 17)
+    thread._drain_pending(fake_dsp)
+
+    calls = [c for c in fake_dsp.calls if c[0] == "set_test_tone"]
+    assert calls == [("set_test_tone", (3, 17))]
+
+
 def test_command_type_enum_is_exhaustive():
     # Guard against silently dropping a command when expanding the enum.
     expected = {
@@ -158,5 +177,6 @@ def test_command_type_enum_is_exhaustive():
         "PREPARE_LINK",
         "CHANNEL_LINK",
         "CHANNEL_NAME",
+        "TEST_TONE",
     }
     assert {c.name for c in CommandType} == expected
