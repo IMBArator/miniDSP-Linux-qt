@@ -45,6 +45,7 @@ from ..widgets import LevelMeter
 from ..defaults import (
     default_compressor_state,
     default_crossover_state,
+    default_delay_samples,
     default_gate_state,
     default_peq_bands,
     default_peq_channel_bypass,
@@ -212,6 +213,7 @@ class DetailView(QWidget):
         )
         self._compressor_panel.reset_requested.connect(self._on_compressor_reset)
         self._delay_panel.delay_changed.connect(self._on_delay_changed)
+        self._delay_panel.reset_requested.connect(self._on_delay_reset)
 
     # ------------------------------------------------------------------ #
     # Header (identical chrome to HomeView)
@@ -727,6 +729,13 @@ class DetailView(QWidget):
             self._output_strip.set_xover_active(hp_slope != 0 or lp_slope != 0)
             self._peq_panel.set_crossover(CrossoverData(hp_freq, hp_slope, lp_freq, lp_slope))
         self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
+
+    def _on_delay_reset(self) -> None:
+        self._delay_panel.reset_to_defaults()
+        samples = default_delay_samples()
+        if not self._is_input:
+            self._output_strip.set_delay_active(samples > 0)
+        self.delay_changed.emit(self._channel, samples)
 
     def _on_peq_reset(self) -> None:
         self._peq_panel.reset_to_defaults()

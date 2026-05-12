@@ -24,6 +24,8 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
+    QMessageBox,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -31,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from ...widgets import DelayGraph, ParamKnob
 from ._slave_lock import apply_link_state, install_link_banner
+from ...defaults import default_delay_samples
 
 _SAMPLES_MAX = 32640
 _SAMPLES_PER_MS = 48.0
@@ -65,6 +68,7 @@ class DelayPanel(QWidget):
     """
 
     delay_changed = Signal(int)
+    reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -77,10 +81,17 @@ class DelayPanel(QWidget):
 
         self._link_banner = install_link_banner(root)
 
+        header = QHBoxLayout()
         title = QLabel("Delay Settings")
         title.setObjectName("panelTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        root.addWidget(title)
+        header.addWidget(title)
+        header.addStretch()
+        self._reset_btn = QPushButton("Reset")
+        self._reset_btn.setObjectName("resetButton")
+        self._reset_btn.clicked.connect(self._on_reset_clicked)
+        header.addWidget(self._reset_btn)
+        root.addLayout(header)
 
         self._graph = DelayGraph()
         self._graph.setSizePolicy(
@@ -147,9 +158,29 @@ class DelayPanel(QWidget):
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         """Lock the knob (graph stays visible) when the active row is a slave."""
-        apply_link_state(self._link_banner, is_slave, master_name, [self._knob])
+        apply_link_state(
+            self._link_banner, is_slave, master_name, [self._knob, self._reset_btn]
+        )
+
+    def reset_to_defaults(self) -> None:
+        """Reset the active channel's delay to the factory default silently."""
+        default = default_delay_samples()
+        self._samples[self._active_idx] = default
+        self._graph.set_delays(self._samples)
+        self._knob.setValueSilently(default)
 
     # ---- knob handler ------------------------------------------------- #
+
+    def _on_reset_clicked(self) -> None:
+        if (
+            QMessageBox.question(
+                self,
+                "Reset Delay",
+                "Reset Delay to factory defaults for this channel?",
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
+            self.reset_requested.emit()
 
     def _on_knob_changed(self, value: int) -> None:
         # Mirror the new value into the graph immediately so the bar

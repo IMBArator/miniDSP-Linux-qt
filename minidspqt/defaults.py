@@ -30,3 +30,7 @@ def default_peq_bands() -> list[tuple]:
 
 def default_peq_channel_bypass() -> bool:
     return _factory()["peqs"][0]["channel_bypass"]
+
+
+def default_delay_samples() -> int:
+    return _factory()["delays"][0]
