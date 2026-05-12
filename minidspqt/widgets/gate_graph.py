@@ -188,7 +188,7 @@ class GateGraph(QWidget):
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         thr_db = self._threshold_db
-        pen = QPen(theme_manager.current.graph_curve, _CURVE_WIDTH)
+        pen = QPen(theme_manager.current.graph_curve_gate, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)

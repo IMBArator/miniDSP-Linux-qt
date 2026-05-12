@@ -206,7 +206,7 @@ class CompressorGraph(QWidget):
         )
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
-        pen = QPen(theme_manager.current.graph_curve, _CURVE_WIDTH)
+        pen = QPen(theme_manager.current.graph_curve_comp, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)

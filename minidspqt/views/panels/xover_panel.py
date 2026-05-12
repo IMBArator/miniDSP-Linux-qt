@@ -90,7 +90,7 @@ class XoverPanel(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         root.addWidget(title)
 
-        self._graph = FreqResponseGraph()
+        self._graph = FreqResponseGraph(feature="xover")
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )

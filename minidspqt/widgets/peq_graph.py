@@ -209,7 +209,7 @@ class PEQGraph(QWidget):
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         theme = theme_manager.current
         if self._channel_bypass:
-            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
+            pen = QPen(theme.graph_curve_peq_bypassed, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -233,7 +233,7 @@ class PEQGraph(QWidget):
             y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
             poly.append(QPointF(x, y))
 
-        pen = QPen(theme.graph_curve, _CURVE_WIDTH)
+        pen = QPen(theme.graph_curve_peq, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
@@ -274,7 +274,7 @@ class PEQGraph(QWidget):
             color = (
                 theme.graph_marker_bypassed
                 if (band.bypass or self._channel_bypass)
-                else theme.graph_marker_active
+                else theme.graph_curve_peq
             )
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)

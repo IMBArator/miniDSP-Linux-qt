@@ -167,7 +167,7 @@ class PEQPanel(QWidget):
 
         root.addLayout(self._build_header())
 
-        self._graph = FreqResponseGraph()
+        self._graph = FreqResponseGraph(feature="peq")
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )

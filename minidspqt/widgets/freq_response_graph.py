@@ -183,8 +183,9 @@ def _second_order_coeffs(f0: float, q: float, is_highpass: bool) -> tuple[float,
 class FreqResponseGraph(QWidget):
     """Combined crossover + PEQ frequency-response graph for one channel."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: QWidget | None = None, *, feature: str = "peq") -> None:
         super().__init__(parent)
+        self._feature = feature
         self._bands: list[PEQBand] = []
         self._channel_bypass: bool = False
         self._crossover: CrossoverData = CrossoverData()
@@ -228,6 +229,12 @@ class FreqResponseGraph(QWidget):
         r = self._plot_rect()
         frac = (db - _DB_MIN) / _DB_RANGE
         return r.bottom() - frac * r.height()
+
+    def _curve_color(self, theme) -> tuple[QColor, QColor]:
+        """Return (active, bypassed) curve colours for the graph's feature."""
+        if self._feature == "xover":
+            return theme.graph_curve_xover, theme.graph_curve_xover_bypassed
+        return theme.graph_curve_peq, theme.graph_curve_peq_bypassed
 
     def paintEvent(self, event) -> None:
         p = QPainter()
@@ -299,8 +306,9 @@ class FreqResponseGraph(QWidget):
 
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         theme = theme_manager.current
+        curve_color, bypassed_color = self._curve_color(theme)
         if self._channel_bypass and self._crossover.hipass_slope == 0 and self._crossover.lopass_slope == 0:
-            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
+            pen = QPen(bypassed_color, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -315,7 +323,7 @@ class FreqResponseGraph(QWidget):
         all_coeffs.extend(_crossover_biquads(self._crossover))
 
         if not all_coeffs:
-            pen = QPen(theme.graph_curve_bypassed, _CURVE_WIDTH)
+            pen = QPen(bypassed_color, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             y = self._db_to_y(0.0)
@@ -333,7 +341,7 @@ class FreqResponseGraph(QWidget):
             y = self._db_to_y(max(_DB_MIN, min(_DB_MAX, db)))
             poly.append(QPointF(x, y))
 
-        pen = QPen(theme.graph_curve, _CURVE_WIDTH)
+        pen = QPen(curve_color, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
@@ -358,7 +366,7 @@ class FreqResponseGraph(QWidget):
             y = self._db_to_y(0.0)
 
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(theme.graph_xover_marker)
+            p.setBrush(theme.graph_curve_xover)
             tri = QPolygonF()
             tri.append(QPointF(x, y - 8))
             tri.append(QPointF(x - 6, y + 4))
@@ -404,7 +412,7 @@ class FreqResponseGraph(QWidget):
             color = (
                 theme.graph_marker_bypassed
                 if (band.bypass or self._channel_bypass)
-                else theme.graph_marker_active
+                else theme.graph_curve_peq
             )
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)

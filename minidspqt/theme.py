@@ -83,6 +83,16 @@ class Theme:
     graph_xover_marker: QColor
     graph_xover_label_text: QColor
 
+    # --- Per-feature curve colours (match the channel-strip toggle buttons) ---
+    graph_curve_gate: QColor
+    graph_curve_gate_bypassed: QColor
+    graph_curve_peq: QColor
+    graph_curve_peq_bypassed: QColor
+    graph_curve_xover: QColor
+    graph_curve_xover_bypassed: QColor
+    graph_curve_comp: QColor
+    graph_curve_comp_bypassed: QColor
+
     # --- Gate-only ---
     gate_closed_fill: QColor
     gate_open_fill: QColor
@@ -159,8 +169,17 @@ DARK_THEME = Theme(
     graph_marker_active=QColor(80, 200, 120),
     graph_marker_bypassed=QColor(140, 140, 140, 140),
     graph_marker_text=QColor(20, 20, 28),
-    graph_xover_marker=QColor(74, 139, 208),
+    graph_xover_marker=QColor(232, 114, 35),
     graph_xover_label_text=QColor(255, 255, 255, 200),
+
+    graph_curve_gate=QColor(47, 168, 74),
+    graph_curve_gate_bypassed=QColor(47, 168, 74, 70),
+    graph_curve_peq=QColor(138, 90, 210),
+    graph_curve_peq_bypassed=QColor(138, 90, 210, 70),
+    graph_curve_xover=QColor(232, 114, 35),
+    graph_curve_xover_bypassed=QColor(232, 114, 35, 70),
+    graph_curve_comp=QColor(47, 168, 155),
+    graph_curve_comp_bypassed=QColor(47, 168, 155, 70),
 
     gate_closed_fill=QColor(200, 50, 50, 40),
     gate_open_fill=QColor(50, 180, 80, 25),
@@ -221,8 +240,17 @@ LIGHT_THEME = Theme(
     graph_marker_active=QColor(40, 140, 80),
     graph_marker_bypassed=QColor(160, 160, 165, 160),
     graph_marker_text=QColor(255, 255, 255),
-    graph_xover_marker=QColor(56, 110, 180),
+    graph_xover_marker=QColor(168, 80, 17),
     graph_xover_label_text=QColor(255, 255, 255, 220),
+
+    graph_curve_gate=QColor(30, 122, 54),
+    graph_curve_gate_bypassed=QColor(30, 122, 54, 80),
+    graph_curve_peq=QColor(110, 63, 184),
+    graph_curve_peq_bypassed=QColor(110, 63, 184, 80),
+    graph_curve_xover=QColor(168, 80, 17),
+    graph_curve_xover_bypassed=QColor(168, 80, 17, 80),
+    graph_curve_comp=QColor(30, 133, 122),
+    graph_curve_comp_bypassed=QColor(30, 133, 122, 80),
 
     gate_closed_fill=QColor(200, 50, 50, 50),
     gate_open_fill=QColor(50, 160, 80, 35),
