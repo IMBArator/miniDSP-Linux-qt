@@ -225,28 +225,29 @@ doc/
 | EQ curve visualisation | — | QPainter log-frequency / dB graph driven by local biquad coefficient math (Audio EQ Cookbook formulas) — shared by PEQ and Crossover panels via `FreqResponseGraph` widget |
 | Reset to factory defaults | `minidsp.defaults.load_factory_defaults` | Per-feature **Reset** button in the header of every Gate / PEQ / Crossover / Compressor / Delay panel. Confirms via dialog, then snaps only that feature on the displayed channel (plus any linked slaves) back to the F00 factory values; other channels and other features stay untouched. Defaults are sourced live from the protocol library's bundled `factory_defaults.toml` so they always match the firmware |
 
-### High priority
-
-| Feature | Library API | What's missing |
-|---------|------------|----------------|
-| **PEQ extras** | — | Copy-band / paste-band, A/B compare, draggable graph markers |
-
 ### Medium priority
 
 | Feature | Library API | What's missing |
-|---------|------------|----------------|
+|---------|-------------|----------------|
 | **Test tone generator** | `set_test_tone` | Dialog: Off / Pink / White / Sine + 31-step freq picker |
 | **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster, double click on knobs to reset to default, refactor linking indicator: right from header pill with text, Detail View: mark with underline the currently edited feature |
 
 ### Low priority
 
 | Feature | Library API | What's missing |
-|---------|------------|----------------|
+|---------|-------------|----------------|
 | Delay display unit (ms/m/ft) | `set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
 | Device lock / PIN | `is_locked`, `submit_pin`, `set_lock_pin` | PIN entry dialog; dangerous feature |
 | Copy channel settings | — | "Copy from…" context menu |
 | Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
+| PEQ extras | — | draggable graph markers |
+
+### Needed?
+
+| Feature | Library API | What's missing |
+|---------|-------------|----------------|
+| PEQ extras | — | Copy-band / paste-band, A/B compare |
 
 ## Related projects
 
