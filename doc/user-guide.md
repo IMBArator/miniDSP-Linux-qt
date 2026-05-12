@@ -32,6 +32,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Saving a .unt File](#saving-a-unt-file)
 - [Menu](#menu)
 - [Channel Linking](#channel-linking)
+- [Test Tone Generator](#test-tone-generator)
 - [Themes (light / dark)](#themes-light--dark)
 - [USB Permissions](#usb-permissions)
 - [Troubleshooting](#troubleshooting)
@@ -573,6 +574,7 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Load .unt file...** | Import a manufacturer preset file |
 | **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
 | **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
+| **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
 
@@ -623,6 +625,56 @@ In **offline mode**, Apply mutates the in-memory virtual DSP exactly as the real
 ### Behind the scenes
 
 For each new master/slave pair the dialog issues `OP_PREPARE_LINK` (0x2A) before the matching `OP_LINK` (0x3B) commits the group; unlinking only needs the second command.  Both opcodes are documented in [`analysis/protocol.md`](https://github.com/IMBArator/miniDSP-Linux/blob/main/analysis/protocol.md) of the upstream protocol library.
+
+---
+
+## Test Tone Generator
+
+The device has an internal signal generator that feeds all four outputs simultaneously. It is useful for speaker level matching, polarity checks, and frequency sweeps without needing an external source.
+
+Open the dialog from **Menu ≡ → Test tone…**.
+
+### Waveform
+
+Select one of four modes:
+
+| Radio | Signal |
+|-------|--------|
+| **Off** | Generator inactive — normal audio pass-through |
+| **Pink noise** | Spectrally shaped random noise (−3 dB/octave) |
+| **White noise** | Flat-spectrum random noise |
+| **Sine** | Discrete-frequency sine wave at the selected frequency |
+
+### Sine Frequency
+
+When **Sine** is selected, the frequency spin-box becomes active. Step through the 31 ISO 1/3-octave frequencies from 20 Hz to 20 kHz using the up/down arrows or by typing a step number. The current frequency label updates next to the spin-box.
+
+| Index | Frequency |
+|-------|-----------|
+| 0 | 20 Hz |
+| 1 | 25 Hz |
+| … | … |
+| 17 | 1 kHz |
+| … | … |
+| 30 | 20 kHz |
+
+The last-used sine frequency is stored in the device's config and remembered across mode changes: switching from Sine to Pink and back again restores the frequency you had selected.
+
+### Starting and stopping the generator
+
+1. Select a waveform (and frequency for Sine).
+2. Click **Apply** — the generator starts immediately. The dialog stays open so you can step through frequencies or change waveforms without reopening it.
+3. To silence the generator, click the red **Disable test tone** button. This is the quickest way to stop the output — no confirmation required.
+
+> **Note:** The **Disable test tone** button is only active after the generator has been started with Apply. Selecting a waveform radio before clicking Apply does not start the generator.
+
+Click **Close** (or press Esc) to dismiss the dialog. The generator keeps running until explicitly disabled — closing the dialog does **not** stop playback.
+
+### Persistence
+
+The generator state (mode and last sine frequency) is part of the device's live configuration. It survives USB reconnects and power cycles. When you reopen the dialog, it reflects what the device is currently doing.
+
+> **Warning:** The test tone feeds all outputs at a hardware-fixed level that cannot be attenuated via this dialog. Use your monitoring volume control to manage listening level, and remember to disable the generator before leaving it unattended.
 
 ---
 
