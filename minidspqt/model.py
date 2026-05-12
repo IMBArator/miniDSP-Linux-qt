@@ -10,7 +10,7 @@ inputs 0–3, outputs 4–7. `gates` is input-only; `delays`, `crossovers`,
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, ClassVar
 
 from minidsp.protocol import decode_link_groups, decode_routing_matrix
 
@@ -38,6 +38,24 @@ class CompressorState:
     attack: int = 0
     release: int = 0
     threshold: int = 0
+
+
+@dataclass
+class TestToneState:
+    """State of the device's internal test signal generator.
+
+    Unlike the per-channel states, this is device-wide: the generator feeds
+    all outputs simultaneously and its state is persisted in the live config
+    at offsets 420 (mode) and 422 (last sine freq index).
+    """
+
+    # __test__ tells pytest's name-based heuristic that this is a
+    # domain class, not a test class; without it pytest emits a
+    # PytestCollectionWarning every run.
+    __test__: ClassVar[bool] = False
+
+    mode: int = 0  # TONE_OFF / TONE_PINK / TONE_WHITE / TONE_SINE
+    sine_freq_index: int = 0  # 0..30, ISO 1/3-octave (20 Hz … 20 kHz)
 
 
 @dataclass
@@ -107,6 +125,7 @@ class DeviceState:
     outputs: list[OutputChannelState] = field(default_factory=list)
     active_slot: int | None = None
     preset_names: list[str] = field(default_factory=list)
+    test_tone: TestToneState = field(default_factory=TestToneState)
     _link_info_cache: list[dict] | None = field(default=None, repr=False)
 
     def _link_flags_list(self) -> list[int]:
@@ -262,6 +281,10 @@ class DeviceState:
             outputs=outputs,
             active_slot=cfg.get("active_slot"),
             preset_names=list(cfg.get("preset_names", [])),
+            test_tone=TestToneState(
+                mode=cfg.get("test_tone_mode", 0),
+                sine_freq_index=cfg.get("test_tone_freq", 0),
+            ),
         )
         state._link_info_cache = decode_link_groups(
             [ch.link_flags for ch in inputs] + [ch.link_flags for ch in outputs]

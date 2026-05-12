@@ -25,6 +25,8 @@ _SLOT_KEYS = frozenset(
         "crossovers",
         "compressors",
         "peqs",
+        "test_tone_mode",
+        "test_tone_freq",
     }
 )
 
@@ -224,6 +226,14 @@ class VirtualDSP:
 
     def set_channel_name(self, channel: int, name: str) -> bool:
         self._config["names"][channel] = name
+        return True
+
+    def set_test_tone(self, mode: int, freq_index: int = 0) -> bool:
+        self._config["test_tone_mode"] = mode
+        # The device keeps the last sine freq index even across noise/off
+        # transitions; mirror that here so the dialog's "sticky freq"
+        # behaviour works in offline mode too.
+        self._config["test_tone_freq"] = freq_index
         return True
 
     # --- Presets ---
