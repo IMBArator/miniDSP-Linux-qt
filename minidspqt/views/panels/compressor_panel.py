@@ -26,6 +26,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -40,6 +42,7 @@ from minidsp.protocol import (
 
 from ...widgets import CompressorGraph, ParamKnob
 from ._slave_lock import apply_link_state, install_link_banner
+from ...defaults import default_compressor_state
 
 
 def _fmt_threshold(raw: int) -> str:
@@ -90,6 +93,7 @@ class CompressorPanel(QWidget):
     """
 
     compressor_params_changed = Signal(int, int, int, int, int)
+    reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -99,10 +103,17 @@ class CompressorPanel(QWidget):
 
         self._link_banner = install_link_banner(root)
 
+        header = QHBoxLayout()
         title = QLabel("Compressor Settings")
         title.setObjectName("panelTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        root.addWidget(title)
+        header.addWidget(title)
+        header.addStretch()
+        self._reset_btn = QPushButton("Reset")
+        self._reset_btn.setObjectName("resetButton")
+        self._reset_btn.clicked.connect(self._on_reset_clicked)
+        header.addWidget(self._reset_btn)
+        root.addLayout(header)
 
         self._graph = CompressorGraph()
         self._graph.setMinimumHeight(120)
@@ -181,6 +192,17 @@ class CompressorPanel(QWidget):
         col.addWidget(widget, alignment=Qt.AlignmentFlag.AlignHCenter)
         return col
 
+    def _on_reset_clicked(self) -> None:
+        if (
+            QMessageBox.question(
+                self,
+                "Reset Compressor",
+                "Reset Compressor to factory defaults for this channel?",
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
+            self.reset_requested.emit()
+
     def _sync_graph(self) -> None:
         self._graph.set_params(
             self._knob_threshold.value(),
@@ -197,6 +219,10 @@ class CompressorPanel(QWidget):
             self._knob_release.value(),
             self._knob_threshold.value(),
         )
+
+    def reset_to_defaults(self) -> None:
+        """Reset all controls to factory defaults silently."""
+        self.set_params_silently(*default_compressor_state())
 
     def set_params_silently(
         self,
@@ -228,5 +254,6 @@ class CompressorPanel(QWidget):
                 self._knob_knee,
                 self._knob_attack,
                 self._knob_release,
+                self._reset_btn,
             ],
         )

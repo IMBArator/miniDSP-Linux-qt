@@ -184,6 +184,19 @@ QPushButton#channelNavButton {
 QPushButton#channelNavButton:hover   { background-color: #dcdce0; }
 QPushButton#channelNavButton:checked { background-color: #4682c8; color: white; border-color: #2f5e94; }
 
+QPushButton#resetButton {
+    background-color: #e8e8ec;
+    color: #8a4e00;
+    border: 1px solid #c4943a;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
+QPushButton#resetButton:hover    { background-color: #dcdce0; color: #a85c00; }
+QPushButton#resetButton:pressed  { background-color: #c8c8cc; }
+QPushButton#resetButton:disabled { color: #aaaaaa; border-color: #c8c8cc; }
+
 QLabel#panelTitle {
     font-size: 14pt;
     font-weight: 600;

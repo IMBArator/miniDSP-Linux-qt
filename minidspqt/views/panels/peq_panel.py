@@ -41,6 +41,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -65,6 +67,7 @@ from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
 from ._slave_lock import apply_link_state, install_link_banner
+from ...defaults import default_peq_bands, default_peq_channel_bypass
 
 NUM_BANDS = 7
 
@@ -154,6 +157,7 @@ class PEQPanel(QWidget):
 
     peq_band_changed = Signal(int, int, int, int, int, bool)
     peq_channel_bypass_changed = Signal(bool)
+    reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -201,6 +205,11 @@ class PEQPanel(QWidget):
         self._channel_bypass.setMinimumWidth(72)
         self._channel_bypass.toggled.connect(self._on_channel_bypass_toggled)
         row.addWidget(self._channel_bypass)
+
+        self._reset_btn = QPushButton("Reset")
+        self._reset_btn.setObjectName("resetButton")
+        self._reset_btn.clicked.connect(self._on_reset_clicked)
+        row.addWidget(self._reset_btn)
 
         return row
 
@@ -354,9 +363,28 @@ class PEQPanel(QWidget):
         self.peq_channel_bypass_changed.emit(checked)
         self._graph.set_bands(self._all_bands(), checked)
 
+    def _on_reset_clicked(self) -> None:
+        if (
+            QMessageBox.question(
+                self,
+                "Reset PEQ",
+                "Reset PEQ to factory defaults for this channel?",
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
+            self.reset_requested.emit()
+
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
+
+    def reset_to_defaults(self) -> None:
+        """Reset all bands and channel bypass to factory defaults silently."""
+        bands = [
+            PEQBand(gain_raw=g, freq_raw=f, q_raw=q, filter_type=t, bypass=b)
+            for g, f, q, t, b in default_peq_bands()
+        ]
+        self.set_bands_silently(bands, default_peq_channel_bypass())
 
     def set_band_silently(
         self,
@@ -432,7 +460,7 @@ class PEQPanel(QWidget):
         The summed response graph stays visible (read-only by nature) so
         the user still sees what the slave is doing.
         """
-        interactive: list[QWidget] = [self._channel_bypass]
+        interactive: list[QWidget] = [self._channel_bypass, self._reset_btn]
         interactive.extend(self._type_combos)
         interactive.extend(self._freq_knobs)
         interactive.extend(self._gain_knobs)

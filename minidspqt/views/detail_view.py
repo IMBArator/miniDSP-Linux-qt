@@ -42,6 +42,13 @@ from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 from ..widgets import LevelMeter
+from ..defaults import (
+    default_compressor_state,
+    default_crossover_state,
+    default_gate_state,
+    default_peq_bands,
+    default_peq_channel_bypass,
+)
 from .channel_strip import (
     ChannelStrip,
     InputChannelStrip,
@@ -192,14 +199,18 @@ class DetailView(QWidget):
         root.addLayout(content_row, stretch=1)
 
         self._gate_panel.gate_params_changed.connect(self._on_gate_params)
+        self._gate_panel.reset_requested.connect(self._on_gate_reset)
         self._peq_panel.peq_band_changed.connect(self._on_peq_band)
         self._peq_panel.peq_channel_bypass_changed.connect(
             self._on_peq_channel_bypass
         )
+        self._peq_panel.reset_requested.connect(self._on_peq_reset)
         self._xover_panel.xover_changed.connect(self._on_xover_changed)
+        self._xover_panel.reset_requested.connect(self._on_xover_reset)
         self._compressor_panel.compressor_params_changed.connect(
             self._on_compressor_params
         )
+        self._compressor_panel.reset_requested.connect(self._on_compressor_reset)
         self._delay_panel.delay_changed.connect(self._on_delay_changed)
 
     # ------------------------------------------------------------------ #
@@ -694,6 +705,42 @@ class DetailView(QWidget):
         if not self._is_input:
             self._output_strip.set_delay_active(samples > 0)
         self.delay_changed.emit(self._channel, samples)
+
+    def _on_gate_reset(self) -> None:
+        self._gate_panel.reset_to_defaults()
+        attack, release, hold, threshold = default_gate_state()
+        if self._is_input:
+            self._input_strip.set_gate_active(threshold > 0)
+        self.gate_params_changed.emit(self._channel, attack, release, hold, threshold)
+
+    def _on_compressor_reset(self) -> None:
+        self._compressor_panel.reset_to_defaults()
+        ratio, knee, attack, release, threshold = default_compressor_state()
+        if not self._is_input:
+            self._output_strip.set_comp_active(ratio > 0)
+        self.compressor_changed.emit(self._channel, ratio, knee, attack, release, threshold)
+
+    def _on_xover_reset(self) -> None:
+        self._xover_panel.reset_to_defaults()
+        hp_freq, hp_slope, lp_freq, lp_slope = default_crossover_state()
+        if not self._is_input:
+            self._output_strip.set_xover_active(hp_slope != 0 or lp_slope != 0)
+            self._peq_panel.set_crossover(CrossoverData(hp_freq, hp_slope, lp_freq, lp_slope))
+        self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
+
+    def _on_peq_reset(self) -> None:
+        self._peq_panel.reset_to_defaults()
+        if not self._is_input:
+            self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
+            self._xover_panel.set_bands(
+                self._peq_panel._all_bands(),
+                self._peq_panel._channel_bypass.isChecked(),
+            )
+        for band, (gain_raw, freq_raw, q_raw, filter_type, bypass) in enumerate(default_peq_bands()):
+            self.peq_band_changed.emit(
+                self._channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
+            )
+        self.peq_channel_bypass_changed.emit(self._channel, default_peq_channel_bypass())
 
     # ------------------------------------------------------------------ #
     # Helpers

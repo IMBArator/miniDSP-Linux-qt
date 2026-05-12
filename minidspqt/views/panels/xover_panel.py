@@ -24,6 +24,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
+    QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -34,6 +36,7 @@ from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
 from ._slave_lock import apply_link_state, install_link_banner
+from ...defaults import default_crossover_state
 
 _SLOPE_ITEMS = [SLOPE_NAMES[i] for i in sorted(SLOPE_NAMES) if i != 0]
 
@@ -72,6 +75,7 @@ class XoverPanel(QWidget):
     """
 
     xover_changed = Signal(int, int, int, int)
+    reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -85,10 +89,17 @@ class XoverPanel(QWidget):
 
         self._link_banner = install_link_banner(root)
 
+        header = QHBoxLayout()
         title = QLabel("Xover Settings")
         title.setObjectName("panelTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        root.addWidget(title)
+        header.addWidget(title)
+        header.addStretch()
+        self._reset_btn = QPushButton("Reset")
+        self._reset_btn.setObjectName("resetButton")
+        self._reset_btn.clicked.connect(self._on_reset_clicked)
+        header.addWidget(self._reset_btn)
+        root.addLayout(header)
 
         self._graph = FreqResponseGraph(feature="xover")
         self._graph.setSizePolicy(
@@ -137,6 +148,17 @@ class XoverPanel(QWidget):
         row.addStretch(1)
         return row
 
+    def _on_reset_clicked(self) -> None:
+        if (
+            QMessageBox.question(
+                self,
+                "Reset Xover",
+                "Reset Xover to factory defaults for this channel?",
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
+            self.reset_requested.emit()
+
     def _read_state(self) -> CrossoverData:
         hp_bypassed = self._hp_bypass.isChecked()
         hp_slope = 0 if hp_bypassed else (self._hp_slope.currentIndex() + 1)
@@ -167,6 +189,10 @@ class XoverPanel(QWidget):
     def is_xover_active(self) -> bool:
         xo = self._read_state()
         return xo.hipass_slope != 0 or xo.lopass_slope != 0
+
+    def reset_to_defaults(self) -> None:
+        """Reset all controls to factory defaults silently."""
+        self.set_params_silently(*default_crossover_state())
 
     def set_params_silently(
         self,
@@ -221,5 +247,6 @@ class XoverPanel(QWidget):
             [
                 self._hp_freq, self._hp_slope, self._hp_bypass,
                 self._lp_freq, self._lp_slope, self._lp_bypass,
+                self._reset_btn,
             ],
         )
