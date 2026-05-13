@@ -136,7 +136,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-309 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), param knob widget, and .unt read/write round-trip.
+324 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), param knob widget, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -168,7 +168,7 @@ minidspqt/                     Main package
   widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
   resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (309 tests)
+tests/                         pytest suite (324 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
   test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
@@ -226,12 +226,13 @@ doc/
 | EQ curve visualisation | — | QPainter log-frequency / dB graph driven by local biquad coefficient math (Audio EQ Cookbook formulas) — shared by PEQ and Crossover panels via `FreqResponseGraph` widget |
 | Reset to factory defaults | `minidsp.defaults.load_factory_defaults` | Per-feature **Reset** button in the header of every Gate / PEQ / Crossover / Compressor / Delay panel. Confirms via dialog, then snaps only that feature on the displayed channel (plus any linked slaves) back to the F00 factory values; other channels and other features stay untouched. Defaults are sourced live from the protocol library's bundled `factory_defaults.toml` so they always match the firmware |
 | Test tone generator | `set_test_tone` | Menu-driven non-modal dialog (`Menu ≡ → Test tone…`) with Off / Pink / White / Sine radios and a 31-step ISO 1/3-octave spin-box (20 Hz – 20 kHz) for sine frequency. Apply keeps the window open for back-to-back sweeps; a separate full-width red "Disable test tone" panic button instantly silences the generator (auto-disabled when nothing is playing). Current state is parsed from config offsets 420/422 and refreshed after every config reload so the dialog always reflects what the device is actually doing |
+| CTRL + fast knob editing | — | Hold **Ctrl** while scrolling, pressing arrow keys, or dragging any knob to jump by a range-adaptive step (~2 % of the knob's total range, minimum 3 raw units) instead of the default ±1. The Ctrl state is locked at drag-start so toggling mid-drag doesn't cause jumps |
 
 ### Medium priority
 
 | Feature | Library API | What's missing |
 |---------|-------------|----------------|
-| **QOL UI Features** | — | CTRL + Scroll on Knobs to edit faster, double click on knobs to reset to default, refactor linking indicator: right from header pill with text, Detail View: mark with underline the currently edited feature |
+| **QOL UI Features** | — | double click on knobs to reset to default, refactor linking indicator: right from header pill with text, Detail View: mark with underline the currently edited feature |
 
 ### Low priority
 

@@ -135,8 +135,11 @@ The rotary dial controls channel gain from **-60 dB** to **+12 dB**. Internally 
 | Action | Effect |
 |--------|--------|
 | **Click and drag** vertically | Adjust gain — drag up to increase, down to decrease |
+| **Ctrl + click and drag** | Fast-adjust — each pixel of drag moves ~2 % of the knob's range instead of ±1 raw unit |
 | **Scroll wheel** | Step gain by ±1 raw unit (0.1 dB) |
+| **Ctrl + scroll wheel** | Step by a range-adaptive amount (~2 % of the total range, minimum 3 raw units). Useful for large-range knobs like Delay (0 – 680 ms) where normal scroll is too slow |
 | **Arrow keys** (Up/Right, Down/Left) | Step gain by ±1 raw unit (0.1 dB) |
+| **Ctrl + arrow keys** | Step by the same range-adaptive amount as Ctrl + scroll |
 | **Click the dB label** | Enter an exact dB value via keyboard. Press Enter to apply. Accepts formats like `+3.5`, `-20`, `-inf` |
 
 The arc fills with blue as gain increases from minimum to maximum. The needle indicator shows the current position.
@@ -781,6 +784,10 @@ This is expected behavior. When channels are linked, the slave channel's gain an
 
 | Key | Action |
 |-----|--------|
-| **Up / Right arrow** | Increase gain (when knob is focused) |
-| **Down / Left arrow** | Decrease gain (when knob is focused) |
-| **Enter** | Apply typed dB value (when dB label is being edited) |
+| **Up / Right arrow** | Increase value (when knob is focused) |
+| **Down / Left arrow** | Decrease value (when knob is focused) |
+| **Ctrl + Up / Right arrow** | Fast-increase (~2 % of range per press) |
+| **Ctrl + Down / Left arrow** | Fast-decrease (~2 % of range per press) |
+| **Ctrl + scroll wheel** | Fast-scroll (~2 % of range per detent) |
+| **Ctrl + drag** | Fast-drag (locked at press — toggling Ctrl mid-drag has no effect) |
+| **Enter** | Apply typed value (when value label is being edited) |

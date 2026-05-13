@@ -62,6 +62,7 @@ class ParamKnob(QWidget):
         self._parser = parser or _default_parser
         self._drag_anchor_y: float | None = None
         self._drag_anchor_value: int = self._value
+        self._drag_fast = False
         self._highlighted = False
         self._blink_count = 0
 
@@ -137,6 +138,9 @@ class ParamKnob(QWidget):
         self._highlighted = False
         self._arc_widget.update()
 
+    def _ctrl_step(self) -> int:
+        return max(3, (self._maximum - self._minimum) // 50)
+
     def _apply_edit(self) -> None:
         text = self._value_edit.text().strip()
         self._value_edit.setReadOnly(True)
@@ -152,6 +156,9 @@ class ParamKnob(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self._drag_anchor_y = event.position().y()
             self._drag_anchor_value = self._value
+            self._drag_fast = bool(
+                event.modifiers() & Qt.KeyboardModifier.ControlModifier
+            )
             event.accept()
             return
         super().mousePressEvent(event)
@@ -162,6 +169,8 @@ class ParamKnob(QWidget):
             return
         dy = self._drag_anchor_y - event.position().y()
         step = int(dy / _DRAG_PIXELS_PER_STEP)
+        if self._drag_fast:
+            step *= self._ctrl_step()
         self.setValue(self._drag_anchor_value + step)
 
     def mouseReleaseEvent(self, event) -> None:
@@ -171,16 +180,19 @@ class ParamKnob(QWidget):
     def wheelEvent(self, event) -> None:
         steps = event.angleDelta().y() // 120
         if steps:
+            if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+                steps *= self._ctrl_step()
             self.setValue(self._value + steps)
             event.accept()
 
     def keyPressEvent(self, event) -> None:
+        step = self._ctrl_step() if event.modifiers() & Qt.KeyboardModifier.ControlModifier else 1
         if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Right):
-            self.setValue(self._value + 1)
+            self.setValue(self._value + step)
             event.accept()
             return
         if event.key() in (Qt.Key.Key_Down, Qt.Key.Key_Left):
-            self.setValue(self._value - 1)
+            self.setValue(self._value - step)
             event.accept()
             return
         super().keyPressEvent(event)

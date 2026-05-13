@@ -1,4 +1,5 @@
-"""ParamKnob — construction, value API, clamping, interaction, highlight."""
+"""ParamKnob — construction, value API, clamping, interaction, highlight,
+CTRL+fast-edit."""
 
 from __future__ import annotations
 
@@ -17,40 +18,43 @@ def knob(qtbot):
     return k
 
 
-def _wheel_up(multiplier=1):
+def _wheel_up(multiplier=1, ctrl=False):
+    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
     return QWheelEvent(
         QPointF(0, 0),
         QPointF(0, 0),
         QPoint(0, 120 * multiplier),
         QPoint(0, 120 * multiplier),
         Qt.MouseButton.NoButton,
-        Qt.KeyboardModifier.NoModifier,
+        mod,
         Qt.ScrollPhase.ScrollBegin,
         False,
     )
 
 
-def _wheel_down(multiplier=1):
+def _wheel_down(multiplier=1, ctrl=False):
+    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
     return QWheelEvent(
         QPointF(0, 0),
         QPointF(0, 0),
         QPoint(0, -120 * multiplier),
         QPoint(0, -120 * multiplier),
         Qt.MouseButton.NoButton,
-        Qt.KeyboardModifier.NoModifier,
+        mod,
         Qt.ScrollPhase.ScrollBegin,
         False,
     )
 
 
-def _mouse_press(y, button=Qt.MouseButton.LeftButton):
+def _mouse_press(y, button=Qt.MouseButton.LeftButton, ctrl=False):
+    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
     return QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(28, y),
         QPointF(28, y),
         button,
         button,
-        Qt.KeyboardModifier.NoModifier,
+        mod,
     )
 
 
@@ -399,3 +403,87 @@ class TestEdgeCases:
         qtbot.addWidget(k)
         k.setValue(50)
         assert all(t is int for t in received)
+
+
+# ------------------------------------------------------------------ #
+# CTRL + fast-edit (range-adaptive multiplier)
+# ------------------------------------------------------------------ #
+
+
+class TestCtrlStep:
+    def test_minimum_step_for_small_range(self, qtbot):
+        k = ParamKnob(minimum=0, maximum=12, default=0)
+        qtbot.addWidget(k)
+        assert k._ctrl_step() == 3
+
+    def test_proportional_for_medium_range(self, qtbot):
+        k = ParamKnob(minimum=0, maximum=300, default=0)
+        qtbot.addWidget(k)
+        assert k._ctrl_step() == 6
+
+    def test_proportional_for_large_range(self, qtbot):
+        k = ParamKnob(minimum=0, maximum=32640, default=0)
+        qtbot.addWidget(k)
+        assert k._ctrl_step() == 652
+
+
+class TestCtrlWheel:
+    def test_ctrl_scroll_jumps_by_ctrl_step(self, knob):
+        knob.wheelEvent(_wheel_up(ctrl=True))
+        assert knob.value() == 50 + knob._ctrl_step()
+
+    def test_ctrl_scroll_down(self, knob):
+        knob.wheelEvent(_wheel_down(ctrl=True))
+        assert knob.value() == 50 - knob._ctrl_step()
+
+    def test_ctrl_clamped_at_minimum(self, knob):
+        knob.setValue(1)
+        knob.wheelEvent(_wheel_down(ctrl=True))
+        assert knob.value() == 0
+
+    def test_normal_scroll_unchanged(self, knob):
+        knob.wheelEvent(_wheel_up())
+        assert knob.value() == 51
+
+    def test_ctrl_signal(self, knob, qtbot):
+        with qtbot.waitSignal(knob.valueChanged, timeout=500) as sig:
+            knob.wheelEvent(_wheel_up(ctrl=True))
+        assert sig.args == [50 + knob._ctrl_step()]
+
+
+class TestCtrlKeyboard:
+    def test_ctrl_up_jumps(self, knob):
+        knob.keyPressEvent(_key(Qt.Key.Key_Up, Qt.KeyboardModifier.ControlModifier))
+        assert knob.value() == 50 + knob._ctrl_step()
+
+    def test_ctrl_down_jumps(self, knob):
+        knob.keyPressEvent(_key(Qt.Key.Key_Down, Qt.KeyboardModifier.ControlModifier))
+        assert knob.value() == 50 - knob._ctrl_step()
+
+    def test_ctrl_right_jumps(self, knob):
+        knob.keyPressEvent(_key(Qt.Key.Key_Right, Qt.KeyboardModifier.ControlModifier))
+        assert knob.value() == 50 + knob._ctrl_step()
+
+    def test_ctrl_left_jumps(self, knob):
+        knob.keyPressEvent(_key(Qt.Key.Key_Left, Qt.KeyboardModifier.ControlModifier))
+        assert knob.value() == 50 - knob._ctrl_step()
+
+
+class TestCtrlDrag:
+    def test_ctrl_drag_locked_at_press(self, knob):
+        knob.mousePressEvent(_mouse_press(y=50, ctrl=True))
+        assert knob._drag_fast is True
+        knob.mouseMoveEvent(_mouse_move(y=35))
+        assert knob.value() > 50
+
+    def test_normal_drag_not_fast(self, knob):
+        knob.mousePressEvent(_mouse_press(y=50, ctrl=False))
+        assert knob._drag_fast is False
+
+    def test_ctrl_drag_step_multiplied(self, knob):
+        knob.mousePressEvent(_mouse_press(y=50, ctrl=True))
+        knob.mouseMoveEvent(_mouse_move(y=35))
+        dy = 50 - 35
+        expected_raw_step = int(dy / 1.5)
+        expected = 50 + expected_raw_step * knob._ctrl_step()
+        assert knob.value() == expected
