@@ -162,6 +162,18 @@ ToggleButton[feature="comp"][comp_active="true"] { color: white; background-colo
    as the button's :checked colour. */
 ToggleButton[feature="delay"][delay_active="true"] { color: white; background-color: #4d7299; border: 1px solid #324c66; }
 
+/* ---------- GainIndicator (non-toggleable signal-chain position marker) ---------- */
+
+GainIndicator {
+    background-color: transparent;
+    color: #888888;
+    border: 1px solid #aaaaaa;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-weight: 600;
+}
+GainIndicator:hover { background-color: #e8e8ec; color: #444444; }
+
 /* ---------- Detail view ---------- */
 
 QFrame#detailChannelStrip {

@@ -115,7 +115,7 @@ Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:
 │  ╰───╯ │
 │▊▊▊▊▊░░░│  ← Level meter
 │ -12.3 dB│  ← Peak-held dB value (left-aligned)
-│Gate Ph M│  ← Toggle buttons (inputs)
+│Gain Gat Ph M│  ← Signal-chain buttons (inputs)
 
 ┌────────────┐
 │  Out1      │  ← Channel name (click to rename)
@@ -124,7 +124,7 @@ Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:
 │  ╰───╯ │
 │▊▊▊▊▊░░░│   ← Level meter
 │ -12.3 dB Lim ●│  ← dB value + Limiter LED (outputs only)
-│Xov PEQ Cp Ph Dl M│  ← Toggle buttons (outputs)
+│Xov PEQ Gain Cp Ph Dl M│  ← Signal-chain buttons (outputs)
 └────────────┘
 ```
 
@@ -162,7 +162,20 @@ Output channel strips display a small red LED labeled **Lim** to the right of th
 
 ### Toggle Buttons
 
-Toggle buttons are color-coded per feature:
+The toggle buttons are arranged in **DSP signal-chain order** — left to right matches the actual processing pipeline inside the device:
+
+| Channel type | Signal chain (left → right) |
+|---|---|
+| **Input** | **Gain** → Gate → Phase → Mute |
+| **Output** | Xover → PEQ → **Gain** → Comp → Phase → Delay → Mute |
+
+#### Gain indicator
+
+The **Gain** button is a *position marker*, not a toggle — it shows where the gain knob sits in the signal chain. It has a distinct muted style (solid border, no fill) so you can tell it apart from the real toggles at a glance. Clicking it briefly flashes the gain knob's arc so you can quickly locate the control.
+
+#### Feature toggles
+
+The remaining buttons are color-coded per feature:
 
 | Button | Accent color | Input | Output |
 |--------|--------------|-------|--------|

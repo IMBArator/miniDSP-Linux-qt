@@ -27,16 +27,17 @@ from PySide6.QtWidgets import (
 
 from minidsp.protocol import CHANNEL_NAMES
 
-from ..widgets import GainKnob, LedIndicator, LevelMeter, ToggleButton
+from ..widgets import GainIndicator, GainKnob, LedIndicator, LevelMeter, ToggleButton
 
-INPUT_TOGGLES = [("Gate", "gate"), ("Phase", "phase"), ("Mute", "mute")]
+INPUT_TOGGLES = [("Gain", "gain"), ("Gate", "gate"), ("Phase", "phase"), ("Mute", "mute")]
 OUTPUT_TOGGLES = [
     ("Xover", "xover"),
-    ("PEQ", "peq"),
-    ("Comp", "comp"),
+    ("PEQ",   "peq"),
+    ("Gain",  "gain"),
+    ("Comp",  "comp"),
     ("Phase", "phase"),
     ("Delay", "delay"),
-    ("Mute", "mute"),
+    ("Mute",  "mute"),
 ]
 
 
@@ -139,26 +140,25 @@ class ChannelStrip(QFrame):
         toggle_row = QHBoxLayout()
         toggle_row.setSpacing(4)
         self._toggles: dict[str, ToggleButton] = {}
+        self._gain_indicator: GainIndicator | None = None
         for label, feature in self._toggle_specs:
-            btn = ToggleButton()
-            btn.setText(label)
-            btn.setFeature(feature)
-            btn.toggled.connect(
-                lambda checked, f=feature: self.toggle_changed.emit(f, checked)
-            )
-            toggle_row.addWidget(btn)
-            self._toggles[feature] = btn
-
-        self._link_label = QLabel("")
-        self._link_label.setObjectName("channelLinkLabel")
-        self._link_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._link_label.setSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
-        )
-        self._link_label.hide()
+            if feature == "gain":
+                indicator = GainIndicator()
+                indicator.setText(label)
+                indicator.gain_clicked.connect(self._highlight_gain)
+                toggle_row.addWidget(indicator)
+                self._gain_indicator = indicator
+            else:
+                btn = ToggleButton()
+                btn.setText(label)
+                btn.setFeature(feature)
+                btn.toggled.connect(
+                    lambda checked, f=feature: self.toggle_changed.emit(f, checked)
+                )
+                toggle_row.addWidget(btn)
+                self._toggles[feature] = btn
 
         toggle_row.addStretch(1)
-        toggle_row.addWidget(self._link_label)
         root.addLayout(toggle_row)
 
         root.setSizeConstraint(root.SizeConstraint.SetMinimumSize)
@@ -183,6 +183,9 @@ class ChannelStrip(QFrame):
 
     def set_gain_silent(self, raw: int) -> None:
         self._knob.setValueSilently(raw)
+
+    def _highlight_gain(self) -> None:
+        self._knob.highlight()
 
     def set_gate_active(self, active: bool) -> None:
         btn = self._toggles.get("gate")
@@ -220,6 +223,8 @@ class ChannelStrip(QFrame):
         self._knob.setEnabled(enabled)
         for btn in self._toggles.values():
             btn.setEnabled(enabled)
+        if self._gain_indicator is not None:
+            self._gain_indicator.setEnabled(enabled)
         if not enabled:
             self._meter.reset()
             self._db_label.setText("\u2014 dB")
@@ -235,6 +240,8 @@ class ChannelStrip(QFrame):
         self._knob.setEnabled(not is_slave)
         for btn in self._toggles.values():
             btn.setEnabled(not is_slave)
+        if self._gain_indicator is not None:
+            self._gain_indicator.setEnabled(not is_slave)
         if is_slave:
             self._link_label.setText("\U0001f517")
             self._link_label.setToolTip(

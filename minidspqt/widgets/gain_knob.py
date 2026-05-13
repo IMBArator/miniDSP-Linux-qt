@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QPainter, QPen
+from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
@@ -57,6 +57,12 @@ class GainKnob(QWidget):
         self._maximum = GAIN_RAW_MAX
         self._drag_anchor_y: float | None = None
         self._drag_anchor_value: int = self._value
+        self._highlighted = False
+        self._blink_count = 0
+
+        self._highlight_timer = QTimer(self)
+        self._highlight_timer.setInterval(200)
+        self._highlight_timer.timeout.connect(self._blink_tick)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -107,6 +113,26 @@ class GainKnob(QWidget):
             self._value = clamped
             self._arc_widget.update()
             self._value_edit.setText(_format_db_full(self._value))
+
+    def highlight(self) -> None:
+        self._blink_count = 0
+        self._highlighted = True
+        self._arc_widget.update()
+        self._highlight_timer.start()
+
+    def _blink_tick(self) -> None:
+        self._highlighted = not self._highlighted
+        self._arc_widget.update()
+        if self._highlighted:
+            self._blink_count += 1
+        if self._blink_count >= 4:
+            self._highlight_timer.stop()
+            self._highlighted = False
+            self._arc_widget.update()
+
+    def _clear_highlight(self) -> None:
+        self._highlighted = False
+        self._arc_widget.update()
 
     # --- Edit handling ---
 
@@ -226,5 +252,13 @@ class _ArcWidget(QWidget):
             )
             p.setPen(QPen(theme.knob_pointer, max(1.5, radius * 0.06)))
             p.drawLine(QPointF(cx, cy), tip)
+
+            if self._knob._highlighted:
+                glow = QColor(theme.knob_arc_fg)
+                glow.setAlpha(120)
+                pen_glow = QPen(glow, max(4.0, radius * 0.18))
+                pen_glow.setCapStyle(Qt.PenCapStyle.RoundCap)
+                p.setPen(pen_glow)
+                p.drawArc(rect, int(_ARC_START_DEG * 16), int(_ARC_SWEEP_DEG * 16))
         finally:
             p.end()

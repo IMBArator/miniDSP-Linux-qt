@@ -3,6 +3,7 @@
 from .compressor_graph import CompressorGraph
 from .delay_graph import DelayGraph
 from .freq_response_graph import FreqResponseGraph
+from .gain_indicator import GainIndicator
 from .gain_knob import GainKnob
 from .gate_graph import GateGraph
 from .led_indicator import LedIndicator
@@ -16,6 +17,7 @@ __all__ = [
     "CompressorGraph",
     "DelayGraph",
     "FreqResponseGraph",
+    "GainIndicator",
     "GainKnob",
     "GateGraph",
     "LedIndicator",
