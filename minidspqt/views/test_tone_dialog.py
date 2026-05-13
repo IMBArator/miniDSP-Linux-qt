@@ -43,12 +43,37 @@ from ..model import DeviceState
 # series is fixed by the device firmware and the labels are friendlier than
 # parsing "SINE_FREQ_1K25HZ" → "1.25 kHz".
 _FREQ_LABELS: tuple[str, ...] = (
-    "20 Hz", "25 Hz", "31 Hz", "40 Hz", "50 Hz", "63 Hz", "80 Hz",
-    "100 Hz", "125 Hz", "160 Hz", "200 Hz", "250 Hz", "315 Hz",
-    "400 Hz", "500 Hz", "630 Hz", "800 Hz",
-    "1 kHz", "1.25 kHz", "1.6 kHz", "2 kHz", "2.5 kHz", "3.15 kHz",
-    "4 kHz", "5 kHz", "6.3 kHz", "8 kHz", "10 kHz", "12.5 kHz",
-    "16 kHz", "20 kHz",
+    "20 Hz",
+    "25 Hz",
+    "31 Hz",
+    "40 Hz",
+    "50 Hz",
+    "63 Hz",
+    "80 Hz",
+    "100 Hz",
+    "125 Hz",
+    "160 Hz",
+    "200 Hz",
+    "250 Hz",
+    "315 Hz",
+    "400 Hz",
+    "500 Hz",
+    "630 Hz",
+    "800 Hz",
+    "1 kHz",
+    "1.25 kHz",
+    "1.6 kHz",
+    "2 kHz",
+    "2.5 kHz",
+    "3.15 kHz",
+    "4 kHz",
+    "5 kHz",
+    "6.3 kHz",
+    "8 kHz",
+    "10 kHz",
+    "12.5 kHz",
+    "16 kHz",
+    "20 kHz",
 )
 
 _MODES = (TONE_OFF, TONE_PINK, TONE_WHITE, TONE_SINE)
@@ -170,7 +195,11 @@ class TestToneDialog(QDialog):
         Falls back to TONE_OFF if, for some reason, no radio is checked
         (should not happen in practice but avoids returning -1).
         """
-        return self._wave_group.checkedId() if self._wave_group.checkedId() != -1 else TONE_OFF
+        return (
+            self._wave_group.checkedId()
+            if self._wave_group.checkedId() != -1
+            else TONE_OFF
+        )
 
     def current_freq_index(self) -> int:
         return self._freq_spin.value()

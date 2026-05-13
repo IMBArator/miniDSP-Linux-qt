@@ -18,7 +18,9 @@ def knob(qtbot):
 
 
 def _wheel_up(multiplier=1, ctrl=False):
-    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    mod = (
+        Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    )
     return QWheelEvent(
         QPointF(0, 0),
         QPointF(0, 0),
@@ -32,7 +34,9 @@ def _wheel_up(multiplier=1, ctrl=False):
 
 
 def _wheel_down(multiplier=1, ctrl=False):
-    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    mod = (
+        Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    )
     return QWheelEvent(
         QPointF(0, 0),
         QPointF(0, 0),
@@ -46,7 +50,9 @@ def _wheel_down(multiplier=1, ctrl=False):
 
 
 def _mouse_press(y, button=Qt.MouseButton.LeftButton, ctrl=False):
-    mod = Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    mod = (
+        Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    )
     return QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(28, y),
@@ -70,7 +76,9 @@ def _mouse_move(y):
 
 def _key(key, modifier=Qt.KeyboardModifier.NoModifier):
     return QKeyEvent(
-        QKeyEvent.Type.KeyPress, key, modifier,
+        QKeyEvent.Type.KeyPress,
+        key,
+        modifier,
     )
 
 
@@ -292,9 +300,7 @@ class TestMouseDrag:
         assert knob.value() < 50
 
     def test_non_left_button_ignored(self, knob):
-        knob.mousePressEvent(
-            _mouse_press(y=50, button=Qt.MouseButton.RightButton)
-        )
+        knob.mousePressEvent(_mouse_press(y=50, button=Qt.MouseButton.RightButton))
         assert knob._drag_anchor_y is None
 
     def test_release_resets_anchor(self, knob):

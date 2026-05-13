@@ -157,11 +157,19 @@ class RoutingMatrix(QWidget):
 
             p.setPen(Qt.PenStyle.NoPen)
             for i in range(NUM):
-                fill = theme.matrix_active if self._hover_input == i else theme.matrix_node_fill
+                fill = (
+                    theme.matrix_active
+                    if self._hover_input == i
+                    else theme.matrix_node_fill
+                )
                 p.setBrush(fill)
                 p.drawEllipse(ins[i], NODE_RADIUS, NODE_RADIUS)
             for o in range(NUM):
-                fill = theme.matrix_active if self._hover_output == o else theme.matrix_node_fill
+                fill = (
+                    theme.matrix_active
+                    if self._hover_output == o
+                    else theme.matrix_node_fill
+                )
                 p.setBrush(fill)
                 p.drawEllipse(outs[o], NODE_RADIUS, NODE_RADIUS)
         finally:

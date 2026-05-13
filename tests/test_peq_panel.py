@@ -36,7 +36,13 @@ class TestSilentSetters:
 
     def test_silent_setter_updates_widgets(self, panel):
         bands = [
-            PEQBand(gain_raw=120 + b * 5, freq_raw=100 + b * 10, q_raw=20, filter_type=b % 7, bypass=(b == 3))
+            PEQBand(
+                gain_raw=120 + b * 5,
+                freq_raw=100 + b * 10,
+                q_raw=20,
+                filter_type=b % 7,
+                bypass=(b == 3),
+            )
             for b in range(7)
         ]
         panel.set_bands_silently(bands, True)
@@ -192,10 +198,10 @@ class TestPerTypeQRange:
         "type_index, expected_max",
         [
             (0, 100),  # Peak
-            (1, 35),   # Low Shelf
-            (2, 35),   # High Shelf
-            (3, 35),   # Low Pass
-            (4, 35),   # High Pass
+            (1, 35),  # Low Shelf
+            (2, 35),  # High Shelf
+            (3, 35),  # Low Pass
+            (4, 35),  # High Pass
             (5, 100),  # Allpass 1st
             (6, 100),  # Allpass 2nd
         ],
@@ -231,7 +237,10 @@ class TestPerTypeQRange:
     def test_silent_setter_clamps_q_for_shelf(self, panel):
         from minidspqt.model import PEQBand
 
-        bands = [PEQBand(gain_raw=120, freq_raw=170, q_raw=20, filter_type=0) for _ in range(7)]
+        bands = [
+            PEQBand(gain_raw=120, freq_raw=170, q_raw=20, filter_type=0)
+            for _ in range(7)
+        ]
         # Out-of-range Q for a Low Shelf should be clamped to 35 on load.
         bands[2] = PEQBand(gain_raw=160, freq_raw=180, q_raw=80, filter_type=1)
         panel.set_bands_silently(bands, False)

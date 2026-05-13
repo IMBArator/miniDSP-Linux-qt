@@ -86,9 +86,7 @@ class MainWindow(QMainWindow):
         self._home_view.mute_changed.connect(self._on_mute_changed)
         self._home_view.phase_changed.connect(self._on_phase_changed)
         self._home_view.gate_clicked.connect(self._show_detail)
-        self._home_view.output_feature_toggled.connect(
-            self._on_output_feature_toggled
-        )
+        self._home_view.output_feature_toggled.connect(self._on_output_feature_toggled)
         self._home_view.name_changed.connect(self._on_name_changed)
         self._home_view.route_changed.connect(self._on_route_changed)
         self._home_view.recall_clicked.connect(self._on_recall)
@@ -109,9 +107,7 @@ class MainWindow(QMainWindow):
             self._on_detail_peq_channel_bypass
         )
         self._detail_view.xover_changed.connect(self._on_detail_xover_changed)
-        self._detail_view.compressor_changed.connect(
-            self._on_detail_compressor_changed
-        )
+        self._detail_view.compressor_changed.connect(self._on_detail_compressor_changed)
         self._detail_view.delay_changed.connect(self._on_detail_delay_changed)
 
         self._thread.start()
@@ -122,7 +118,9 @@ class MainWindow(QMainWindow):
         self._save_action.triggered.connect(self._on_save_unt)
         self._save_action.setEnabled(False)
         menu.addSeparator()
-        menu.addAction("Channel linking\u2026").triggered.connect(self._on_channel_linking)
+        menu.addAction("Channel linking\u2026").triggered.connect(
+            self._on_channel_linking
+        )
         self._linking_dialog: ChannelLinkingDialog | None = None
         menu.addAction("Test tone\u2026").triggered.connect(self._on_test_tone)
         self._test_tone_dialog: TestToneDialog | None = None
@@ -492,6 +490,7 @@ class MainWindow(QMainWindow):
         request pattern is wired so the panel only needs to connect a
         signal when it lands.
         """
+
         def _mutate(obj) -> None:
             obj.compressor = CompressorState(
                 ratio=ratio,
@@ -503,9 +502,7 @@ class MainWindow(QMainWindow):
 
         affected = self._state.mutate_with_links(channel, _mutate)
         for ch in affected:
-            self._thread.request_compressor(
-                ch, ratio, knee, attack, release, threshold
-            )
+            self._thread.request_compressor(ch, ratio, knee, attack, release, threshold)
         self._refresh_active_states(affected)
 
     def _on_detail_delay_changed(self, channel: int, samples: int) -> None:
@@ -618,9 +615,7 @@ class MainWindow(QMainWindow):
 
         # Step 1: prepare_link for any new slave pair, per group.
         for group_start in (0, 4):
-            new_master = self._find_new_master(
-                old_flags, new_flags, group_start
-            )
+            new_master = self._find_new_master(old_flags, new_flags, group_start)
             if new_master is None:
                 continue
             new_master_unified = group_start + new_master
@@ -661,9 +656,7 @@ class MainWindow(QMainWindow):
         Updates local state immediately so the dialog's stop button arms
         (or disarms) without waiting for a config round-trip.
         """
-        self._state.test_tone = TestToneState(
-            mode=mode, sine_freq_index=freq_index
-        )
+        self._state.test_tone = TestToneState(mode=mode, sine_freq_index=freq_index)
         self._thread.request_test_tone(mode, freq_index)
         self._sync_test_tone_dialog()
 
@@ -675,9 +668,7 @@ class MainWindow(QMainWindow):
         the next time the user picks Sine.
         """
         keep_freq = self._state.test_tone.sine_freq_index
-        self._state.test_tone = TestToneState(
-            mode=0, sine_freq_index=keep_freq
-        )
+        self._state.test_tone = TestToneState(mode=0, sine_freq_index=keep_freq)
         self._thread.request_test_tone(0, keep_freq)
 
     @staticmethod
@@ -714,7 +705,9 @@ class MainWindow(QMainWindow):
             act = theme_menu.addAction(label)
             act.setCheckable(True)
             act.setChecked(theme_manager.preference == pref)
-            act.triggered.connect(lambda _checked, p=pref: theme_manager.set_user_preference(p))
+            act.triggered.connect(
+                lambda _checked, p=pref: theme_manager.set_user_preference(p)
+            )
             group.addAction(act)
 
         _add("System", "system")

@@ -72,7 +72,7 @@ class Theme:
     # --- Frequency / gate graphs ---
     graph_bg: QColor
     graph_grid: QColor
-    graph_ref: QColor          # 0 dB / diagonal reference line
+    graph_ref: QColor  # 0 dB / diagonal reference line
     graph_curve: QColor
     graph_curve_bypassed: QColor
     graph_label: QColor
@@ -105,13 +105,13 @@ class Theme:
     knob_pointer: QColor
 
     # --- Level meter ---
-    meter_segment_green_low: QColor   # darkest green segment
+    meter_segment_green_low: QColor  # darkest green segment
     meter_segment_green_high: QColor  # brightest green segment
     meter_segment_amber: QColor
     meter_segment_red: QColor
     meter_peak_marker: QColor
-    meter_unlit_target: QColor        # color we blend each segment toward
-    meter_unlit_amount: float         # 0..1; 1.0 = fully replaced by target
+    meter_unlit_target: QColor  # color we blend each segment toward
+    meter_unlit_amount: float  # 0..1; 1.0 = fully replaced by target
 
     # --- LED indicator ---
     led_active: QColor
@@ -147,7 +147,6 @@ class Theme:
 
 DARK_THEME = Theme(
     name="dark",
-
     pal_window=QColor(45, 45, 48),
     pal_window_text=QColor(220, 220, 220),
     pal_base=QColor(30, 30, 32),
@@ -158,7 +157,6 @@ DARK_THEME = Theme(
     pal_bright_text=QColor(255, 255, 255),
     pal_highlight=QColor(70, 130, 200),
     pal_highlighted_text=QColor(255, 255, 255),
-
     graph_bg=QColor(26, 26, 46),
     graph_grid=QColor(255, 255, 255, 25),
     graph_ref=QColor(255, 255, 255, 60),
@@ -171,7 +169,6 @@ DARK_THEME = Theme(
     graph_marker_text=QColor(20, 20, 28),
     graph_xover_marker=QColor(232, 114, 35),
     graph_xover_label_text=QColor(255, 255, 255, 200),
-
     graph_curve_gate=QColor(47, 168, 74),
     graph_curve_gate_bypassed=QColor(47, 168, 74, 70),
     graph_curve_peq=QColor(138, 90, 210),
@@ -180,28 +177,23 @@ DARK_THEME = Theme(
     graph_curve_xover_bypassed=QColor(232, 114, 35, 70),
     graph_curve_comp=QColor(47, 168, 155),
     graph_curve_comp_bypassed=QColor(47, 168, 155, 70),
-
     gate_closed_fill=QColor(200, 50, 50, 40),
     gate_open_fill=QColor(50, 180, 80, 25),
     gate_threshold_line=QColor(255, 200, 50, 140),
     gate_threshold_text=QColor(255, 200, 50),
-
     knob_arc_bg=QColor(60, 60, 64),
     knob_arc_fg=QColor(80, 160, 230),
     knob_pointer=QColor(230, 230, 230),
-
     meter_segment_green_low=QColor(0, 140, 0),
     meter_segment_green_high=QColor(0, 200, 0),
     meter_segment_amber=QColor(210, 200, 0),
     meter_segment_red=QColor(255, 0, 0),
     meter_peak_marker=QColor(255, 255, 255, 160),
     meter_unlit_target=QColor(0, 0, 0),
-    meter_unlit_amount=0.80,            # 1/5 of original brightness
-
+    meter_unlit_amount=0.80,  # 1/5 of original brightness
     led_active=QColor(255, 40, 40),
     led_dim=QColor(80, 15, 15),
     led_glow=QColor(255, 60, 60, 90),
-
     matrix_active=QColor(80, 170, 230),
     matrix_drag=QColor(120, 200, 255, 180),
     matrix_highlight=QColor(120, 200, 255, 60),
@@ -218,7 +210,6 @@ DARK_THEME = Theme(
 
 LIGHT_THEME = Theme(
     name="light",
-
     pal_window=QColor(245, 245, 247),
     pal_window_text=QColor(40, 40, 42),
     pal_base=QColor(255, 255, 255),
@@ -229,7 +220,6 @@ LIGHT_THEME = Theme(
     pal_bright_text=QColor(0, 0, 0),
     pal_highlight=QColor(70, 130, 200),
     pal_highlighted_text=QColor(255, 255, 255),
-
     graph_bg=QColor(240, 242, 247),
     graph_grid=QColor(0, 0, 0, 30),
     graph_ref=QColor(0, 0, 0, 70),
@@ -242,7 +232,6 @@ LIGHT_THEME = Theme(
     graph_marker_text=QColor(255, 255, 255),
     graph_xover_marker=QColor(168, 80, 17),
     graph_xover_label_text=QColor(255, 255, 255, 220),
-
     graph_curve_gate=QColor(30, 122, 54),
     graph_curve_gate_bypassed=QColor(30, 122, 54, 80),
     graph_curve_peq=QColor(110, 63, 184),
@@ -251,16 +240,13 @@ LIGHT_THEME = Theme(
     graph_curve_xover_bypassed=QColor(168, 80, 17, 80),
     graph_curve_comp=QColor(30, 133, 122),
     graph_curve_comp_bypassed=QColor(30, 133, 122, 80),
-
     gate_closed_fill=QColor(200, 50, 50, 50),
     gate_open_fill=QColor(50, 160, 80, 35),
     gate_threshold_line=QColor(200, 140, 30, 200),
     gate_threshold_text=QColor(170, 110, 20),
-
     knob_arc_bg=QColor(220, 220, 225),
     knob_arc_fg=QColor(70, 130, 200),
     knob_pointer=QColor(60, 60, 64),
-
     meter_segment_green_low=QColor(0, 150, 0),
     meter_segment_green_high=QColor(40, 200, 40),
     meter_segment_amber=QColor(220, 170, 0),
@@ -268,11 +254,9 @@ LIGHT_THEME = Theme(
     meter_peak_marker=QColor(0, 0, 0, 160),
     meter_unlit_target=QColor(232, 232, 236),  # match meter frame fill
     meter_unlit_amount=0.85,
-
     led_active=QColor(220, 30, 30),
     led_dim=QColor(220, 170, 170),
     led_glow=QColor(255, 80, 80, 90),
-
     matrix_active=QColor(50, 130, 200),
     matrix_drag=QColor(70, 160, 220, 200),
     matrix_highlight=QColor(70, 160, 220, 60),

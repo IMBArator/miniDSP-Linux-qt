@@ -52,15 +52,21 @@ def _parse_db(text: str) -> int:
 
     return db_to_raw(db_val)
 
-INPUT_TOGGLES = [("Gain", "gain"), ("Gate", "gate"), ("Phase", "phase"), ("Mute", "mute")]
+
+INPUT_TOGGLES = [
+    ("Gain", "gain"),
+    ("Gate", "gate"),
+    ("Phase", "phase"),
+    ("Mute", "mute"),
+]
 OUTPUT_TOGGLES = [
     ("Xover", "xover"),
-    ("PEQ",   "peq"),
-    ("Gain",  "gain"),
-    ("Comp",  "comp"),
+    ("PEQ", "peq"),
+    ("Gain", "gain"),
+    ("Comp", "comp"),
     ("Phase", "phase"),
     ("Delay", "delay"),
-    ("Mute",  "mute"),
+    ("Mute", "mute"),
 ]
 
 

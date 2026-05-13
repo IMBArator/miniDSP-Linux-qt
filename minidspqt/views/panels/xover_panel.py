@@ -245,8 +245,12 @@ class XoverPanel(QWidget):
             is_slave,
             master_name,
             [
-                self._hp_freq, self._hp_slope, self._hp_bypass,
-                self._lp_freq, self._lp_slope, self._lp_bypass,
+                self._hp_freq,
+                self._hp_slope,
+                self._hp_bypass,
+                self._lp_freq,
+                self._lp_slope,
+                self._lp_bypass,
                 self._reset_btn,
             ],
         )

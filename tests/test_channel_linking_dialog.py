@@ -102,20 +102,14 @@ class TestDialogInitialState:
         # should be the one checked.
         for row in range(4):
             for col, rb in enumerate(dialog._input_radios[row]):
-                assert rb.isChecked() is (col == row), (
-                    f"input row {row} col {col}"
-                )
+                assert rb.isChecked() is (col == row), f"input row {row} col {col}"
             for col, rb in enumerate(dialog._output_radios[row]):
-                assert rb.isChecked() is (col == row), (
-                    f"output row {row} col {col}"
-                )
+                assert rb.isChecked() is (col == row), f"output row {row} col {col}"
 
     def test_pre_existing_link_pre_checks_master_column(self, qtbot):
         # Inputs A+B linked (master InA, slave InB), C and D standalone.
         # → row InB should pre-check column 0 (InA).
-        state = _state_with_link_flags(
-            [0x03, 0x00, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
-        )
+        state = _state_with_link_flags([0x03, 0x00, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80])
         dlg = ChannelLinkingDialog(None, state)
         qtbot.addWidget(dlg)
 
@@ -141,9 +135,7 @@ class TestDialogApply:
 
     def test_unlink_pre_existing_pair(self, qtbot):
         # Start from A+B linked, click row InB column InB to unlink.
-        state = _state_with_link_flags(
-            [0x03, 0x00, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
-        )
+        state = _state_with_link_flags([0x03, 0x00, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80])
         dlg = ChannelLinkingDialog(None, state)
         qtbot.addWidget(dlg)
 
@@ -242,26 +234,36 @@ class TestCustomChannelNames:
 
     def test_custom_names_flow_to_headers_and_status(self, qtbot):
         cfg = {
-            "names": ["Mic 1", "Mic 2", "Line L", "Line R",
-                      "Mains", "Sub", "Mon A", "Mon B"],
+            "names": [
+                "Mic 1",
+                "Mic 2",
+                "Line L",
+                "Line R",
+                "Mains",
+                "Sub",
+                "Mon A",
+                "Mon B",
+            ],
             "gains": [0] * 8,
             "mutes": [False] * 8,
             "phases": [False] * 8,
             "link_flags": [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80],
             "routings": [0x01, 0x02, 0x04, 0x08],
             "gates": [
-                {"attack": 0, "release": 0, "hold": 0, "threshold": 0}
-                for _ in range(4)
+                {"attack": 0, "release": 0, "hold": 0, "threshold": 0} for _ in range(4)
             ],
             "delays": [0] * 4,
             "crossovers": [
-                {"hipass_freq": 0, "hipass_slope": 0,
-                 "lopass_freq": 0, "lopass_slope": 0}
+                {
+                    "hipass_freq": 0,
+                    "hipass_slope": 0,
+                    "lopass_freq": 0,
+                    "lopass_slope": 0,
+                }
                 for _ in range(4)
             ],
             "compressors": [
-                {"ratio": 0, "knee": 0, "attack": 0,
-                 "release": 0, "threshold": 0}
+                {"ratio": 0, "knee": 0, "attack": 0, "release": 0, "threshold": 0}
                 for _ in range(4)
             ],
             "peqs": [{"bands": [], "channel_bypass": False} for _ in range(4)],
@@ -273,13 +275,22 @@ class TestCustomChannelNames:
         qtbot.addWidget(dlg)
 
         assert [h.text() for h in dlg._input_headers] == [
-            "Mic 1", "Mic 2", "Line L", "Line R"
+            "Mic 1",
+            "Mic 2",
+            "Line L",
+            "Line R",
         ]
         assert [h.text() for h in dlg._output_headers] == [
-            "Mains", "Sub", "Mon A", "Mon B"
+            "Mains",
+            "Sub",
+            "Mon A",
+            "Mon B",
         ]
         assert [lbl.text() for lbl in dlg._input_row_labels] == [
-            "Mic 1", "Mic 2", "Line L", "Line R"
+            "Mic 1",
+            "Mic 2",
+            "Line L",
+            "Line R",
         ]
         # Status labels should also use the live names.
         assert "Mic 1: standalone" in dlg._input_status[0].text()
@@ -289,26 +300,27 @@ class TestCustomChannelNames:
         # Construct with default fixture names, then refresh from a
         # state that renamed InA — the header should update in place.
         cfg = {
-            "names": ["NEW_A", "InB", "InC", "InD",
-                      "Out1", "Out2", "Out3", "Out4"],
+            "names": ["NEW_A", "InB", "InC", "InD", "Out1", "Out2", "Out3", "Out4"],
             "gains": [0] * 8,
             "mutes": [False] * 8,
             "phases": [False] * 8,
             "link_flags": [0x01, 0x02, 0x04, 0x08, 0x01, 0x02, 0x04, 0x08],
             "routings": [0x01, 0x02, 0x04, 0x08],
             "gates": [
-                {"attack": 0, "release": 0, "hold": 0, "threshold": 0}
-                for _ in range(4)
+                {"attack": 0, "release": 0, "hold": 0, "threshold": 0} for _ in range(4)
             ],
             "delays": [0] * 4,
             "crossovers": [
-                {"hipass_freq": 0, "hipass_slope": 0,
-                 "lopass_freq": 0, "lopass_slope": 0}
+                {
+                    "hipass_freq": 0,
+                    "hipass_slope": 0,
+                    "lopass_freq": 0,
+                    "lopass_slope": 0,
+                }
                 for _ in range(4)
             ],
             "compressors": [
-                {"ratio": 0, "knee": 0, "attack": 0,
-                 "release": 0, "threshold": 0}
+                {"ratio": 0, "knee": 0, "attack": 0, "release": 0, "threshold": 0}
                 for _ in range(4)
             ],
             "peqs": [{"bands": [], "channel_bypass": False} for _ in range(4)],

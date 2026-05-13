@@ -126,45 +126,47 @@ class CompressorPanel(QWidget):
         controls_row.setSpacing(24)
 
         self._knob_threshold = ParamKnob(
-            minimum=0, maximum=220, default=220,
-            formatter=_fmt_threshold, parser=_parse_threshold,
+            minimum=0,
+            maximum=220,
+            default=220,
+            formatter=_fmt_threshold,
+            parser=_parse_threshold,
         )
         self._ratio_combo = QComboBox()
         for raw in range(16):
             self._ratio_combo.addItem(COMP_RATIO_NAMES[raw])
         self._knob_knee = ParamKnob(
-            minimum=0, maximum=12, default=0,
-            formatter=_fmt_knee, parser=_parse_knee,
+            minimum=0,
+            maximum=12,
+            default=0,
+            formatter=_fmt_knee,
+            parser=_parse_knee,
         )
         self._knob_attack = ParamKnob(
-            minimum=0, maximum=998, default=49,
-            formatter=_fmt_attack, parser=_parse_attack,
+            minimum=0,
+            maximum=998,
+            default=49,
+            formatter=_fmt_attack,
+            parser=_parse_attack,
         )
         self._knob_release = ParamKnob(
-            minimum=9, maximum=2999, default=499,
-            formatter=_fmt_release, parser=_parse_release,
+            minimum=9,
+            maximum=2999,
+            default=499,
+            formatter=_fmt_release,
+            parser=_parse_release,
         )
 
         controls_row.addStretch(1)
-        controls_row.addLayout(
-            self._make_column("Threshold", self._knob_threshold)
-        )
+        controls_row.addLayout(self._make_column("Threshold", self._knob_threshold))
         controls_row.addStretch(1)
-        controls_row.addLayout(
-            self._make_column("Ratio", self._ratio_combo)
-        )
+        controls_row.addLayout(self._make_column("Ratio", self._ratio_combo))
         controls_row.addStretch(1)
-        controls_row.addLayout(
-            self._make_column("Knee", self._knob_knee)
-        )
+        controls_row.addLayout(self._make_column("Knee", self._knob_knee))
         controls_row.addStretch(1)
-        controls_row.addLayout(
-            self._make_column("Attack", self._knob_attack)
-        )
+        controls_row.addLayout(self._make_column("Attack", self._knob_attack))
         controls_row.addStretch(1)
-        controls_row.addLayout(
-            self._make_column("Release", self._knob_release)
-        )
+        controls_row.addLayout(self._make_column("Release", self._knob_release))
         controls_row.addStretch(1)
 
         root.addLayout(controls_row)
@@ -173,8 +175,10 @@ class CompressorPanel(QWidget):
         # both when the user clicks and when setCurrentIndex runs — the
         # silent setter blocks signals so refresh paths don't re-emit.
         for knob in (
-            self._knob_threshold, self._knob_knee,
-            self._knob_attack, self._knob_release,
+            self._knob_threshold,
+            self._knob_knee,
+            self._knob_attack,
+            self._knob_release,
         ):
             knob.valueChanged.connect(self._on_any_change)
         self._ratio_combo.currentIndexChanged.connect(self._on_any_change)

@@ -130,15 +130,11 @@ class TestXoverActiveProperty:
         assert state.xover_active is False
 
     def test_active_when_hipass(self):
-        state = OutputChannelState(
-            crossover=CrossoverState(hipass_slope=SLOPE_BW24)
-        )
+        state = OutputChannelState(crossover=CrossoverState(hipass_slope=SLOPE_BW24))
         assert state.xover_active is True
 
     def test_active_when_lopass(self):
-        state = OutputChannelState(
-            crossover=CrossoverState(lopass_slope=SLOPE_BW24)
-        )
+        state = OutputChannelState(crossover=CrossoverState(lopass_slope=SLOPE_BW24))
         assert state.xover_active is True
 
     def test_inactive_when_both_bypassed(self):
@@ -207,40 +203,42 @@ class TestCrossoverBiquads:
         from minidsp.protocol import SLOPE_LR24
 
         xo = CrossoverData(
-            hipass_freq=100, hipass_slope=SLOPE_BW24,
-            lopass_freq=200, lopass_slope=SLOPE_LR24,
+            hipass_freq=100,
+            hipass_slope=SLOPE_BW24,
+            lopass_freq=200,
+            lopass_slope=SLOPE_LR24,
         )
         biquads = _crossover_biquads(xo)
         assert len(biquads) == 6  # BW24=2 + LR24=4
 
     def test_hipass_attenuates_low_freq(self):
-        biquads = _crossover_biquads(CrossoverData(
-            hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0
-        ))
+        biquads = _crossover_biquads(
+            CrossoverData(hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0)
+        )
         omega_low = 2.0 * math.pi * 20.0 / _FS_HZ
         db = sum(_biquad_magnitude_db(c, omega_low) for c in biquads)
         assert db < -20  # well below cutoff
 
     def test_hipass_passes_high_freq(self):
-        biquads = _crossover_biquads(CrossoverData(
-            hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0
-        ))
+        biquads = _crossover_biquads(
+            CrossoverData(hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0)
+        )
         omega_high = 2.0 * math.pi * 10000.0 / _FS_HZ
         db = sum(_biquad_magnitude_db(c, omega_high) for c in biquads)
         assert abs(db) < 0.5  # near unity
 
     def test_lopass_attenuates_high_freq(self):
-        biquads = _crossover_biquads(CrossoverData(
-            hipass_slope=0, lopass_freq=150, lopass_slope=SLOPE_BW24
-        ))
+        biquads = _crossover_biquads(
+            CrossoverData(hipass_slope=0, lopass_freq=150, lopass_slope=SLOPE_BW24)
+        )
         omega_high = 2.0 * math.pi * 10000.0 / _FS_HZ
         db = sum(_biquad_magnitude_db(c, omega_high) for c in biquads)
         assert db < -20
 
     def test_lopass_passes_low_freq(self):
-        biquads = _crossover_biquads(CrossoverData(
-            hipass_slope=0, lopass_freq=150, lopass_slope=SLOPE_BW24
-        ))
+        biquads = _crossover_biquads(
+            CrossoverData(hipass_slope=0, lopass_freq=150, lopass_slope=SLOPE_BW24)
+        )
         omega_low = 2.0 * math.pi * 20.0 / _FS_HZ
         db = sum(_biquad_magnitude_db(c, omega_low) for c in biquads)
         assert abs(db) < 0.5

@@ -144,9 +144,7 @@ class DelayPanel(QWidget):
         self._graph.set_delays(self._samples)
         self._knob.setValueSilently(self._samples[self._active_idx])
 
-    def set_active_channel(
-        self, output_idx: int, name: str, samples: int
-    ) -> None:
+    def set_active_channel(self, output_idx: int, name: str, samples: int) -> None:
         """Switch which row is the editable one and refresh its label/knob."""
         idx = max(0, min(3, int(output_idx)))
         self._active_idx = idx

@@ -58,7 +58,9 @@ def test_set_params_clamps_out_of_range_ratio(graph):
 class TestCurveMath:
     def test_baseline_below_threshold_is_identity(self, graph):
         """For inputs well below threshold, output equals input."""
-        graph.set_params(threshold_raw=160, ratio_raw=9, knee_raw=0)  # thr=-10, ratio=4.0
+        graph.set_params(
+            threshold_raw=160, ratio_raw=9, knee_raw=0
+        )  # thr=-10, ratio=4.0
         for x in (-90.0, -60.0, -30.0, -15.0):
             assert graph._curve_db(x) == pytest.approx(x)
 
@@ -98,6 +100,4 @@ class TestCurveMath:
         # input (identity); at the high edge, output matches the linear
         # compressed region.
         assert graph._curve_db(thr - 4.0) == pytest.approx(thr - 4.0)
-        assert graph._curve_db(thr + 4.0) == pytest.approx(
-            thr + 4.0 / 2.0
-        )
+        assert graph._curve_db(thr + 4.0) == pytest.approx(thr + 4.0 / 2.0)

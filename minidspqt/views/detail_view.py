@@ -81,7 +81,9 @@ class RoutedMetersPanel(QWidget):
         self._meters: list[tuple[int, QLabel, LevelMeter]] = []
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
 
-    def set_channels(self, channel_indices: list[int], names: dict[int, str] | None = None) -> None:
+    def set_channels(
+        self, channel_indices: list[int], names: dict[int, str] | None = None
+    ) -> None:
         while self._layout.count():
             item = self._layout.takeAt(0)
             w = item.widget()
@@ -202,9 +204,7 @@ class DetailView(QWidget):
         self._gate_panel.gate_params_changed.connect(self._on_gate_params)
         self._gate_panel.reset_requested.connect(self._on_gate_reset)
         self._peq_panel.peq_band_changed.connect(self._on_peq_band)
-        self._peq_panel.peq_channel_bypass_changed.connect(
-            self._on_peq_channel_bypass
-        )
+        self._peq_panel.peq_channel_bypass_changed.connect(self._on_peq_channel_bypass)
         self._peq_panel.reset_requested.connect(self._on_peq_reset)
         self._xover_panel.xover_changed.connect(self._on_xover_changed)
         self._xover_panel.reset_requested.connect(self._on_xover_reset)
@@ -229,7 +229,9 @@ class DetailView(QWidget):
         header.addWidget(self._back_button)
 
         header.addItem(
-            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
         )
 
         self._title_label = QLabel("Detail View")
@@ -238,7 +240,9 @@ class DetailView(QWidget):
         header.addWidget(self._title_label)
 
         header.addItem(
-            QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+            QSpacerItem(
+                40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+            )
         )
 
         self._connection_label = QLabel("Disconnected")
@@ -338,7 +342,11 @@ class DetailView(QWidget):
         self._show_feature_panel()
 
         ch_state = self._current_channel_state(state)
-        ch_name = ch_state.name or CHANNEL_NAMES[channel] if ch_state else CHANNEL_NAMES[channel]
+        ch_name = (
+            ch_state.name or CHANNEL_NAMES[channel]
+            if ch_state
+            else CHANNEL_NAMES[channel]
+        )
         self._title_label.setText(f"{self._feature_name} \u2014 {ch_name}")
 
     def apply_state(self, state: DeviceState) -> None:
@@ -394,13 +402,19 @@ class DetailView(QWidget):
             self._xover_panel.set_params_silently(
                 xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
             )
-            self._peq_panel.set_crossover(CrossoverData(
-                xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
-            ))
+            self._peq_panel.set_crossover(
+                CrossoverData(
+                    xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+                )
+            )
             self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
             c = ch_state.compressor
             self._compressor_panel.set_params_silently(
-                c.ratio, c.knee, c.attack, c.release, c.threshold,
+                c.ratio,
+                c.knee,
+                c.attack,
+                c.release,
+                c.threshold,
             )
             self._push_delay_state(state)
 
@@ -430,9 +444,7 @@ class DetailView(QWidget):
             samples.append(0)
         self._delay_panel.set_channel_names(names)
         self._delay_panel.set_delays_silently(samples)
-        self._delay_panel.set_active_channel(
-            out_idx, names[out_idx], samples[out_idx]
-        )
+        self._delay_panel.set_active_channel(out_idx, names[out_idx], samples[out_idx])
 
     def refresh_delay_panel_state(self) -> None:
         """Re-push delay values from the cached state into the panel.
@@ -494,9 +506,7 @@ class DetailView(QWidget):
             self._strip.update_level(inputs[ch])
         elif ch >= 4 and (ch - 4) < len(outputs):
             self._strip.update_level(outputs[ch - 4])
-            self._output_strip.set_limiter_active(
-                bool(limiter_mask & (1 << (ch - 4)))
-            )
+            self._output_strip.set_limiter_active(bool(limiter_mask & (1 << (ch - 4))))
 
         self._left_meters.update_levels(payload)
         self._right_meters.update_levels(payload)
@@ -657,7 +667,10 @@ class DetailView(QWidget):
     ) -> None:
         if not self._is_input:
             self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
-            self._xover_panel.set_bands(self._peq_panel._all_bands(), self._peq_panel._channel_bypass.isChecked())
+            self._xover_panel.set_bands(
+                self._peq_panel._all_bands(),
+                self._peq_panel._channel_bypass.isChecked(),
+            )
         self.peq_band_changed.emit(
             self._channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
         )
@@ -667,12 +680,12 @@ class DetailView(QWidget):
             self._output_strip.set_peq_active(self._peq_panel.is_peq_active())
         self.peq_channel_bypass_changed.emit(self._channel, bypass)
 
-    def _on_gate_params(self, attack: int, release: int, hold: int, threshold: int) -> None:
+    def _on_gate_params(
+        self, attack: int, release: int, hold: int, threshold: int
+    ) -> None:
         if self._is_input:
             self._input_strip.set_gate_active(threshold > 0)
-        self.gate_params_changed.emit(
-            self._channel, attack, release, hold, threshold
-        )
+        self.gate_params_changed.emit(self._channel, attack, release, hold, threshold)
 
     def _on_xover_changed(
         self, hp_freq: int, hp_slope: int, lp_freq: int, lp_slope: int
@@ -680,9 +693,9 @@ class DetailView(QWidget):
         if not self._is_input:
             active = hp_slope != 0 or lp_slope != 0
             self._output_strip.set_xover_active(active)
-            self._peq_panel.set_crossover(CrossoverData(
-                hp_freq, hp_slope, lp_freq, lp_slope
-            ))
+            self._peq_panel.set_crossover(
+                CrossoverData(hp_freq, hp_slope, lp_freq, lp_slope)
+            )
         self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
 
     def _on_compressor_params(
@@ -718,14 +731,18 @@ class DetailView(QWidget):
         ratio, knee, attack, release, threshold = default_compressor_state()
         if not self._is_input:
             self._output_strip.set_comp_active(ratio > 0)
-        self.compressor_changed.emit(self._channel, ratio, knee, attack, release, threshold)
+        self.compressor_changed.emit(
+            self._channel, ratio, knee, attack, release, threshold
+        )
 
     def _on_xover_reset(self) -> None:
         self._xover_panel.reset_to_defaults()
         hp_freq, hp_slope, lp_freq, lp_slope = default_crossover_state()
         if not self._is_input:
             self._output_strip.set_xover_active(hp_slope != 0 or lp_slope != 0)
-            self._peq_panel.set_crossover(CrossoverData(hp_freq, hp_slope, lp_freq, lp_slope))
+            self._peq_panel.set_crossover(
+                CrossoverData(hp_freq, hp_slope, lp_freq, lp_slope)
+            )
         self.xover_changed.emit(self._channel, hp_freq, hp_slope, lp_freq, lp_slope)
 
     def _on_delay_reset(self) -> None:
@@ -743,11 +760,15 @@ class DetailView(QWidget):
                 self._peq_panel._all_bands(),
                 self._peq_panel._channel_bypass.isChecked(),
             )
-        for band, (gain_raw, freq_raw, q_raw, filter_type, bypass) in enumerate(default_peq_bands()):
+        for band, (gain_raw, freq_raw, q_raw, filter_type, bypass) in enumerate(
+            default_peq_bands()
+        ):
             self.peq_band_changed.emit(
                 self._channel, band, gain_raw, freq_raw, q_raw, filter_type, bypass
             )
-        self.peq_channel_bypass_changed.emit(self._channel, default_peq_channel_bypass())
+        self.peq_channel_bypass_changed.emit(
+            self._channel, default_peq_channel_bypass()
+        )
 
     # ------------------------------------------------------------------ #
     # Helpers

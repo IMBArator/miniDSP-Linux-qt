@@ -76,9 +76,7 @@ def test_preset_queue_does_not_coalesce(thread, fake_dsp):
     assert [c[1][0] for c in loads] == [2, 3]
 
 
-def test_request_prepare_link_dispatches_in_order_before_channel_link(
-    thread, fake_dsp
-):
+def test_request_prepare_link_dispatches_in_order_before_channel_link(thread, fake_dsp):
     # The protocol contract requires prepare_link before set_channel_link
     # for the same slave. The thread coalesces via dict insertion order,
     # so as long as the caller enqueues the prepare first the dispatch

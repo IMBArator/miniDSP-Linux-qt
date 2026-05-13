@@ -48,7 +48,13 @@ _MARGIN_LEFT = _OUTER_PADDING_LEFT + _LABEL_GAP + _Y_LABEL_WIDTH
 # drawn in the grid pass.
 _GRID_TICKS_DB: tuple[float, ...] = (-80.0, -60.0, -40.0, -20.0, 0.0)
 _AXIS_LABELS_DB: tuple[float, ...] = (
-    -90.0, -80.0, -60.0, -40.0, -20.0, 0.0, 20.0,
+    -90.0,
+    -80.0,
+    -60.0,
+    -40.0,
+    -20.0,
+    0.0,
+    20.0,
 )
 
 _CURVE_WIDTH = 2.5
@@ -58,8 +64,22 @@ _CURVE_STEPS = 110  # one sample per dB across the −90..+20 plot
 # ``minidsp.protocol.COMP_RATIO_NAMES``.  ``math.inf`` marks the hard
 # limiter (raw 0x0F).
 COMP_RATIO_VALUES: tuple[float, ...] = (
-    1.0, 1.1, 1.3, 1.5, 1.7, 2.0, 2.5, 3.0,
-    3.5, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0, math.inf,
+    1.0,
+    1.1,
+    1.3,
+    1.5,
+    1.7,
+    2.0,
+    2.5,
+    3.0,
+    3.5,
+    4.0,
+    5.0,
+    6.0,
+    8.0,
+    10.0,
+    20.0,
+    math.inf,
 )
 
 

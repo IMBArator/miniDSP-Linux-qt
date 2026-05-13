@@ -95,17 +95,30 @@ def _crossover_biquads(xo: CrossoverData) -> list[tuple[float, ...]]:
     """Return biquad coefficient tuples for the crossover filters."""
     sections: list[tuple[float, ...]] = []
     if xo.hipass_slope != 0:
-        sections.extend(_slope_to_biquads(xo.hipass_freq, xo.hipass_slope, is_highpass=True))
+        sections.extend(
+            _slope_to_biquads(xo.hipass_freq, xo.hipass_slope, is_highpass=True)
+        )
     if xo.lopass_slope != 0:
-        sections.extend(_slope_to_biquads(xo.lopass_freq, xo.lopass_slope, is_highpass=False))
+        sections.extend(
+            _slope_to_biquads(xo.lopass_freq, xo.lopass_slope, is_highpass=False)
+        )
     return sections
 
 
-def _slope_to_biquads(freq_raw: int, slope: int, is_highpass: bool) -> list[tuple[float, ...]]:
+def _slope_to_biquads(
+    freq_raw: int, slope: int, is_highpass: bool
+) -> list[tuple[float, ...]]:
     from minidsp.protocol import (
-        SLOPE_BL6, SLOPE_BL12, SLOPE_BL18, SLOPE_BL24,
-        SLOPE_BW6, SLOPE_BW12, SLOPE_BW18, SLOPE_BW24,
-        SLOPE_LR12, SLOPE_LR24,
+        SLOPE_BL6,
+        SLOPE_BL12,
+        SLOPE_BL18,
+        SLOPE_BL24,
+        SLOPE_BW6,
+        SLOPE_BW12,
+        SLOPE_BW18,
+        SLOPE_BW24,
+        SLOPE_LR12,
+        SLOPE_LR24,
     )
 
     f0 = max(1.0, freq_raw_to_hz(freq_raw))
@@ -307,7 +320,11 @@ class FreqResponseGraph(QWidget):
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         theme = theme_manager.current
         curve_color, bypassed_color = self._curve_color(theme)
-        if self._channel_bypass and self._crossover.hipass_slope == 0 and self._crossover.lopass_slope == 0:
+        if (
+            self._channel_bypass
+            and self._crossover.hipass_slope == 0
+            and self._crossover.lopass_slope == 0
+        ):
             pen = QPen(bypassed_color, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
@@ -337,7 +354,9 @@ class FreqResponseGraph(QWidget):
         for i in range(_NUM_SAMPLES):
             frac = i / (_NUM_SAMPLES - 1)
             db = 0.0
-            omega = 2.0 * math.pi * (10.0 ** (_LOG_F_MIN + frac * _LOG_F_RANGE)) / _FS_HZ
+            omega = (
+                2.0 * math.pi * (10.0 ** (_LOG_F_MIN + frac * _LOG_F_RANGE)) / _FS_HZ
+            )
             for c in all_coeffs:
                 db += _biquad_magnitude_db(c, omega)
             x = rect.left() + frac * rect.width()

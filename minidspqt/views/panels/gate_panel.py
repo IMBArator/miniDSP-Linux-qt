@@ -229,5 +229,11 @@ class GatePanel(QWidget):
             self._link_banner,
             is_slave,
             master_name,
-            [self._knob_threshold, self._knob_attack, self._knob_hold, self._knob_release, self._reset_btn],
+            [
+                self._knob_threshold,
+                self._knob_attack,
+                self._knob_hold,
+                self._knob_release,
+                self._reset_btn,
+            ],
         )

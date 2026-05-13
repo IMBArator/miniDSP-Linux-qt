@@ -74,14 +74,21 @@ def test_master_peq_band_edit_fans_out_to_device(window, monkeypatch):
     calls: list[tuple] = []
     monkeypatch.setattr(window._thread, "request_peq_band", lambda *a: calls.append(a))
 
-    window._on_detail_peq_band(4, band=2, gain_raw=160, freq_raw=180, q_raw=25, filter_type=0, bypass=False)
+    window._on_detail_peq_band(
+        4, band=2, gain_raw=160, freq_raw=180, q_raw=25, filter_type=0, bypass=False
+    )
 
     chans = sorted({c[0] for c in calls})
     assert chans == [4, 5, 6]
     # All three carry the same band payload
     for ch, band, gain_raw, freq_raw, q_raw, filter_type, bypass in calls:
         assert (band, gain_raw, freq_raw, q_raw, filter_type, bypass) == (
-            2, 160, 180, 25, 0, False,
+            2,
+            160,
+            180,
+            25,
+            0,
+            False,
         )
     # Model mirrors
     for out_idx in (0, 1, 2):
@@ -116,7 +123,10 @@ def test_master_xover_edit_fans_out_to_device(window, monkeypatch):
     for out_idx in (0, 1, 2):
         xo = window._state.outputs[out_idx].crossover
         assert (xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope) == (
-            120, 4, 200, 6,
+            120,
+            4,
+            200,
+            6,
         )
 
 
@@ -153,7 +163,9 @@ def test_active_state_propagates_to_slave_strips(window):
     assert slave_strip._toggles["gate"].property("gate_active") is True
 
     # And a PEQ edit that lights output strips
-    window._on_detail_peq_band(4, band=0, gain_raw=200, freq_raw=150, q_raw=20, filter_type=0, bypass=False)
+    window._on_detail_peq_band(
+        4, band=0, gain_raw=200, freq_raw=150, q_raw=20, filter_type=0, bypass=False
+    )
     for out_idx in (0, 1, 2):
         btn = window._home_view._output_strips[out_idx]._toggles["peq"]
         assert btn.property("peq_active") is True
@@ -258,7 +270,9 @@ def test_delay_panel_available_on_output_detail(window):
 def test_compressor_handler_scaffolds_fan_out(window, monkeypatch):
     """The scaffolded compressor handler should still fan out per-channel."""
     calls: list[tuple] = []
-    monkeypatch.setattr(window._thread, "request_compressor", lambda *a: calls.append(a))
+    monkeypatch.setattr(
+        window._thread, "request_compressor", lambda *a: calls.append(a)
+    )
 
     window._on_detail_compressor_changed(
         4, ratio=4, knee=2, attack=15, release=120, threshold=30
@@ -280,7 +294,9 @@ def test_compressor_panel_edit_fans_out(window, monkeypatch):
         → thread.request_compressor / model mutate_with_links.
     """
     calls: list[tuple] = []
-    monkeypatch.setattr(window._thread, "request_compressor", lambda *a: calls.append(a))
+    monkeypatch.setattr(
+        window._thread, "request_compressor", lambda *a: calls.append(a)
+    )
 
     window._show_detail(4)  # Out0 master
     panel = window._detail_view._compressor_panel

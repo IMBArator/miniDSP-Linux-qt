@@ -405,7 +405,9 @@ class PEQPanel(QWidget):
             # would briefly accept Q=80 then truncate on the next type change.
             combo = self._type_combos[band]
             combo.blockSignals(True)
-            combo.setCurrentIndex(max(0, min(len(PEQ_TYPE_NAMES) - 1, int(filter_type))))
+            combo.setCurrentIndex(
+                max(0, min(len(PEQ_TYPE_NAMES) - 1, int(filter_type)))
+            )
             combo.blockSignals(False)
             self._apply_q_range(band)
             self._q_knobs[band].setValueSilently(q_raw)
@@ -426,9 +428,7 @@ class PEQPanel(QWidget):
         finally:
             self._suppress_emit = prev
 
-    def set_bands_silently(
-        self, bands: list[PEQBand], channel_bypass: bool
-    ) -> None:
+    def set_bands_silently(self, bands: list[PEQBand], channel_bypass: bool) -> None:
         prev = self._suppress_emit
         self._suppress_emit = True
         try:

@@ -227,7 +227,7 @@ class PEQGraph(QWidget):
         for i in range(_NUM_SAMPLES):
             frac = i / (_NUM_SAMPLES - 1)
             log_f = _LOG_F_MIN + frac * _LOG_F_RANGE
-            f = 10.0 ** log_f
+            f = 10.0**log_f
             db = 0.0
             omega = 2.0 * math.pi * f / _FS_HZ
             for c in coeffs:
@@ -308,9 +308,7 @@ def _biquad_coeffs_from_band(band: PEQBand) -> tuple[float, ...]:
     return _coeffs(band.filter_type, f0, q, gain_db)
 
 
-def _coeffs(
-    filter_type: int, f0: float, q: float, gain_db: float
-) -> tuple[float, ...]:
+def _coeffs(filter_type: int, f0: float, q: float, gain_db: float) -> tuple[float, ...]:
     """Return ``(b0, b1, b2, a0, a1, a2)`` in normalised-by-a0 form."""
     omega0 = 2.0 * math.pi * f0 / _FS_HZ
     cos_w0 = math.cos(omega0)

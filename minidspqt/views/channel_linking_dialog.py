@@ -134,16 +134,28 @@ class ChannelLinkingDialog(QDialog):
         self._output_names: tuple[str, ...] = OUTPUT_CHANNEL_NAMES
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self._build_matrix_group(
-            "Inputs", INPUT_CHANNEL_NAMES, self._input_radios,
-            self._input_groups, self._input_status,
-            self._input_headers, self._input_row_labels,
-        ))
-        layout.addWidget(self._build_matrix_group(
-            "Outputs", OUTPUT_CHANNEL_NAMES, self._output_radios,
-            self._output_groups, self._output_status,
-            self._output_headers, self._output_row_labels,
-        ))
+        layout.addWidget(
+            self._build_matrix_group(
+                "Inputs",
+                INPUT_CHANNEL_NAMES,
+                self._input_radios,
+                self._input_groups,
+                self._input_status,
+                self._input_headers,
+                self._input_row_labels,
+            )
+        )
+        layout.addWidget(
+            self._build_matrix_group(
+                "Outputs",
+                OUTPUT_CHANNEL_NAMES,
+                self._output_radios,
+                self._output_groups,
+                self._output_status,
+                self._output_headers,
+                self._output_row_labels,
+            )
+        )
 
         self._buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Apply
@@ -189,31 +201,35 @@ class ChannelLinkingDialog(QDialog):
             for i in range(4)
         )
         self._apply_names_to_widgets(
-            self._input_names, self._input_headers, self._input_row_labels,
+            self._input_names,
+            self._input_headers,
+            self._input_row_labels,
             self._input_radios,
         )
         self._apply_names_to_widgets(
-            self._output_names, self._output_headers, self._output_row_labels,
+            self._output_names,
+            self._output_headers,
+            self._output_row_labels,
             self._output_radios,
         )
 
         info = state.link_info
         for ch in range(4):
-            target = _initial_target_for(
-                info[ch]["role"], info[ch]["master"], ch
-            )
+            target = _initial_target_for(info[ch]["role"], info[ch]["master"], ch)
             self._select_row(self._input_radios, ch, target)
         for i in range(4):
             ch = 4 + i
-            target = _initial_target_for(
-                info[ch]["role"], info[ch]["master"], i
-            )
+            target = _initial_target_for(info[ch]["role"], info[ch]["master"], i)
             self._select_row(self._output_radios, i, target)
         self._update_status_labels(
-            self._input_names, self._input_radios, self._input_status,
+            self._input_names,
+            self._input_radios,
+            self._input_status,
         )
         self._update_status_labels(
-            self._output_names, self._output_radios, self._output_status,
+            self._output_names,
+            self._output_radios,
+            self._output_status,
         )
         self._update_enabled_state(self._input_radios)
         self._update_enabled_state(self._output_radios)
@@ -222,7 +238,9 @@ class ChannelLinkingDialog(QDialog):
         """Return the 8-entry link_flags list reflecting the current radios."""
         in_targets = self._row_targets(self._input_radios)
         out_targets = self._row_targets(self._output_radios)
-        return link_flags_from_targets(in_targets) + link_flags_from_targets(out_targets)
+        return link_flags_from_targets(in_targets) + link_flags_from_targets(
+            out_targets
+        )
 
     # ----------------------------------------------------------------- #
     # Build helpers
@@ -287,9 +305,7 @@ class ChannelLinkingDialog(QDialog):
     # Internal state helpers
     # ----------------------------------------------------------------- #
 
-    def _select_row(
-        self, radios: list[list[QRadioButton]], row: int, col: int
-    ) -> None:
+    def _select_row(self, radios: list[list[QRadioButton]], row: int, col: int) -> None:
         # Clamp col to a valid column for this row (defensive — should
         # always already be true).
         col = max(0, min(row, col))
@@ -345,8 +361,7 @@ class ChannelLinkingDialog(QDialog):
         is_slave = [targets[i] != i for i in range(4)]
         # A channel has slaves iff some other row points to it.
         has_slaves = [
-            any(j != i and targets[j] == i for j in range(4))
-            for i in range(4)
+            any(j != i and targets[j] == i for j in range(4)) for i in range(4)
         ]
         for row in range(4):
             for col, rb in enumerate(radios[row]):
@@ -401,10 +416,14 @@ class ChannelLinkingDialog(QDialog):
         if not checked:
             return
         self._update_status_labels(
-            self._input_names, self._input_radios, self._input_status,
+            self._input_names,
+            self._input_radios,
+            self._input_status,
         )
         self._update_status_labels(
-            self._output_names, self._output_radios, self._output_status,
+            self._output_names,
+            self._output_radios,
+            self._output_status,
         )
         # Re-evaluate which radios are clickable: forming a slave chain
         # or making a master into a slave should be disabled.

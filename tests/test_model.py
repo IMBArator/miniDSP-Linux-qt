@@ -165,11 +165,15 @@ def test_mutate_with_links_does_not_touch_link_flags(preset_cfg):
     routine param fan-out.
     """
     state = DeviceState.from_config(_linked_cfg(preset_cfg))
-    before = [ch.link_flags for ch in state.inputs] + [ch.link_flags for ch in state.outputs]
+    before = [ch.link_flags for ch in state.inputs] + [
+        ch.link_flags for ch in state.outputs
+    ]
 
     state.mutate_with_links(0, lambda obj: setattr(obj, "muted", True))
 
-    after = [ch.link_flags for ch in state.inputs] + [ch.link_flags for ch in state.outputs]
+    after = [ch.link_flags for ch in state.inputs] + [
+        ch.link_flags for ch in state.outputs
+    ]
     assert after == before
 
 

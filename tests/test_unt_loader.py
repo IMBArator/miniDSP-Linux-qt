@@ -6,10 +6,17 @@ from pathlib import Path
 
 import pytest
 
-from minidspqt.unt_loader import EXPECTED_SIZE, UntParseError, load_unt, load_unt_all_slots
+from minidspqt.unt_loader import (
+    EXPECTED_SIZE,
+    UntParseError,
+    load_unt,
+    load_unt_all_slots,
+)
 
 FIXTURE_PATH = "/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt"
-BUNDLED_BLANK = Path(__file__).resolve().parent.parent / "minidspqt" / "resources" / "blank.unt"
+BUNDLED_BLANK = (
+    Path(__file__).resolve().parent.parent / "minidspqt" / "resources" / "blank.unt"
+)
 
 
 @pytest.fixture

@@ -25,8 +25,8 @@ _DB_RANGE = _DB_MAX - _DB_MIN
 
 _OUTER_PADDING = 10
 _OUTER_PADDING_LEFT = 4  # tighter than other sides: y-labels are right-aligned
-                         # and naturally drift toward the rect, leaving extra
-                         # whitespace on the widget-edge side of the text.
+# and naturally drift toward the rect, leaving extra
+# whitespace on the widget-edge side of the text.
 _LABEL_GAP = 4
 _X_LABEL_HEIGHT = 12
 _Y_LABEL_WIDTH = 24

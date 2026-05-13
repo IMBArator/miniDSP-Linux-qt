@@ -186,7 +186,11 @@ class ParamKnob(QWidget):
             event.accept()
 
     def keyPressEvent(self, event) -> None:
-        step = self._ctrl_step() if event.modifiers() & Qt.KeyboardModifier.ControlModifier else 1
+        step = (
+            self._ctrl_step()
+            if event.modifiers() & Qt.KeyboardModifier.ControlModifier
+            else 1
+        )
         if event.key() in (Qt.Key.Key_Up, Qt.Key.Key_Right):
             self.setValue(self._value + step)
             event.accept()

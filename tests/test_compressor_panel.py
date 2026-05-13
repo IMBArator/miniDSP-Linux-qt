@@ -54,13 +54,15 @@ class TestSilentSetter:
         panel.set_params_silently(
             ratio=2, knee=0, attack=49, release=499, threshold=220
         )
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._knob_threshold.setValue(120)
         ratio, knee, attack, release, threshold = sig.args
         assert (ratio, knee, attack, release, threshold) == (
-            2, 0, 49, 499, 120,
+            2,
+            0,
+            49,
+            499,
+            120,
         )
 
 
@@ -74,9 +76,7 @@ class TestSignalEmission:
         panel.set_params_silently(
             ratio=4, knee=2, attack=60, release=400, threshold=200
         )
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._knob_threshold.setValue(150)
         assert sig.args == [4, 2, 60, 400, 150]
 
@@ -84,9 +84,7 @@ class TestSignalEmission:
         panel.set_params_silently(
             ratio=0, knee=0, attack=49, release=499, threshold=220
         )
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._ratio_combo.setCurrentIndex(7)
         assert sig.args == [7, 0, 49, 499, 220]
 
@@ -94,21 +92,15 @@ class TestSignalEmission:
         panel.set_params_silently(
             ratio=3, knee=0, attack=49, release=499, threshold=180
         )
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._knob_knee.setValue(8)
         assert sig.args == [3, 8, 49, 499, 180]
 
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._knob_attack.setValue(120)
         assert sig.args == [3, 8, 120, 499, 180]
 
-        with qtbot.waitSignal(
-            panel.compressor_params_changed, timeout=500
-        ) as sig:
+        with qtbot.waitSignal(panel.compressor_params_changed, timeout=500) as sig:
             panel._knob_release.setValue(2000)
         assert sig.args == [3, 8, 120, 2000, 180]
 
@@ -121,9 +113,7 @@ class TestSignalEmission:
 def test_graph_threshold_reflects_knob(panel):
     panel._knob_threshold.setValue(150)
     # raw 150 → -15 dB
-    assert panel._graph._threshold_db == pytest.approx(
-        comp_threshold_to_db(150)
-    )
+    assert panel._graph._threshold_db == pytest.approx(comp_threshold_to_db(150))
 
 
 def test_graph_knee_reflects_knob(panel):

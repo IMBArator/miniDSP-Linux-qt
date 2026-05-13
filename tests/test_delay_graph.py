@@ -96,11 +96,11 @@ class TestAxisRange:
         assert graph._current_axis_max_ms() == pytest.approx(20.0)
 
     def test_axis_snaps_up_to_next_20ms(self, graph):
-        graph.set_delays([0, 0, 0, 48 * 5])      # 5 ms → 20 ms axis
+        graph.set_delays([0, 0, 0, 48 * 5])  # 5 ms → 20 ms axis
         assert graph._current_axis_max_ms() == pytest.approx(20.0)
-        graph.set_delays([0, 0, 0, 48 * 21])     # 21 ms → 40 ms axis
+        graph.set_delays([0, 0, 0, 48 * 21])  # 21 ms → 40 ms axis
         assert graph._current_axis_max_ms() == pytest.approx(40.0)
-        graph.set_delays([0, 0, 0, 48 * 40])     # exactly 40 ms → 40 ms axis
+        graph.set_delays([0, 0, 0, 48 * 40])  # exactly 40 ms → 40 ms axis
         assert graph._current_axis_max_ms() == pytest.approx(40.0)
 
     def test_axis_respects_largest_channel(self, graph):
@@ -122,12 +122,21 @@ class TestAxisRange:
 class TestGridTicks:
     def test_low_range_uses_20ms_step(self, graph):
         assert graph._grid_ticks_ms(100.0) == (
-            0.0, 20.0, 40.0, 60.0, 80.0, 100.0,
+            0.0,
+            20.0,
+            40.0,
+            60.0,
+            80.0,
+            100.0,
         )
 
     def test_high_range_uses_100ms_step(self, graph):
         assert graph._grid_ticks_ms(400.0) == (
-            0.0, 100.0, 200.0, 300.0, 400.0,
+            0.0,
+            100.0,
+            200.0,
+            300.0,
+            400.0,
         )
 
     def test_always_anchors_at_endpoints(self, graph):

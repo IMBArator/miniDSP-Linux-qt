@@ -29,7 +29,7 @@ from PySide6.QtWidgets import QWidget
 
 from ..theme import theme_manager
 
-_SAMPLES_PER_MS = 48.0    # 48 kHz sample rate
+_SAMPLES_PER_MS = 48.0  # 48 kHz sample rate
 _SAMPLES_MAX = 32640
 _PROTOCOL_MAX_MS = 680.0  # absolute upper bound (32 640 samples / 48 kHz)
 
@@ -37,13 +37,13 @@ _PROTOCOL_MAX_MS = 680.0  # absolute upper bound (32 640 samples / 48 kHz)
 # of ``_AXIS_STEP_MS`` so small delays are readable while the same widget
 # also handles the full 0–680 ms range.  See ``_current_axis_max_ms``.
 _AXIS_STEP_MS = 20.0
-_AXIS_MIN_MS = 20.0       # used when every channel is 0 ms
+_AXIS_MIN_MS = 20.0  # used when every channel is 0 ms
 
 _OUTER_PADDING = 10
 _LABEL_GAP = 4
 _X_LABEL_HEIGHT = 12
-_ROW_LABEL_WIDTH = 44     # fits "Out 1" comfortably; user-renamed names elide
-_MS_READOUT_WIDTH = 72    # fits "680.000 ms"
+_ROW_LABEL_WIDTH = 44  # fits "Out 1" comfortably; user-renamed names elide
+_MS_READOUT_WIDTH = 72  # fits "680.000 ms"
 _ROW_GAP = 10
 
 _MARGIN_TOP = _OUTER_PADDING
