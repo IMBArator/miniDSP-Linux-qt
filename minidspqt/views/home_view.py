@@ -223,6 +223,20 @@ class HomeView(QWidget):
 
         self.routingMatrix.set_routing([ch.routing_mask for ch in state.outputs])
 
+        for i in range(4):
+            if state.is_linked_master(i):
+                slaves = state.get_linked_slaves(i)
+                members = [strips[i]._title_btn.text()] + [
+                    strips[s]._title_btn.text() for s in slaves
+                ]
+                self._input_strips[i].set_link_master(members)
+            if state.is_linked_master(i + 4):
+                slaves = state.get_linked_slaves(i + 4)
+                members = [strips[i + 4]._title_btn.text()] + [
+                    strips[s]._title_btn.text() for s in slaves
+                ]
+                self._output_strips[i].set_link_master(members)
+
         slot = state.active_slot
         if slot is not None and state.preset_names:
             label = f"U{slot:02d}" if slot > 0 else "F00"
@@ -302,6 +316,20 @@ class HomeView(QWidget):
             self._output_strips[i].set_linked_slave(
                 state.is_linked_slave(i + 4), master_name
             )
+
+        for i in range(4):
+            if state.is_linked_master(i):
+                slaves = state.get_linked_slaves(i)
+                members = [strips[i]._title_btn.text()] + [
+                    strips[s]._title_btn.text() for s in slaves
+                ]
+                self._input_strips[i].set_link_master(members)
+            if state.is_linked_master(i + 4):
+                slaves = state.get_linked_slaves(i + 4)
+                members = [strips[i + 4]._title_btn.text()] + [
+                    strips[s]._title_btn.text() for s in slaves
+                ]
+                self._output_strips[i].set_link_master(members)
 
     @staticmethod
     def _master_title(

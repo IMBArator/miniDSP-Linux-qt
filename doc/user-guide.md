@@ -190,7 +190,12 @@ Click the channel name button at the top of any strip to rename it. A dialog app
 
 ### Linked Channels
 
-When channels are linked on the device (e.g., stereo pair), the **slave** channel displays a chain icon (🔗) and its controls (gain knob and toggles) are disabled. Adjusting the master channel automatically updates all linked slaves.
+When channels are linked on the device (e.g., stereo pair), both the **master** and **slave** channels display a chain icon (🔗) in the title row:
+
+- **Master** — tooltip reads *"Master of Out1, Out2"*
+- **Slave** — controls (gain knob and toggles) are disabled; tooltip reads *"Linked to Out1"*
+
+Adjusting the master channel automatically updates all linked slaves.
 
 To **edit** which channels are linked, open **Menu ≡ → Channel linking…** (see [Channel Linking](#channel-linking)).
 

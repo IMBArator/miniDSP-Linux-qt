@@ -72,7 +72,22 @@ class ChannelStrip(QFrame):
         self._title_btn.setFixedHeight(22)
         self._title_btn.setFlat(True)
         self._title_btn.clicked.connect(self._on_title_clicked)
-        root.addWidget(self._title_btn)
+
+        self._link_label = QLabel("")
+        self._link_label.setObjectName("channelLinkLabel")
+        self._link_label.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        self._link_label.setSizePolicy(
+            QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed
+        )
+        self._link_label.hide()
+
+        title_row = QHBoxLayout()
+        title_row.setSpacing(4)
+        title_row.addWidget(self._title_btn, stretch=1)
+        title_row.addWidget(self._link_label)
+        root.addLayout(title_row)
 
         meter_row = QHBoxLayout()
         meter_row.setSpacing(0)
@@ -192,6 +207,12 @@ class ChannelStrip(QFrame):
         was = btn.blockSignals(True)
         btn.setChecked(checked)
         btn.blockSignals(was)
+
+    def set_link_master(self, member_names: list[str]) -> None:
+        self._link_label.setText("\U0001f517")
+        tooltip = ", ".join(member_names)
+        self._link_label.setToolTip(f"Master of {tooltip}")
+        self._link_label.show()
 
     def set_enabled_state(self, enabled: bool) -> None:
         if enabled and self._is_linked_slave:
