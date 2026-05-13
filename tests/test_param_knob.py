@@ -47,6 +47,7 @@ def _mouse_press(y, button=Qt.MouseButton.LeftButton):
     return QMouseEvent(
         QMouseEvent.Type.MouseButtonPress,
         QPointF(28, y),
+        QPointF(28, y),
         button,
         button,
         Qt.KeyboardModifier.NoModifier,
@@ -56,6 +57,7 @@ def _mouse_press(y, button=Qt.MouseButton.LeftButton):
 def _mouse_move(y):
     return QMouseEvent(
         QMouseEvent.Type.MouseMove,
+        QPointF(28, y),
         QPointF(28, y),
         Qt.MouseButton.NoButton,
         Qt.MouseButton.NoButton,
@@ -297,6 +299,7 @@ class TestMouseDrag:
         assert knob._drag_anchor_y is not None
         release = QMouseEvent(
             QMouseEvent.Type.MouseButtonRelease,
+            QPointF(28, 50),
             QPointF(28, 50),
             Qt.MouseButton.LeftButton,
             Qt.MouseButton.LeftButton,
