@@ -79,22 +79,7 @@ If no device is found, the UI shows **Disconnected** and all controls are disabl
 
 The main window is divided into three columns:
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  DSP 4x4 Mini          [Connected]              [≡]      │
-├────────────┬──────────────┬──────────────────────────────┤
-│            │              │                              │
-│  Inputs    │   Routing    │   Outputs                    │
-│            │   Matrix     │                              │
-│  InA  ●───┤   ●────●     ├───●  Out1                    │
-│  InB  ●───┤   ●────●     ├───●  Out2                    │
-│  InC  ●───┤   ●────●     ├───●  Out3                    │
-│  InD  ●───┤   ●────●     ├───●  Out4                    │
-│            │              │                              │
-├────────────┴──────────────┴──────────────────────────────┤
-│  Preset: U01 — My Studio              [Recall] [Store]   │
-└──────────────────────────────────────────────────────────┘
-```
+![Home view](img/home-view.png)
 
 - **Left column** — 4 input channel strips (InA through InD)
 - **Center** — interactive 4x4 routing matrix
@@ -107,26 +92,9 @@ The main window is divided into three columns:
 
 Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:
 
-```
-┌──────────┐
-│  InA     │  ← Channel name (click to rename)
-│  ╭───╮ │  ← Gain knob
-│  │ ◠ │ │
-│  ╰───╯ │
-│▊▊▊▊▊░░░│  ← Level meter
-│ -12.3 dB│  ← Peak-held dB value (left-aligned)
-│Gain Gat Ph M│  ← Signal-chain buttons (inputs)
+![Input strip](img/channel-strip-in.png)
 
-┌────────────┐
-│  Out1      │  ← Channel name (click to rename)
-│  ╭───╮ │   ← Gain knob
-│  │ ◠ │ │
-│  ╰───╯ │
-│▊▊▊▊▊░░░│   ← Level meter
-│ -12.3 dB Lim ●│  ← dB value + Limiter LED (outputs only)
-│Xov PEQ Gain Cp Ph Dl M│  ← Signal-chain buttons (outputs)
-└────────────┘
-```
+![Output strip](img/channel-strip-out.png)
 
 ### Gain Knob
 
@@ -221,21 +189,7 @@ To **edit** which channels are linked, open **Menu ≡ → Channel linking…** 
 
 Click the **Gate** button on an input strip — or the **PEQ** / **Xover** / **Comp** / **Delay** button on an output strip — in the home view to open the channel detail view:
 
-```
-┌──────────────────────────────────────────────────────────┐
-│  ← Gate — InA                  [Connected]      [≡]      │
-├────┬───────────────────────────────────┬─────────────────┤
-│ InA│                                   │  Out1   Out3    │
-│ InB│           Channel Strip           │  ▌▌▌▌   ▌▌▌▌    │
-│ InC│  (gain, meter, mute/phase/gate)   │   …      …     │
-│ InD│                                   │                 │
-├────┴───────────────────────────────────┴─────────────────┤
-│                                                          │
-│       Gate Panel: Threshold / Attack / Hold /             │
-│       Release knobs + transfer-function graph             │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
-```
+![Channel detail view](img/channel-detail-view-xover.png)
 
 Layout:
 
@@ -266,27 +220,7 @@ The gate icon on the input channel strip shows green ("armed") whenever the thre
 
 The PEQ panel exposes the 7-band parametric EQ that lives on each output channel. The layout mirrors the t.racks editor: a frequency-response graph at the top showing the summed magnitude across all bands, then 7 columns of per-band controls below.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  PEQ — Out1                                          [Bypass]   │
-├─────────────────────────────────────────────────────────────────┤
-│   +18 dB ┊                                                       │
-│   +12 dB ┊·····················································│
-│    +6 dB ┊·····················································│
-│     0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─│
-│    -6 dB ┊·····················································│
-│   -12 dB ┊·····················································│
-│   -18 dB └─────┬───┬────┬────┬────┬────┬────┬────┬─────┬───┬──│
-│             20  50 100  200  500  1k   2k   5k  10k  20k       │
-├─────────────────────────────────────────────────────────────────┤
-│         B1     B2     B3     B4     B5     B6     B7            │
-│        [Type] [Type] [Type] [Type] [Type] [Type] [Type]         │
-│  Freq   ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
-│  Gain   ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
-│   Q     ◍      ◍      ◍      ◍      ◍      ◍      ◍             │
-│        [Byp]  [Byp]  [Byp]  [Byp]  [Byp]  [Byp]  [Byp]          │
-└─────────────────────────────────────────────────────────────────┘
-```
+![PEQ panel](img/peq-panel.png)
 
 #### Per-band controls
 
@@ -321,20 +255,7 @@ The PEQ button on the output channel strip lights up purple whenever the channel
 
 The Crossover panel exposes the hi-pass and lo-pass filters on each output channel. Each filter has three controls:
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Xover Settings                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│   +18 dB ┊                                                        │
-│    +0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ │
-│   -18 dB └────────────────────────────────────────────────────────│
-│                                                                   │
-├──────────────────────────────────────────────────────────────────┤
-│  Hi-Pass   ◍  1.00 kHz    [BW 24 ▾]  [Byp]                      │
-│  Lo-Pass   ◍  20.00 kHz   [LR 24 ▾]  [Byp]                      │
-└──────────────────────────────────────────────────────────────────┘
-```
+![Crossover panel](img/crossover-panel.png)
 
 #### Per-filter controls
 
@@ -361,24 +282,7 @@ The Xover button on the output channel strip lights up amber whenever **either**
 
 The Compressor panel exposes the per-output dynamics processor. The hardware sends all five compressor parameters in a single atomic frame (protocol command `0x30`), so a change to any one knob re-emits the full block — there is no per-parameter coalescing for the compressor.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Compressor Settings                                            │
-├─────────────────────────────────────────────────────────────────┤
-│   +20 dB ┊                                                  ╱  │
-│     0 dB ┊─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─╱─ ─ ─│
-│   -20 dB ┊·····················································│
-│   -40 dB ┊·······························╱·············│       │
-│   -60 dB ┊··················╱·······│ knee elbow │            │
-│   -80 dB ┊·····╱·····│ identity below threshold │             │
-│   -90 dB └─────┬──────┬──────┬──────┬──────┬──────┬─────────│
-│              -90    -80   -60   -40   -20    0   +20  (dB in) │
-├─────────────────────────────────────────────────────────────────┤
-│   Threshold    Ratio        Knee      Attack    Release         │
-│      ◍       [1:4.0 ▾]       ◍         ◍          ◍             │
-│   −10.0 dB                  4 dB      50 ms     500 ms          │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Compressor panel](img/compressor-panel.png)
 
 #### Controls
 
@@ -414,22 +318,7 @@ The Delay panel exposes the per-output digital delay (0 – 680 ms, stored on th
 
 Each output only has a single delay parameter, so a per-channel panel would feel sparse. Instead the panel shows **all four outputs at once** in an overview graph and provides a single edit knob bound to the **currently displayed** output. To edit a different output, navigate to that channel's strip — the same panel re-targets without reloading.
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  Delay Settings                                                  │
-├──────────────────────────────────────────────────────────────────┤
-│   Out1  ▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯   12.521 ms          │
-│   Out2  ▮▮▮▮▮▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯    4.000 ms          │
-│   Out3  ▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▮▯▯▯▯▯▯▯▯   18.667 ms  ◀ active │
-│   Out4  ▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯▯    0.000 ms          │
-│         └────┬────┬────┬────┬────┬────┬─────┘                    │
-│             0    4    8   12   16   20 (ms)                      │
-├──────────────────────────────────────────────────────────────────┤
-│                          Out3                                    │
-│                           ◍                                      │
-│                       18.667 ms                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
+![Delay panel](img/delay-panel.png)
 
 #### The single edit knob
 
@@ -607,13 +496,7 @@ Linking lets you treat multiple channels as a group: gain, mute, phase, and othe
 
 Open the dialog from **Menu ≡ → Channel linking…**.  It shows two triangular radio-button matrices, one for inputs and one for outputs:
 
-```
-        InA  InB  InC  InD
-InA      ●
-InB      ○    ●
-InC      ○    ○    ●
-InD      ○    ○    ○    ●
-```
+![Channel linking dialog](img/channel-linking-dialog.png)
 
 ### How to read the matrix
 
@@ -654,6 +537,8 @@ For each new master/slave pair the dialog issues `OP_PREPARE_LINK` (0x2A) before
 The device has an internal signal generator that feeds all four outputs simultaneously. It is useful for speaker level matching, polarity checks, and frequency sweeps without needing an external source.
 
 Open the dialog from **Menu ≡ → Test tone…**.
+
+![Test tone generator](img/test-tone-dialog.png)
 
 ### Waveform
 

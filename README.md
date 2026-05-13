@@ -1,20 +1,14 @@
 # miniDSP-Linux-qt
 
-> **Status:** Work in progress — home view (8 channel strips, routing matrix, level meters), preset management, and the channel detail view are functional. The detail view ships with the **Gate** panel for inputs and the **PEQ** panel (7 bands + summed frequency-response graph), **Crossover**, **Compressor**, and **Delay** panels for outputs. All per-channel features are now implemented.
+> **Status:** Work in progress — see [Features](#features) for completed features
 
 Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
 
 ## Home View
 
-![Home View](doc/Home-View.gif)
+![Home View](doc/img/Home-View.gif)
 
-## UI concepts
-
-![Home](doc/concept-art/miniDSP-home.png)
-
-![Detail View](doc/concept-art/miniDSP-detailView.png)
-
-![Detail View PEQ](doc/concept-art/miniDSP-detailViewPEQ.png)
+See [UI Concepts](doc/concepts.md) for original design mockups.
 
 ## Features
 
