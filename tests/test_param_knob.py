@@ -4,9 +4,8 @@ CTRL+fast-edit."""
 from __future__ import annotations
 
 import pytest
-from PySide6.QtCore import QPoint, QPointF, Qt, QTimer
+from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import QKeyEvent, QMouseEvent, QWheelEvent
-from PySide6.QtWidgets import QApplication
 
 from minidspqt.widgets.param_knob import ParamKnob
 

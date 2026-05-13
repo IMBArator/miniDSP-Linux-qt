@@ -8,7 +8,7 @@ import math
 
 import pytest
 
-from minidsp.protocol import SLOPE_BW24, freq_raw_to_hz
+from minidsp.protocol import SLOPE_BW24
 from minidspqt.model import CrossoverState, OutputChannelState
 from minidspqt.views.panels import XoverPanel
 from minidspqt.widgets.freq_response_graph import (
@@ -16,7 +16,6 @@ from minidspqt.widgets.freq_response_graph import (
     FreqResponseGraph,
     _biquad_magnitude_db,
     _crossover_biquads,
-    _second_order_coeffs,
     _FS_HZ,
 )
 
@@ -215,7 +214,6 @@ class TestCrossoverBiquads:
         assert len(biquads) == 6  # BW24=2 + LR24=4
 
     def test_hipass_attenuates_low_freq(self):
-        f0 = freq_raw_to_hz(150)
         biquads = _crossover_biquads(CrossoverData(
             hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0
         ))
@@ -224,7 +222,6 @@ class TestCrossoverBiquads:
         assert db < -20  # well below cutoff
 
     def test_hipass_passes_high_freq(self):
-        f0 = freq_raw_to_hz(150)
         biquads = _crossover_biquads(CrossoverData(
             hipass_freq=150, hipass_slope=SLOPE_BW24, lopass_slope=0
         ))

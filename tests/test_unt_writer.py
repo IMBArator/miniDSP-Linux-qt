@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from minidspqt.unt_loader import load_unt, load_unt_all_slots
+from minidspqt.unt_loader import load_unt_all_slots
 from minidspqt.unt_writer import save_unt
 
 FIXTURE_PATH = Path("/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt")

@@ -278,7 +278,7 @@ class TestCustomChannelNames:
         assert [h.text() for h in dlg._output_headers] == [
             "Mains", "Sub", "Mon A", "Mon B"
         ]
-        assert [l.text() for l in dlg._input_row_labels] == [
+        assert [lbl.text() for lbl in dlg._input_row_labels] == [
             "Mic 1", "Mic 2", "Line L", "Line R"
         ]
         # Status labels should also use the live names.

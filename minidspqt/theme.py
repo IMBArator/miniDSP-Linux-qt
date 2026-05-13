@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Literal
 
 from PySide6.QtCore import QObject, QSettings, Qt, Signal
-from PySide6.QtGui import QColor, QGuiApplication, QPalette
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
 ThemePreference = Literal["system", "light", "dark"]
