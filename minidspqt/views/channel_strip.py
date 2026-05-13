@@ -25,9 +25,32 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import CHANNEL_NAMES
+from minidsp.protocol import CHANNEL_NAMES, raw_to_db
 
-from ..widgets import GainIndicator, GainKnob, LedIndicator, LevelMeter, ToggleButton
+from ..widgets import GainIndicator, LedIndicator, LevelMeter, ParamKnob, ToggleButton
+
+GAIN_RAW_MIN = 0
+GAIN_RAW_MAX = 400
+GAIN_RAW_DEFAULT = 280
+
+
+def _format_db_full(raw: int) -> str:
+    db = raw_to_db(raw)
+    if db <= -60.0:
+        return "-inf dB"
+    return f"{db:+.1f} dB"
+
+
+def _parse_db(text: str) -> int:
+    text = text.strip().lower()
+    if text in ("-inf", "-∞", "-inf db", "-∞ db"):
+        return GAIN_RAW_MIN
+    num_str = text.removesuffix("db").strip()
+    db_val = float(num_str)
+    db_val = max(-60.0, min(12.0, db_val))
+    from minidsp.protocol import db_to_raw
+
+    return db_to_raw(db_val)
 
 INPUT_TOGGLES = [("Gain", "gain"), ("Gate", "gate"), ("Phase", "phase"), ("Mute", "mute")]
 OUTPUT_TOGGLES = [
@@ -93,7 +116,13 @@ class ChannelStrip(QFrame):
         meter_row = QHBoxLayout()
         meter_row.setSpacing(0)
 
-        self._knob = GainKnob()
+        self._knob = ParamKnob(
+            minimum=GAIN_RAW_MIN,
+            maximum=GAIN_RAW_MAX,
+            default=GAIN_RAW_DEFAULT,
+            formatter=_format_db_full,
+            parser=_parse_db,
+        )
         self._knob.setFixedSize(64, 76)
         meter_row.addWidget(self._knob)
 

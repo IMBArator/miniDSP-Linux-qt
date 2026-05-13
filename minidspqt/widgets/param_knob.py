@@ -1,17 +1,17 @@
-"""Generic rotary parameter knob with configurable range and display format.
+"""Rotary parameter knob with configurable range, display format, and optional
+highlight animation.
 
-Unlike :class:`GainKnob` (which is hard-coded to the device gain raw range
-and dB display), ``ParamKnob`` accepts arbitrary min/max ranges and a
-``formatter`` callable for the value label.  The arc drawing and mouse /
-scroll interaction are identical to ``GainKnob``.
+Accepts arbitrary min/max ranges and ``formatter``/``parser`` callables so
+each panel can define its own value mapping.  The arc drawing and mouse /
+scroll interaction are shared by all parameter types.
 """
 
 from __future__ import annotations
 
 import math
 
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QPainter, QPen
+from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
@@ -62,6 +62,12 @@ class ParamKnob(QWidget):
         self._parser = parser or _default_parser
         self._drag_anchor_y: float | None = None
         self._drag_anchor_value: int = self._value
+        self._highlighted = False
+        self._blink_count = 0
+
+        self._highlight_timer = QTimer(self)
+        self._highlight_timer.setInterval(200)
+        self._highlight_timer.timeout.connect(self._blink_tick)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -110,6 +116,26 @@ class ParamKnob(QWidget):
             self._value = clamped
             self._arc_widget.update()
             self._value_edit.setText(self._formatter(self._value))
+
+    def highlight(self) -> None:
+        self._blink_count = 0
+        self._highlighted = True
+        self._arc_widget.update()
+        self._highlight_timer.start()
+
+    def _blink_tick(self) -> None:
+        self._highlighted = not self._highlighted
+        self._arc_widget.update()
+        if self._highlighted:
+            self._blink_count += 1
+        if self._blink_count >= 4:
+            self._highlight_timer.stop()
+            self._highlighted = False
+            self._arc_widget.update()
+
+    def _clear_highlight(self) -> None:
+        self._highlighted = False
+        self._arc_widget.update()
 
     def _apply_edit(self) -> None:
         text = self._value_edit.text().strip()
@@ -208,6 +234,14 @@ class _ArcWidget(QWidget):
             )
             p.setPen(QPen(theme.knob_pointer, max(1.5, radius * 0.06)))
             p.drawLine(QPointF(cx, cy), tip)
+
+            if self._knob._highlighted:
+                glow = QColor(theme.knob_arc_fg)
+                glow.setAlpha(120)
+                pen_glow = QPen(glow, max(4.0, radius * 0.18))
+                pen_glow.setCapStyle(Qt.PenCapStyle.RoundCap)
+                p.setPen(pen_glow)
+                p.drawArc(rect, int(_ARC_START_DEG * 16), int(_ARC_SWEEP_DEG * 16))
         finally:
             p.end()
 

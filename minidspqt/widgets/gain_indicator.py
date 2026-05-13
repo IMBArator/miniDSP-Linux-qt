@@ -1,7 +1,7 @@
 """Non-toggleable signal-chain indicator for the Gain stage.
 
 Renders as a dashed-border label in the toggle row at the position where
-Gain sits in the DSP signal chain.  Clicking it highlights the GainKnob
+Gain sits in the DSP signal chain.  Clicking it highlights the ParamKnob
 above so the user can immediately locate the control.
 """
 
