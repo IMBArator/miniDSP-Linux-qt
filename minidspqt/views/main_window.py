@@ -317,6 +317,7 @@ class MainWindow(QMainWindow):
             if reply != QMessageBox.StandardButton.Yes:
                 return
             self._thread.request_store_preset(slot, dlg.chosen_name)
+            self._thread.request_read_config()
             names = self._state.preset_names
             idx = slot - 1
             if 0 <= idx < len(names):
