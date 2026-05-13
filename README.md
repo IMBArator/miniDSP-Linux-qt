@@ -2,7 +2,7 @@
 
 > **Status:** Work in progress — see [Features](#features) for completed features
 
-Qt graphical interface for the **the t.racks DSP 4x4 Mini**, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Provides full preset management, real-time metering, and an offline mode for editing without hardware connected.
+A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, light/dark theming, and an offline mode for editing without hardware.
 
 ## Home View
 
@@ -14,13 +14,15 @@ See [UI Concepts](doc/concepts.md) for original design mockups.
 
 ### Home view
 
-- Per-channel **gain knobs** (−60 to +12 dB) for 4 inputs and 4 outputs
-- **Mute** and **phase invert** toggles per channel
-- **Routing matrix** — interactive 4×4 input-to-output mapping (drag to connect, double-click to disconnect)
-- **dB-scaled level meters** for all 8 channels
+- Per-channel **gain knobs** (−60 to +12 dB) for 4 inputs and 4 outputs (`cmd_gain`)
+- **Mute** and **phase invert** toggles per channel (`cmd_mute`, `cmd_phase`)
+- **Routing matrix** — interactive 4×4 input-to-output mapping (drag to connect, double-click to disconnect) (`cmd_matrix_route`)
+- **dB-scaled level meters** for all 8 channels (`cmd_poll`, `parse_levels`)
 - **Outlined toggle buttons** — each feature button (gate / mute / phase / xover / peq / comp / delay) paints its accent color on the border and text when off, and fills with the same accent when on
-- Startup **config read** — knobs and toggles reflect device state on connect
+- Startup **config read** — knobs and toggles reflect device state on connect (`cmd_read_config`, `parse_config_page`)
 - **Auto-reconnect** on USB disconnect
+- **Channel names** — click any channel label to rename (max 8 characters), sent to the device immediately (`cmd_set_channel_name`)
+- **Limiter indicator** — red LED on output strips lights up when the compressor is actively limiting (`parse_levels` response field)
 
 ### Light / dark theme
 
@@ -30,7 +32,8 @@ See [UI Concepts](doc/concepts.md) for original design mockups.
 
 ### Channel linking
 
-- Editable from **Menu → Channel linking…** — a popup with two triangular radio-button matrices (inputs / outputs) where each row picks the channel it is linked to (or its own diagonal for *standalone*)
+- **Linked channel display** — master and slave strips show a chain icon; slave controls are disabled with a tooltip indicating the master (`decode_link_groups`)
+- Editable from **Menu → Channel linking…** — a popup with two triangular radio-button matrices (inputs / outputs) where each row picks the channel it is linked to (or its own diagonal for *standalone*) (`cmd_prepare_link`, `cmd_channel_link`)
 - The lowest-indexed channel in each group automatically becomes the master, matching the device's master = OR-bitmask / slave = 0x00 wire convention
 - Forbidden configurations are greyed out: a slave can't itself be picked as a target (no chains), and a master with active slaves can't be demoted before they are released
 - Headers, row labels, and the live "InA: master of …" / "InB: linked to InA" status text use the user's custom channel names from the home view
@@ -43,23 +46,24 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - Header with the same channel strip from the home view (gain knob, level meter, mute/phase/gate or mute/phase/peq/… toggles, name)
 - Quick navigation buttons for all 4 inputs and 4 outputs; the active feature is preserved across channel switches when valid for the new channel type
 - A feature panel area:
-  - **Gate** (inputs) — Threshold, Attack, Hold, Release knobs plus a live transfer-function graph; all four parameters are sent atomically (protocol command 0x3E)
-  - **PEQ** (outputs) — 7 bands of (Type / Freq / Gain / Q / Bypass) below a summed frequency-response graph, plus a channel-bypass toggle in the panel header. Per-band atomic emit (protocol command 0x33). Shelves and pass filters cap Q at 3.0 to match the official editor; Peak and the two allpass forms keep the full Q range
-  - **Crossover** (outputs) — Hi-Pass and Lo-Pass rows, each with frequency knob, slope selector (BW 6 / BL 6 / BW 12 / BL 12 / LR 12 / BW 18 / BL 18 / BW 24 / BL 24 / LR 24), and bypass toggle. Bypass is independent of the slope selector (matching the manufacturer software). Both the Xover and PEQ panels share a combined frequency-response graph that shows the summed crossover + PEQ curve
-  - **Compressor** (outputs) — Threshold (−90 to +20 dB) and Knee (0 – 12 dB) knobs, a Ratio combo (16 named ratios from 1:1.0 to Limit), and Attack (1–999 ms) / Release (10–3000 ms) knobs. All five parameters are sent atomically (protocol command 0x30) and visualised on a live input-vs-output transfer-function graph that renders the soft/hard knee elbow and the Limit clamp
-  - **Delay** (outputs) — Single edit knob (0 – 680 ms, 3-decimal ms display, typed input accepts `"12.5 ms"` or `"601 sa"`) targeting the displayed output, plus an overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms above the largest active delay; clamps at 680 ms). The graph re-targets to whichever output the strip nav buttons select, so a single panel covers all four outputs without per-channel duplication
+  - **Gate** (inputs) — Threshold, Attack, Hold, Release knobs plus a live transfer-function graph; all four parameters are sent atomically (`cmd_gate`)
+  - **PEQ** (outputs) — 7 bands of (Type / Freq / Gain / Q / Bypass) below a summed frequency-response graph, plus a channel-bypass toggle in the panel header. Per-band atomic emit. Shelves and pass filters cap Q at 3.0 to match the official editor; Peak and the two allpass forms keep the full Q range (`cmd_peq_band`, `cmd_peq_channel_bypass`)
+  - **Crossover** (outputs) — Hi-Pass and Lo-Pass rows, each with frequency knob, slope selector (BW 6 / BL 6 / BW 12 / BL 12 / LR 12 / BW 18 / BL 18 / BW 24 / BL 24 / LR 24), and bypass toggle. Bypass is independent of the slope selector (matching the manufacturer software). Both the Xover and PEQ panels share a combined frequency-response graph that shows the summed crossover + PEQ curve (`cmd_hipass`, `cmd_lopass`)
+  - **Compressor** (outputs) — Threshold (−90 to +20 dB) and Knee (0 – 12 dB) knobs, a Ratio combo (16 named ratios from 1:1.0 to Limit), and Attack (1–999 ms) / Release (10–3000 ms) knobs. All five parameters are sent atomically and visualised on a live input-vs-output transfer-function graph that renders the soft/hard knee elbow and the Limit clamp (`cmd_compressor`)
+  - **Delay** (outputs) — Single edit knob (0 – 680 ms, 3-decimal ms display, typed input accepts `"12.5 ms"` or `"601 sa"`) targeting the displayed output, plus an overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms above the largest active delay; clamps at 680 ms). The graph re-targets to whichever output the strip nav buttons select, so a single panel covers all four outputs without per-channel duplication (`cmd_delay`)
   - A **placeholder panel** is shown when the active feature does not apply to the selected channel (e.g. Gate on an output)
-  - A **Reset** button in the header of every feature panel (Gate / PEQ / Crossover / Compressor / Delay) snaps just that feature on the displayed channel — plus any linked slaves — back to the F00 factory defaults after a confirmation dialog. Values are sourced live from the protocol library's `factory_defaults.toml`, so they always match what the firmware considers "blank"
+  - A **Reset** button in the header of every feature panel (Gate / PEQ / Crossover / Compressor / Delay) snaps just that feature on the displayed channel — plus any linked slaves — back to the F00 factory defaults after a confirmation dialog (`load_factory_defaults`)
 - Routed-channel level meters — outputs to the right of an input, inputs to the left of an output, driven by the routing matrix
 - Strip-level "active" indicators: the input Gate button fills green when the gate threshold is above the noise floor; the output PEQ button fills purple when at least one band has non-zero gain and is not bypassed; the output Xover button fills amber when either hi-pass or lo-pass is not bypassed; the output Comp button fills teal when the ratio is anything other than 1:1.0; the output Delay button fills light blue when the delay is non-zero
-- Master → slave parameter fan-out: editing any compressor / delay (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests, since the hardware emits no telemetry for its own master-to-slave copy
+- Master → slave parameter fan-out: editing any compressor / delay (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests (internal logic using `decode_link_groups`)
+- **EQ curve visualisation** — QPainter log-frequency/dB graphs driven by local biquad coefficient math (Audio EQ Cookbook / RBJ), shared between PEQ and Crossover panels; crossover markers (triangles) and PEQ band markers (numbered circles) overlay the summed magnitude response
 
 ### Preset management
 
-- **Recall** any of the 30 user presets (U01–U30) or the factory preset (F00)
-- **Store** current settings to any user slot with a custom name
+- **Recall** any of the 30 user presets (U01–U30) or the factory preset (F00) (`cmd_load_preset`, `cmd_read_config`, `parse_preset_params`)
+- **Store** current settings to any user slot with a custom name (`cmd_store_preset_name`, `cmd_store_preset`)
 - Confirmation dialog before writing to device flash
-- Preset name label updates in real time
+- Preset name label updates in real time (`cmd_read_name`, `parse_preset_name`)
 
 ### Offline mode (`--offline`)
 
@@ -73,6 +77,19 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - **Load** manufacturer .unt files — parses all 30 preset slots
 - **Save** .unt files with byte-identical round-trip for untouched data
 - Preserves unknown bytes when editing individual fields
+
+### Test tone generator
+
+- Accessible from **Menu → Test tone…** — non-modal dialog with Off / Pink / White / Sine radios (`cmd_test_tone`)
+- 31-step ISO 1/3-octave sine frequency selector (20 Hz – 20 kHz)
+- Full-width red **Disable test tone** panic button for instant silence
+- Generator keeps running after closing the dialog; state survives power cycles (`parse_preset_params` test tone fields)
+
+### Knob interaction
+
+- **Click and drag** vertically, **scroll wheel**, or **arrow keys** for ±1 raw unit steps
+- **Ctrl + scroll / drag / arrows** for range-adaptive fast editing (~2 % of range per step)
+- **Click the dB label** to type an exact value via keyboard
 
 ## Requirements
 
@@ -190,37 +207,7 @@ doc/
 
 ## Roadmap
 
-> Comparison against the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library.
-
-### Done
-
-| Feature | Library API | Notes |
-|---------|------------|-------|
-| Gain control (8 ch) | `set_gain` | Knob, linked-channel sync |
-| Mute (8 ch) | `mute` | Per-channel toggle |
-| Phase invert (8 ch) | `set_phase` | Per-channel toggle |
-| Level meters (8 ch) | `poll_levels` | 150 ms poll, dB-scaled, peak-hold |
-| Channel names | `set_channel_name` | Click-to-edit, max 8 chars |
-| Preset recall | `load_preset` | F00 + U01–U30, slot names |
-| Preset store | `store_preset` | Name entry, flash-write confirm |
-| Config read | `read_config` | Full state on connect |
-| Routing matrix | `set_matrix_route` | Interactive: drag-to-connect, double-click-to-disconnect |
-| Auto-reconnect | — | 2 s retry on USB disconnect |
-| Offline mode | — | VirtualDSP, no hardware |
-| .unt load/save | — | 30-slot round-trip |
-| Linked channel display | `decode_link_groups` | Icon + disabled controls on slaves |
-| Limiter indicator | `limiter_mask` in `poll_levels` | Red LED + "Lim" label on output strips, bitmask-driven |
-| Channel detail view (Gate) | `set_gate` | Per-channel canvas with quick-nav, routed meters, and a Gate panel for input channels (threshold / attack / hold / release + transfer-function graph). Outputs and other features show a placeholder |
-| Channel detail view (PEQ) | `set_peq_band`, `set_peq_channel_bypass` | 7-band PEQ panel for output channels with per-band Type / Freq / Gain / Q / Byp controls, channel-wide bypass, and a summed frequency-response graph. Per-band atomic emit, shelf/pass Q capped at 3.0, output strip's PEQ button lights up when any band is shaping signal |
-| Channel detail view (Crossover) | `set_hipass`, `set_lopass` | Hi-Pass / Lo-Pass panel for output channels with frequency knob, slope selector (9 slope types), and per-filter bypass toggle. Shared frequency-response graph shows summed crossover + PEQ curve on both the Xover and PEQ panels. Output strip's Xover button lights up when either filter is active |
-| Channel detail view (Compressor) | `set_compressor` | Threshold / Knee / Attack / Release knobs + 16-entry Ratio combo (1:1.0 … 1:20.0 / Limit), atomic 5-value emit (protocol command 0x30). Live input-vs-output transfer-function graph with soft/hard knee elbow and Limit clamp. Output strip's Comp button lights teal when the ratio is not 1:1.0 |
-| Channel detail view (Delay) | `set_delay` | Single edit knob (0 – 680 ms / 0 – 32 640 samples, protocol command 0x38) for the displayed output. Overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms, clamps at 680 ms protocol max) — same panel re-targets when the user navigates between output strips. Typed input accepts ms or samples; output strip's Delay button lights light blue when delay > 0 |
-| Master → slave parameter sync | `mutate_with_links` (model) | Editing any parameter on a master channel mirrors the change to every linked slave in both DeviceState and the device queue — required because the hardware emits no telemetry for its own master-to-slave copy. Slave feature panels are read-only and show a "Linked to <master>" banner |
-| Channel linking UI | `prepare_link` + `set_channel_link` | Menu-driven dialog (`Menu ≡ → Channel linking…`) with two triangular radio matrices for inputs and outputs. Apply sends `OP_PREPARE_LINK` (0x2A) for every new pair followed by `OP_LINK` (0x3B) for each affected channel, then re-reads the device config so the dialog reflects what the device actually committed; forbidden configurations (chained slaves, demoting an active master) are greyed out at compose time |
-| EQ curve visualisation | — | QPainter log-frequency / dB graph driven by local biquad coefficient math (Audio EQ Cookbook formulas) — shared by PEQ and Crossover panels via `FreqResponseGraph` widget |
-| Reset to factory defaults | `minidsp.defaults.load_factory_defaults` | Per-feature **Reset** button in the header of every Gate / PEQ / Crossover / Compressor / Delay panel. Confirms via dialog, then snaps only that feature on the displayed channel (plus any linked slaves) back to the F00 factory values; other channels and other features stay untouched. Defaults are sourced live from the protocol library's bundled `factory_defaults.toml` so they always match the firmware |
-| Test tone generator | `set_test_tone` | Menu-driven non-modal dialog (`Menu ≡ → Test tone…`) with Off / Pink / White / Sine radios and a 31-step ISO 1/3-octave spin-box (20 Hz – 20 kHz) for sine frequency. Apply keeps the window open for back-to-back sweeps; a separate full-width red "Disable test tone" panic button instantly silences the generator (auto-disabled when nothing is playing). Current state is parsed from config offsets 420/422 and refreshed after every config reload so the dialog always reflects what the device is actually doing |
-| CTRL + fast knob editing | — | Hold **Ctrl** while scrolling, pressing arrow keys, or dragging any knob to jump by a range-adaptive step (~2 % of the knob's total range, minimum 3 raw units) instead of the default ±1. The Ctrl state is locked at drag-start so toggling mid-drag doesn't cause jumps |
+> Comparison against the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. See [Features](#features) for completed functionality.
 
 ### Medium priority
 
@@ -232,9 +219,9 @@ doc/
 
 | Feature | Library API | What's missing |
 |---------|-------------|----------------|
-| Delay display unit (ms/m/ft) | `set_delay_unit` | Dropdown in delay view |
+| Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
-| Device lock / PIN | `is_locked`, `submit_pin`, `set_lock_pin` | PIN entry dialog; dangerous feature |
+| Device lock / PIN | `cmd_device_info` (locked field), `cmd_submit_pin`, `cmd_set_lock_pin` | PIN entry dialog; dangerous feature |
 | Copy channel settings | — | "Copy from…" context menu |
 | Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
 | PEQ extras | — | draggable graph markers |
