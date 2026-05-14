@@ -125,10 +125,12 @@ class CompressorPanel(QWidget):
         controls_row = QHBoxLayout()
         controls_row.setSpacing(24)
 
+        factory_defaults = default_compressor_state()
+
         self._knob_threshold = ParamKnob(
             minimum=0,
             maximum=220,
-            default=220,
+            default=factory_defaults[4],
             formatter=_fmt_threshold,
             parser=_parse_threshold,
         )
@@ -138,21 +140,21 @@ class CompressorPanel(QWidget):
         self._knob_knee = ParamKnob(
             minimum=0,
             maximum=12,
-            default=0,
+            default=factory_defaults[1],
             formatter=_fmt_knee,
             parser=_parse_knee,
         )
         self._knob_attack = ParamKnob(
             minimum=0,
             maximum=998,
-            default=49,
+            default=factory_defaults[2],
             formatter=_fmt_attack,
             parser=_parse_attack,
         )
         self._knob_release = ParamKnob(
             minimum=9,
             maximum=2999,
-            default=499,
+            default=factory_defaults[3],
             formatter=_fmt_release,
             parser=_parse_release,
         )

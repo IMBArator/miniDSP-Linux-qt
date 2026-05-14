@@ -34,3 +34,7 @@ def default_peq_channel_bypass() -> bool:
 
 def default_delay_samples() -> int:
     return _factory()["delays"][0]
+
+
+def default_gain() -> int:
+    return _factory()["gains"][0]

@@ -28,10 +28,10 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES, raw_to_db
 
 from ..widgets import GainIndicator, LedIndicator, LevelMeter, ParamKnob, ToggleButton
+from ..defaults import default_gain
 
 GAIN_RAW_MIN = 0
 GAIN_RAW_MAX = 400
-GAIN_RAW_DEFAULT = 280
 
 
 def _format_db_full(raw: int) -> str:
@@ -125,7 +125,7 @@ class ChannelStrip(QFrame):
         self._knob = ParamKnob(
             minimum=GAIN_RAW_MIN,
             maximum=GAIN_RAW_MAX,
-            default=GAIN_RAW_DEFAULT,
+            default=default_gain(),
             formatter=_format_db_full,
             parser=_parse_db,
         )

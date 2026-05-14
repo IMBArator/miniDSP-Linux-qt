@@ -112,11 +112,13 @@ class GatePanel(QWidget):
         knobs_row = QHBoxLayout()
         knobs_row.setSpacing(24)
 
+        factory_defaults = default_gate_state()
+
         self._threshold = self._make_knob(
             "Threshold",
             minimum=0,
             maximum=180,
-            default=0,
+            default=factory_defaults[3],
             formatter=_fmt_threshold,
             parser=_parse_threshold,
         )
@@ -124,7 +126,7 @@ class GatePanel(QWidget):
             "Attack",
             minimum=0,
             maximum=998,
-            default=0,
+            default=factory_defaults[0],
             formatter=_fmt_time,
             parser=_parse_attack,
         )
@@ -132,7 +134,7 @@ class GatePanel(QWidget):
             "Hold",
             minimum=9,
             maximum=998,
-            default=9,
+            default=factory_defaults[2],
             formatter=_fmt_time,
             parser=_parse_hold,
         )
@@ -140,7 +142,7 @@ class GatePanel(QWidget):
             "Release",
             minimum=0,
             maximum=2999,
-            default=0,
+            default=factory_defaults[1],
             formatter=_fmt_time,
             parser=_parse_release,
         )

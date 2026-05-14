@@ -107,10 +107,11 @@ class XoverPanel(QWidget):
         )
         root.addWidget(self._graph, stretch=1)
 
-        root.addLayout(self._build_filter_row("Hi-Pass", "hp"))
-        root.addLayout(self._build_filter_row("Lo-Pass", "lp"))
+        factory_defaults = default_crossover_state()
+        root.addLayout(self._build_filter_row("Hi-Pass", "hp", factory_defaults[0]))
+        root.addLayout(self._build_filter_row("Lo-Pass", "lp", factory_defaults[2]))
 
-    def _build_filter_row(self, label: str, prefix: str) -> QHBoxLayout:
+    def _build_filter_row(self, label: str, prefix: str, default_freq: int) -> QHBoxLayout:
         row = QHBoxLayout()
         row.setSpacing(8)
 
@@ -122,7 +123,7 @@ class XoverPanel(QWidget):
         freq_knob = ParamKnob(
             minimum=0,
             maximum=300,
-            default=0,
+            default=default_freq,
             formatter=_fmt_freq,
             parser=_parse_freq,
         )

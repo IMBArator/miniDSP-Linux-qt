@@ -239,6 +239,8 @@ class PEQPanel(QWidget):
             )
             grid.addWidget(row_label, row, 0)
 
+        factory_bands = default_peq_bands()
+
         for band in range(NUM_BANDS):
             col = band + 1  # column 0 is reserved for row labels
             header = QLabel(f"B{band + 1}")
@@ -258,7 +260,7 @@ class PEQPanel(QWidget):
             freq_knob = ParamKnob(
                 minimum=0,
                 maximum=300,
-                default=170,
+                default=factory_bands[band][1],
                 formatter=_fmt_freq,
                 parser=_parse_freq,
             )
@@ -269,7 +271,7 @@ class PEQPanel(QWidget):
             gain_knob = ParamKnob(
                 minimum=0,
                 maximum=240,
-                default=120,
+                default=factory_bands[band][0],
                 formatter=_fmt_gain,
                 parser=_parse_gain,
             )
@@ -280,7 +282,7 @@ class PEQPanel(QWidget):
             q_knob = ParamKnob(
                 minimum=0,
                 maximum=100,
-                default=16,
+                default=factory_bands[band][2],
                 formatter=_fmt_q,
                 parser=_parse_q,
             )

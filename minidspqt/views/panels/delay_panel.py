@@ -111,7 +111,7 @@ class DelayPanel(QWidget):
         self._knob = ParamKnob(
             minimum=0,
             maximum=_SAMPLES_MAX,
-            default=0,
+            default=default_delay_samples(),
             formatter=_fmt_delay,
             parser=_parse_delay,
         )
