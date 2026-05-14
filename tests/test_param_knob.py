@@ -319,6 +319,70 @@ class TestMouseDrag:
 
 
 # ------------------------------------------------------------------ #
+# Double-click to reset to default
+# ------------------------------------------------------------------ #
+
+
+class TestDoubleClick:
+    def test_double_click_resets_to_default(self, knob, qtbot):
+        knob.setValue(75)
+        event = QMouseEvent(
+            QMouseEvent.Type.MouseButtonDblClick,
+            QPointF(28, 28),
+            QPointF(28, 28),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        with qtbot.waitSignal(knob.valueChanged, timeout=500) as sig:
+            knob.mouseDoubleClickEvent(event)
+        assert sig.args == [50]
+        assert knob.value() == 50
+
+    def test_double_click_at_default_no_signal(self, knob, qtbot):
+        with qtbot.assertNotEmitted(knob.valueChanged):
+            event = QMouseEvent(
+                QMouseEvent.Type.MouseButtonDblClick,
+                QPointF(28, 28),
+                QPointF(28, 28),
+                Qt.MouseButton.LeftButton,
+                Qt.MouseButton.LeftButton,
+                Qt.KeyboardModifier.NoModifier,
+            )
+            knob.mouseDoubleClickEvent(event)
+
+    def test_double_click_clears_drag_anchor(self, knob):
+        knob.mousePressEvent(_mouse_press(y=50))
+        assert knob._drag_anchor_y is not None
+        event = QMouseEvent(
+            QMouseEvent.Type.MouseButtonDblClick,
+            QPointF(28, 28),
+            QPointF(28, 28),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        knob.mouseDoubleClickEvent(event)
+        assert knob._drag_anchor_y is None
+
+    def test_double_click_uses_clamped_default(self, qtbot):
+        k = ParamKnob(minimum=10, maximum=50, default=999)
+        qtbot.addWidget(k)
+        assert k._default_value == 50
+        k.setValue(20)
+        event = QMouseEvent(
+            QMouseEvent.Type.MouseButtonDblClick,
+            QPointF(28, 28),
+            QPointF(28, 28),
+            Qt.MouseButton.LeftButton,
+            Qt.MouseButton.LeftButton,
+            Qt.KeyboardModifier.NoModifier,
+        )
+        k.mouseDoubleClickEvent(event)
+        assert k.value() == 50
+
+
+# ------------------------------------------------------------------ #
 # Text input (_apply_edit)
 # ------------------------------------------------------------------ #
 

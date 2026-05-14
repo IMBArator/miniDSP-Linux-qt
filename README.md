@@ -90,6 +90,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - **Click and drag** vertically, **scroll wheel**, or **arrow keys** for ±1 raw unit steps
 - **Ctrl + scroll / drag / arrows** for range-adaptive fast editing (~2 % of range per step)
 - **Click the dB label** to type an exact value via keyboard
+- **Double-click** on any knob to reset to its default value (emits `valueChanged` signal)
 
 ## Requirements
 
@@ -209,16 +210,10 @@ doc/
 
 > Comparison against the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. See [Features](#features) for completed functionality.
 
-### Medium priority
-
 | Feature | Library API | What's missing |
 |---------|-------------|----------------|
-| **QOL UI Features** | — | double click on knobs to reset to default, refactor linking indicator: right from header pill with text, Detail View: mark with underline the currently edited feature |
-
-### Low priority
-
-| Feature | Library API | What's missing |
-|---------|-------------|----------------|
+| Refactor linking indicator: right from header pill with text | — | — |
+| Detail View: mark with underline the currently edited feature | — | — |
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
 | Device lock / PIN | `cmd_device_info` (locked field), `cmd_submit_pin`, `cmd_set_lock_pin` | PIN entry dialog; dangerous feature |

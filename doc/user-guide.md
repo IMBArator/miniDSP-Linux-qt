@@ -109,6 +109,7 @@ The rotary dial controls channel gain from **-60 dB** to **+12 dB**. Internally 
 | **Arrow keys** (Up/Right, Down/Left) | Step gain by ±1 raw unit (0.1 dB) |
 | **Ctrl + arrow keys** | Step by the same range-adaptive amount as Ctrl + scroll |
 | **Click the dB label** | Enter an exact dB value via keyboard. Press Enter to apply. Accepts formats like `+3.5`, `-20`, `-inf` |
+| **Double-click** on the knob | Reset to the default value (e.g., 0 dB for gain) |
 
 The arc fills with blue as gain increases from minimum to maximum. The needle indicator shows the current position.
 

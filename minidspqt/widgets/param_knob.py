@@ -58,6 +58,7 @@ class ParamKnob(QWidget):
         self._maximum = maximum
         clamped = max(minimum, min(maximum, default))
         self._value = clamped
+        self._default_value = clamped
         self._formatter = formatter or (lambda v: str(v))
         self._parser = parser or _default_parser
         self._drag_anchor_y: float | None = None
@@ -176,6 +177,14 @@ class ParamKnob(QWidget):
     def mouseReleaseEvent(self, event) -> None:
         self._drag_anchor_y = None
         super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_anchor_y = None
+            self.setValue(self._default_value)
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def wheelEvent(self, event) -> None:
         steps = event.angleDelta().y() // 120
