@@ -133,6 +133,7 @@ class CopyChannelDialog(QDialog):
             if ch == source:
                 continue
             cb = QCheckBox(CHANNEL_NAMES[ch])
+            cb.stateChanged.connect(self._update_ui_state)
             self._target_checkboxes[ch] = cb
             self._target_container.addWidget(cb, row, col)
             col += 1
