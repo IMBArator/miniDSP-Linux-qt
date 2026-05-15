@@ -97,10 +97,27 @@ class CopyChannelDialog(QDialog):
                 w.setParent(None)
                 w.deleteLater()
 
+    def _display_name(self, channel: int) -> str:
+        """Return channel name with custom name suffix if set.
+
+        Format: "InA (Subwoofer)" if custom name exists, else just "InA".
+        """
+        base_name = CHANNEL_NAMES[channel]
+        custom_name: str | None = None
+
+        if 0 <= channel < 4 and channel < len(self._device_state.inputs):
+            custom_name = self._device_state.inputs[channel].name
+        elif 4 <= channel < 8 and (channel - 4) < len(self._device_state.outputs):
+            custom_name = self._device_state.outputs[channel - 4].name
+
+        if custom_name:
+            return f"{base_name} ({custom_name})"
+        return base_name
+
     def _populate(self) -> None:
         for ch in range(8):
             self._source_combo.blockSignals(True)
-            self._source_combo.addItem(CHANNEL_NAMES[ch], ch)
+            self._source_combo.addItem(self._display_name(ch), ch)
         self._source_combo.blockSignals(False)
         self._on_source_changed()
 
@@ -132,7 +149,7 @@ class CopyChannelDialog(QDialog):
         for ch in target_range:
             if ch == source:
                 continue
-            cb = QCheckBox(CHANNEL_NAMES[ch])
+            cb = QCheckBox(self._display_name(ch))
             cb.stateChanged.connect(self._update_ui_state)
             self._target_checkboxes[ch] = cb
             self._target_container.addWidget(cb, row, col)
@@ -159,7 +176,7 @@ class CopyChannelDialog(QDialog):
 
         if any_slave and targets:
             names = [
-                CHANNEL_NAMES[t]
+                self._display_name(t)
                 for t in targets
                 if self._device_state.is_linked_slave(t)
             ]
