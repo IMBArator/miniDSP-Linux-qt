@@ -39,6 +39,15 @@ See [UI Concepts](doc/concepts.md) for original design mockups.
 - Headers, row labels, and the live "InA: master of …" / "InB: linked to InA" status text use the user's custom channel names from the home view
 - Apply sends `OP_PREPARE_LINK` (0x2A) for every new pair followed by `OP_LINK` (0x3B) for each affected channel, then re-reads the device config so the dialog reflects whatever the device actually committed; offline mode uses the same code path against the in-memory virtual DSP
 
+### Copy channel settings
+
+- Accessible from **Menu → Copy channel settings…**
+- Select a source channel from all 8 channels (InA–InD, Out1–Out4)
+- Choose which parameter groups to copy (Name, Gain, Mute, Phase, Gate for inputs; plus Routing, Crossover, PEQ, Compressor, Delay for outputs)
+- Target channels update automatically to the same type as the source; exclude the source itself
+- Linked slave targets are restricted to Name-only with a warning banner
+- Parameters are sent as raw protocol values and a config reload refreshes the UI
+
 ### Channel detail view
 
 Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **Comp** button on any output strip — to open the per-channel detail view:
@@ -217,7 +226,6 @@ doc/
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
 | Device lock / PIN | `cmd_device_info` (locked field), `cmd_submit_pin`, `cmd_set_lock_pin` | PIN entry dialog; dangerous feature |
-| Copy channel settings | — | "Copy from…" context menu |
 | Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
 | PEQ extras | — | draggable graph markers |
 

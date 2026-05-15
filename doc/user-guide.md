@@ -32,6 +32,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
   - [Saving a .unt File](#saving-a-unt-file)
 - [Menu](#menu)
 - [Channel Linking](#channel-linking)
+- [Copy Channel Settings](#copy-channel-settings)
 - [Test Tone Generator](#test-tone-generator)
 - [Themes (light / dark)](#themes-light--dark)
 - [USB Permissions](#usb-permissions)
@@ -485,6 +486,7 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Load .unt file...** | Import a manufacturer preset file |
 | **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
 | **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
+| **Copy channel settings...** | Copy parameters from one channel to others (see [Copy Channel Settings](#copy-channel-settings)) |
 | **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
@@ -530,6 +532,53 @@ In **offline mode**, Apply mutates the in-memory virtual DSP exactly as the real
 ### Behind the scenes
 
 For each new master/slave pair the dialog issues `OP_PREPARE_LINK` (0x2A) before the matching `OP_LINK` (0x3B) commits the group; unlinking only needs the second command.  Both opcodes are documented in [`analysis/protocol.md`](https://github.com/IMBArator/miniDSP-Linux/blob/main/analysis/protocol.md) of the upstream protocol library.
+
+---
+
+## Copy Channel Settings
+
+The copy dialog lets you duplicate parameter groups from one channel to one or more channels of the same type. This is useful for quickly matching settings across stereo pairs or replicating a tuned EQ curve to another output.
+
+Open the dialog from **Menu ≡ → Copy channel settings…**.
+
+### How it works
+
+1. **Copy from** — select the source channel from all 8 channels (InA–InD, Out1–Out4).
+2. **Parameters to copy** — checkboxes appear based on the source channel type. Check the parameter groups you want to copy.
+3. **Apply to** — target channels of the **same type** as the source (input or output) are listed, excluding the source itself. Check one or more targets.
+4. Click **Apply** to copy. The device receives all selected parameters, then the UI refreshes.
+
+### Parameter groups
+
+The available parameter groups depend on whether the source is an input or output channel:
+
+| Group | Input | Output |
+|-------|:-----:|:------:|
+| **Name** | ✓ | ✓ |
+| **Gain** | ✓ | ✓ |
+| **Mute** | ✓ | ✓ |
+| **Phase** | ✓ | ✓ |
+| **Noise Gate** | ✓ | — |
+| **Routing** | — | ✓ |
+| **Crossover** | — | ✓ |
+| **PEQ** (all 7 bands + channel bypass) | — | ✓ |
+| **Compressor** | — | ✓ |
+| **Delay** | — | ✓ |
+
+All parameters are copied as raw protocol values — no unit conversion is needed, so values transfer exactly.
+
+### Linked channels
+
+When a target channel is a **linked slave**, the dialog shows a warning and restricts the available parameters to **Name only**. All other parameter groups are disabled because the slave's settings are controlled by its master. Copying to a **master** channel is unrestricted; the change will propagate to its slaves through the normal link mechanism.
+
+### Examples
+
+| Task | Steps |
+|------|-------|
+| Mirror a tuned PEQ to another output | Source: Out1, check **PEQ**, targets: Out2 + Out3 |
+| Copy a complete output to another | Source: Out1, check all groups, target: Out2 |
+| Match input gain and phase across all inputs | Source: InA, check **Gain** + **Phase**, targets: InB + InC + InD |
+| Copy only the channel name | Source: any, check **Name** only, target: any same-type channel |
 
 ---
 
