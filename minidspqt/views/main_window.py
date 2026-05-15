@@ -655,8 +655,7 @@ class MainWindow(QMainWindow):
                     self._thread.request_channel_name(ch, value)
 
             # Trigger a config reload to refresh UI with copied values
-            if not self._offline:
-                self._thread.request_read_config()
+            self._thread.request_read_config()
 
     def _apply_channel_links(self, new_flags: list[int]) -> None:
         """Push link changes to the device and trigger a config reload.
