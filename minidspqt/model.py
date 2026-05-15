@@ -225,6 +225,274 @@ class DeviceState:
     def routing_info(self) -> list[dict]:
         return decode_routing_matrix([ch.routing_mask for ch in self.outputs])
 
+    def copy_params(
+        self, source: int, targets: list[int], groups: set[str]
+    ) -> list[dict]:
+        """Copy selected parameter groups from source to target channels.
+
+        groups keys:
+        - Inputs: "name", "gain", "mute", "phase", "gate"
+        - Outputs: "name", "gain", "mute", "phase", "routing",
+                   "crossover", "peq", "compressor", "delay"
+
+        Returns a list of change descriptors, one per modified field.
+        Each descriptor is a dict with keys:
+        - "channel": int
+        - "field": str (internal field name)
+        - "value": Any (new value)
+        - "cmd_type": str (for device command mapping)
+
+        The caller can map these to device_thread method calls.
+        Does not validate if targets are linked slaves — that's the dialog's job.
+        """
+        changes: list[dict] = []
+        source_obj = self._channel_obj(source)
+        if source_obj is None:
+            return changes
+
+        if isinstance(source_obj, InputChannelState):
+            valid_groups = {"name", "gain", "mute", "phase", "gate"}
+        else:
+            valid_groups = {
+                "name",
+                "gain",
+                "mute",
+                "phase",
+                "routing",
+                "crossover",
+                "peq",
+                "compressor",
+                "delay",
+            }
+
+        groups = groups & valid_groups
+        if not groups:
+            return changes
+
+        for target in targets:
+            target_obj = self._channel_obj(target)
+            if target_obj is None:
+                continue
+
+            if isinstance(target_obj, InputChannelState) and isinstance(
+                source_obj, InputChannelState
+            ):
+                for group in groups:
+                    if group == "name":
+                        target_obj.name = source_obj.name
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "name",
+                                "value": source_obj.name,
+                                "cmd_type": "CHANNEL_NAME",
+                            }
+                        )
+                    elif group == "gain":
+                        target_obj.gain_raw = source_obj.gain_raw
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "gain_raw",
+                                "value": source_obj.gain_raw,
+                                "cmd_type": "GAIN",
+                            }
+                        )
+                    elif group == "mute":
+                        target_obj.muted = source_obj.muted
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "muted",
+                                "value": source_obj.muted,
+                                "cmd_type": "MUTE",
+                            }
+                        )
+                    elif group == "phase":
+                        target_obj.phase_inverted = source_obj.phase_inverted
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "phase_inverted",
+                                "value": source_obj.phase_inverted,
+                                "cmd_type": "PHASE",
+                            }
+                        )
+                    elif group == "gate":
+                        target_obj.gate = GateState(
+                            attack=source_obj.gate.attack,
+                            release=source_obj.gate.release,
+                            hold=source_obj.gate.hold,
+                            threshold=source_obj.gate.threshold,
+                        )
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "gate",
+                                "value": (
+                                    source_obj.gate.attack,
+                                    source_obj.gate.release,
+                                    source_obj.gate.hold,
+                                    source_obj.gate.threshold,
+                                ),
+                                "cmd_type": "GATE",
+                            }
+                        )
+
+            elif isinstance(target_obj, OutputChannelState) and isinstance(
+                source_obj, OutputChannelState
+            ):
+                for group in groups:
+                    if group == "name":
+                        target_obj.name = source_obj.name
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "name",
+                                "value": source_obj.name,
+                                "cmd_type": "CHANNEL_NAME",
+                            }
+                        )
+                    elif group == "gain":
+                        target_obj.gain_raw = source_obj.gain_raw
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "gain_raw",
+                                "value": source_obj.gain_raw,
+                                "cmd_type": "GAIN",
+                            }
+                        )
+                    elif group == "mute":
+                        target_obj.muted = source_obj.muted
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "muted",
+                                "value": source_obj.muted,
+                                "cmd_type": "MUTE",
+                            }
+                        )
+                    elif group == "phase":
+                        target_obj.phase_inverted = source_obj.phase_inverted
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "phase_inverted",
+                                "value": source_obj.phase_inverted,
+                                "cmd_type": "PHASE",
+                            }
+                        )
+                    elif group == "routing":
+                        target_obj.routing_mask = source_obj.routing_mask
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "routing_mask",
+                                "value": source_obj.routing_mask,
+                                "cmd_type": "MATRIX_ROUTE",
+                            }
+                        )
+                    elif group == "crossover":
+                        target_obj.crossover = CrossoverState(
+                            hipass_freq=source_obj.crossover.hipass_freq,
+                            hipass_slope=source_obj.crossover.hipass_slope,
+                            lopass_freq=source_obj.crossover.lopass_freq,
+                            lopass_slope=source_obj.crossover.lopass_slope,
+                        )
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "hipass",
+                                "value": (
+                                    source_obj.crossover.hipass_freq,
+                                    source_obj.crossover.hipass_slope,
+                                ),
+                                "cmd_type": "HIPASS",
+                            }
+                        )
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "lopass",
+                                "value": (
+                                    source_obj.crossover.lopass_freq,
+                                    source_obj.crossover.lopass_slope,
+                                ),
+                                "cmd_type": "LOPASS",
+                            }
+                        )
+                    elif group == "peq":
+                        target_obj.peqs = [
+                            PEQBand(
+                                gain_raw=b.gain_raw,
+                                freq_raw=b.freq_raw,
+                                q_raw=b.q_raw,
+                                filter_type=b.filter_type,
+                                bypass=b.bypass,
+                            )
+                            for b in source_obj.peqs
+                        ]
+                        target_obj.peq_channel_bypass = source_obj.peq_channel_bypass
+                        for band_idx, band in enumerate(target_obj.peqs):
+                            changes.append(
+                                {
+                                    "channel": target,
+                                    "field": f"peq_band_{band_idx}",
+                                    "value": (
+                                        band.gain_raw,
+                                        band.freq_raw,
+                                        band.q_raw,
+                                        band.filter_type,
+                                        band.bypass,
+                                    ),
+                                    "cmd_type": "PEQ_BAND",
+                                    "band": band_idx,
+                                }
+                            )
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "peq_channel_bypass",
+                                "value": source_obj.peq_channel_bypass,
+                                "cmd_type": "PEQ_CHANNEL_BYPASS",
+                            }
+                        )
+                    elif group == "compressor":
+                        target_obj.compressor = CompressorState(
+                            ratio=source_obj.compressor.ratio,
+                            knee=source_obj.compressor.knee,
+                            attack=source_obj.compressor.attack,
+                            release=source_obj.compressor.release,
+                            threshold=source_obj.compressor.threshold,
+                        )
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "compressor",
+                                "value": (
+                                    source_obj.compressor.ratio,
+                                    source_obj.compressor.knee,
+                                    source_obj.compressor.attack,
+                                    source_obj.compressor.release,
+                                    source_obj.compressor.threshold,
+                                ),
+                                "cmd_type": "COMPRESSOR",
+                            }
+                        )
+                    elif group == "delay":
+                        target_obj.delay_samples = source_obj.delay_samples
+                        changes.append(
+                            {
+                                "channel": target,
+                                "field": "delay_samples",
+                                "value": source_obj.delay_samples,
+                                "cmd_type": "DELAY",
+                            }
+                        )
+
+        return changes
+
     @classmethod
     def from_config(cls, cfg: dict) -> DeviceState:
         """Build a DeviceState from the dict returned by DSPmini.read_config()."""

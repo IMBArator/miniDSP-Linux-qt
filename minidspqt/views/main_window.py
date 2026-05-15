@@ -29,6 +29,7 @@ from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
 from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
 from .channel_linking_dialog import ChannelLinkingDialog
+from .copy_channel_dialog import CopyChannelDialog
 from .detail_view import DetailView
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
@@ -122,6 +123,10 @@ class MainWindow(QMainWindow):
             self._on_channel_linking
         )
         self._linking_dialog: ChannelLinkingDialog | None = None
+        menu.addAction("Copy channel settings\u2026").triggered.connect(
+            self._on_copy_requested
+        )
+        self._copy_dialog: CopyChannelDialog | None = None
         menu.addAction("Test tone\u2026").triggered.connect(self._on_test_tone)
         self._test_tone_dialog: TestToneDialog | None = None
         menu.addSeparator()
@@ -597,6 +602,61 @@ class MainWindow(QMainWindow):
         self._linking_dialog.show()
         self._linking_dialog.raise_()
         self._linking_dialog.activateWindow()
+
+    # --- Copy channel settings ---
+
+    def _on_copy_requested(self) -> None:
+        """Open the copy-settings dialog."""
+        dialog = CopyChannelDialog(self._state, self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            source, targets, groups = dialog.result_data
+            changes = self._state.copy_params(source, targets, groups)
+            if not changes:
+                return
+
+            for change in changes:
+                ch = change["channel"]
+                cmd_type = change["cmd_type"]
+                value = change["value"]
+
+                if cmd_type == "GAIN":
+                    self._thread.request_gain(ch, value)
+                elif cmd_type == "MUTE":
+                    self._thread.request_mute(ch, value)
+                elif cmd_type == "PHASE":
+                    self._thread.request_phase(ch, value)
+                elif cmd_type == "GATE":
+                    attack, release, hold, threshold = value
+                    self._thread.request_gate(ch, attack, release, hold, threshold)
+                elif cmd_type == "HIPASS":
+                    freq_raw, slope = value
+                    self._thread.request_hipass(ch, freq_raw, slope)
+                elif cmd_type == "LOPASS":
+                    freq_raw, slope = value
+                    self._thread.request_lopass(ch, freq_raw, slope)
+                elif cmd_type == "COMPRESSOR":
+                    ratio, knee, attack, release, threshold = value
+                    self._thread.request_compressor(
+                        ch, ratio, knee, attack, release, threshold
+                    )
+                elif cmd_type == "DELAY":
+                    self._thread.request_delay(ch, value)
+                elif cmd_type == "PEQ_BAND":
+                    band_idx = change["band"]
+                    gain_raw, freq_raw, q_raw, filter_type, bypass = value
+                    self._thread.request_peq_band(
+                        ch, band_idx, gain_raw, freq_raw, q_raw, filter_type, bypass
+                    )
+                elif cmd_type == "PEQ_CHANNEL_BYPASS":
+                    self._thread.request_peq_channel_bypass(ch, value)
+                elif cmd_type == "MATRIX_ROUTE":
+                    self._thread.request_matrix_route(ch, value)
+                elif cmd_type == "CHANNEL_NAME":
+                    self._thread.request_channel_name(ch, value)
+
+            # Trigger a config reload to refresh UI with copied values
+            if not self._offline:
+                self._thread.request_read_config()
 
     def _apply_channel_links(self, new_flags: list[int]) -> None:
         """Push link changes to the device and trigger a config reload.
