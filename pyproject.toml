@@ -9,7 +9,7 @@ description = "Graphical interface for the t.racks DSP 4x4 Mini"
 requires-python = ">=3.11"
 dependencies = [
     "PySide6>=6.8",
-    "minidsp-linux",
+    "minidsp-linux>=1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -29,4 +29,4 @@ artifacts = ["minidspqt/resources/*"]
 testpaths = ["tests"]
 
 [tool.uv.sources]
-minidsp-linux = { path = "../miniDSP-Linux/dist/minidsp_linux-0.1.0-py3-none-any.whl" }
+minidsp-linux = { git = "https://github.com/IMBArator/miniDSP-Linux.git", tag = "v1.0.0" }

@@ -105,7 +105,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) — manages the virtual environment and dependencies
-- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed from local wheel)
+- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed automatically from the upstream `v1.0.0` tag)
 - Linux with kernel HID driver — communicates via `/dev/hidraw*`
 - Read/write access to `/dev/hidraw*` (see [Permissions](#permissions))
 
@@ -117,6 +117,19 @@ cd miniDSP-Linux-qt
 uv sync              # creates .venv, installs dependencies
 uv sync --extra dev  # also installs pytest for development
 ```
+
+### Developing against a local protocol library
+
+By default `minidsp-linux` is pulled from the upstream `v1.0.0` git tag. When
+hacking on the protocol library in a sibling checkout, reinstall on top of the
+synced env from your local source tree:
+
+```bash
+uv pip install --reinstall ../miniDSP-Linux/
+```
+
+The override is reverted by the next `uv sync` / `uv lock`. Re-run the command
+whenever you want to test fresh local changes.
 
 ## Usage
 
