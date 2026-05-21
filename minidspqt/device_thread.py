@@ -11,6 +11,7 @@ re-read the full config.
 from __future__ import annotations
 
 import logging
+import queue
 import threading
 from collections import deque
 from enum import Enum, auto
@@ -18,6 +19,11 @@ from enum import Enum, auto
 from PySide6.QtCore import QThread, Signal
 
 from minidsp.device import DeviceLockedError, DSPmini
+
+# Sentinel used on the PIN queue when the UI cancels the unlock dialog.
+_CANCEL_PIN = object()
+# Max unlock attempts before the worker gives up and disconnects.
+MAX_PIN_ATTEMPTS = 3
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +57,8 @@ class DeviceThread(QThread):
     levels_updated = Signal(dict)
     connection_changed = Signal(bool)
     config_loaded = Signal(dict)
+    pin_required = Signal()
+    pin_result = Signal(bool, int)  # success, remaining_attempts
 
     POLL_INTERVAL_MS = 150
     RECONNECT_INTERVAL_MS = 2000
@@ -64,6 +72,7 @@ class DeviceThread(QThread):
         self._lock = threading.Lock()
         self._pending: dict[tuple, tuple] = {}
         self._preset_queue: deque[tuple] = deque()
+        self._pin_queue: queue.Queue = queue.Queue()
 
     # --- Thread-safe command interface (called from UI thread) ---
 
@@ -162,6 +171,50 @@ class DeviceThread(QThread):
 
     def request_stop(self) -> None:
         self._stop = True
+        # If the worker is parked in _handle_locked, unblock it so it can
+        # exit cleanly.
+        self._pin_queue.put(_CANCEL_PIN)
+
+    def restart(self) -> None:
+        """Bring the worker back online after it stopped itself.
+
+        Used by the "Reconnect" menu item to recover from a cancelled
+        unlock prompt, exhausted PIN attempts, or any other state that
+        flipped ``_stop`` to True. No-op if the worker is still running.
+
+        Callers MUST ensure the previous run() has exited (the thread is
+        not isRunning) before calling — otherwise ``start()`` is a no-op
+        on Qt's side and we'd leave _stop=False on a still-stopping
+        worker, which would race the next iteration.
+        """
+        if self.isRunning():
+            log.info("restart: thread is still running, ignoring")
+            return
+        # Clear the stop flag and any stale queue state so the new run
+        # starts from a clean slate.
+        self._stop = False
+        with self._lock:
+            self._pending.clear()
+            self._preset_queue.clear()
+        while not self._pin_queue.empty():
+            try:
+                self._pin_queue.get_nowait()
+            except queue.Empty:
+                break
+        self.start()
+
+    def submit_pin(self, pin: str) -> None:
+        """Hand a PIN to the worker that's blocked waiting in _handle_locked."""
+        self._pin_queue.put(pin)
+
+    def cancel_pin_entry(self) -> None:
+        """Tell the worker to give up on the unlock prompt and disconnect."""
+        self._pin_queue.put(_CANCEL_PIN)
+
+    def request_set_pin(self, pin: str) -> None:
+        """Queue a set-PIN admin op. Serialises with other device ops."""
+        with self._lock:
+            self._preset_queue.append(("set_pin", pin))
 
     # --- Internal helpers ---
 
@@ -186,13 +239,22 @@ class DeviceThread(QThread):
             log.info("Reading device config...")
             try:
                 config = dsp.read_config()
-            except DEVICE_ERRORS:
+            except DeviceLockedError:
+                log.info("Device is locked, prompting for PIN")
+                config = self._handle_locked(dsp)
+            except OSError:
                 log.exception("read_config failed")
                 config = None
             if config is not None:
                 self.config_loaded.emit(config)
             else:
-                log.warning("Config read failed, reconnecting...")
+                if self._stop:
+                    # _handle_locked (or any other early-exit path) flipped
+                    # _stop to signal "give up, do not reconnect". Don't
+                    # log it as a failure — it's the user's explicit choice.
+                    log.info("Stopping worker (no auto-reconnect)")
+                else:
+                    log.warning("Config read failed, reconnecting...")
                 try:
                     dsp.close()
                 except DEVICE_ERRORS:
@@ -201,13 +263,21 @@ class DeviceThread(QThread):
                 continue
 
             log.info("Starting poll loop")
-            self._poll_loop(dsp)
-            log.info("Poll loop exited, closing device")
             try:
-                dsp.close()
-            except DEVICE_ERRORS:
-                log.exception("Error closing device")
-            self.connection_changed.emit(False)
+                self._poll_loop(dsp)
+            finally:
+                # Defense in depth: even if _poll_loop raises something
+                # unexpected (an assertion from the library, a programming
+                # bug), the UI must still see connection_changed(False)
+                # so the connection indicator clears. Without this finally
+                # the worker thread can die silently and the UI is stuck
+                # showing "Connected".
+                log.info("Poll loop exited, closing device")
+                try:
+                    dsp.close()
+                except (OSError, AssertionError, DeviceLockedError):
+                    log.exception("Error closing device")
+                self.connection_changed.emit(False)
 
     def _try_connect(self, dsp) -> bool:
         while not self._stop:
@@ -229,6 +299,13 @@ class DeviceThread(QThread):
         while not self._stop:
             try:
                 self._drain_preset_queue(dsp)
+                # A preset op (e.g. successful set_pin) may have closed the
+                # device and flipped _stop. Bail before touching dsp again
+                # — otherwise the next call hits an already-closed handle
+                # and raises an AssertionError that the DEVICE_ERRORS
+                # catch won't recognise.
+                if self._stop:
+                    return
                 self._drain_pending(dsp)
                 levels = dsp.poll_levels()
             except DEVICE_ERRORS:
@@ -299,6 +376,32 @@ class DeviceThread(QThread):
                     )
                     dsp.store_preset(slot, name)
                     log.info("store: done")
+                elif kind == "set_pin":
+                    _, pin = entry
+                    log.info("set_pin: calling dsp.set_lock_pin(...)")
+                    ok = dsp.set_lock_pin(pin)
+                    if ok:
+                        # Per protocol capture analysis: the device ACKs
+                        # but keeps the USB session alive — the client
+                        # (we) closes. After a successful set-pin we
+                        # deliberately do NOT auto-reconnect: setting a
+                        # PIN is a one-shot admin action and immediately
+                        # cycling into the unlock prompt is hostile UX.
+                        # Stop the worker so the user can choose to
+                        # restart the app when ready.
+                        log.info(
+                            "set_pin: ACK received, closing session and "
+                            "stopping worker (no auto-reconnect)"
+                        )
+                        try:
+                            dsp.close()
+                        except DEVICE_ERRORS:
+                            log.exception("set_pin: error closing after ACK")
+                        self._stop = True
+                    else:
+                        log.warning(
+                            "set_pin: device did not ACK; PIN was NOT set"
+                        )
                 elif kind == "read_config":
                     # Flush any pending writes (e.g. channel-link commands
                     # the UI just queued) before we read back state.  The
@@ -325,6 +428,57 @@ class DeviceThread(QThread):
             except DEVICE_ERRORS:
                 log.exception("Preset operation %s failed", entry)
         return did_recall
+
+    def _handle_locked(self, dsp) -> dict | None:
+        """Drive the UI through up to MAX_PIN_ATTEMPTS unlock attempts.
+
+        Emits :attr:`pin_required` once so the UI shows the dialog, then
+        blocks on the PIN queue. Each ``submit_pin`` from the UI is tried
+        against :meth:`DSPmini.submit_pin`; ``pin_result`` reports whether
+        it worked and how many attempts remain so the dialog can show
+        inline feedback.
+
+        Returns the freshly-loaded config on success. On cancel or after
+        ``MAX_PIN_ATTEMPTS`` wrong PINs returns ``None`` AND sets
+        ``self._stop`` so the worker exits instead of immediately
+        reconnecting back into the same unlock prompt (which would make
+        Cancel pointless).
+        """
+        # Drain any stale entries from a previous lock cycle.
+        while not self._pin_queue.empty():
+            try:
+                self._pin_queue.get_nowait()
+            except queue.Empty:
+                break
+
+        self.pin_required.emit()
+        attempts_used = 0
+        while attempts_used < MAX_PIN_ATTEMPTS and not self._stop:
+            item = self._pin_queue.get()
+            if item is _CANCEL_PIN:
+                log.info("PIN entry cancelled — stopping worker")
+                self._stop = True
+                return None
+            pin = item
+            attempts_used += 1
+            try:
+                ok = dsp.submit_pin(pin)
+            except OSError:
+                log.exception("submit_pin failed")
+                self._stop = True
+                return None
+            attempts_left = MAX_PIN_ATTEMPTS - attempts_used
+            self.pin_result.emit(bool(ok), attempts_left)
+            if ok:
+                try:
+                    return dsp.read_config()
+                except DEVICE_ERRORS:
+                    log.exception("read_config after unlock failed")
+                    self._stop = True
+                    return None
+        log.info("PIN attempts exhausted — stopping worker")
+        self._stop = True
+        return None
 
     def _dispatch(self, dsp, key: tuple, args: tuple) -> None:
         cmd = key[0]
