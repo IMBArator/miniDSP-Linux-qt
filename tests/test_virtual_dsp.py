@@ -237,6 +237,140 @@ def test_default_config_matches_factory_defaults():
         assert cfg[key] == factory[key], f"{key} diverges from factory defaults"
 
 
+def test_prepare_link_copies_master_params_to_slave():
+    """Linking an input pair must replicate the device firmware's master→slave copy.
+
+    Real hardware copies the master's parameters to slaves when 0x2A/0x3B run,
+    and the client re-reads the full config to see the result. The virtual DSP
+    must produce the same post-link state so the UI behaves identically offline.
+    Names are user identifiers and must NOT be overwritten.
+    """
+    dsp = VirtualDSP()
+
+    dsp.set_gain(0, 250)
+    dsp.mute(0, True)
+    dsp.set_phase(0, True)
+    dsp.set_gate(0, 111, 222, 333, 44)
+
+    dsp.set_gain(1, 100)
+    dsp.mute(1, False)
+    dsp.set_phase(1, False)
+    dsp.set_gate(1, 1, 2, 3, 4)
+    dsp.set_channel_name(1, "keepme")
+
+    dsp.prepare_link(0, 1)
+    dsp.set_channel_link(0, 0x03)
+    dsp.set_channel_link(1, 0x00)
+
+    cfg = dsp.read_config()
+    assert cfg["gains"][1] == cfg["gains"][0] == 250
+    assert cfg["mutes"][1] is True and cfg["mutes"][0] is True
+    assert cfg["phases"][1] is True and cfg["phases"][0] is True
+    assert cfg["gates"][1] == cfg["gates"][0]
+    assert cfg["gates"][1] is not cfg["gates"][0]
+    assert cfg["link_flags"][0] == 0x03
+    assert cfg["link_flags"][1] == 0x00
+    assert cfg["names"][1] == "keepme"
+
+
+def test_prepare_link_copies_master_params_to_output_slave():
+    """Output linking must copy gain, mute, phase, delay, crossover,
+    compressor, and PEQ from master to slave — but NOT the routing matrix
+    (hardware keeps routing per-channel so linked outputs can still pull
+    from different inputs) and NOT the channel name.
+    """
+    dsp = VirtualDSP()
+
+    dsp.set_gain(4, 180)
+    dsp.mute(4, True)
+    dsp.set_phase(4, True)
+    dsp.set_matrix_route(4, 0x0F)
+    dsp.set_delay(4, 480)
+    dsp.set_hipass(4, 100, 3)
+    dsp.set_lopass(4, 200, 5)
+    dsp.set_compressor(4, 5, 6, 100, 500, 60)
+    dsp.set_peq_band(4, 0, 130, 200, 50, 1, True)
+    dsp.set_peq_channel_bypass(4, True)
+
+    dsp.set_gain(5, 50)
+    dsp.mute(5, False)
+    dsp.set_matrix_route(5, 0x01)
+    dsp.set_delay(5, 0)
+    dsp.set_channel_name(5, "OutSlave")
+
+    dsp.prepare_link(4, 5)
+    dsp.set_channel_link(4, 0x03)
+    dsp.set_channel_link(5, 0x00)
+
+    cfg = dsp.read_config()
+    assert cfg["gains"][5] == cfg["gains"][4] == 180
+    assert cfg["mutes"][5] is True
+    assert cfg["phases"][5] is True
+    assert cfg["routings"][0] == 0x0F
+    assert cfg["routings"][1] == 0x01  # preserved — not copied from master
+    assert cfg["delays"][1] == cfg["delays"][0] == 480
+    assert cfg["crossovers"][1] == cfg["crossovers"][0]
+    assert cfg["crossovers"][1] is not cfg["crossovers"][0]
+    assert cfg["compressors"][1] == cfg["compressors"][0]
+    assert cfg["compressors"][1] is not cfg["compressors"][0]
+    assert cfg["peqs"][1] == cfg["peqs"][0]
+    assert cfg["peqs"][1] is not cfg["peqs"][0]
+    assert cfg["link_flags"][4] == 0x03
+    assert cfg["link_flags"][5] == 0x00
+    assert cfg["names"][5] == "OutSlave"
+
+
+def test_prepare_link_deep_copies_nested_state():
+    """Mutating the slave's nested state after linking must not bleed into the
+    master — guards against shallow-copy regressions in _copy_channel_params.
+    """
+    dsp = VirtualDSP()
+    dsp.set_gate(0, 111, 222, 333, 44)
+    dsp.prepare_link(0, 1)
+    dsp.set_channel_link(0, 0x03)
+    dsp.set_channel_link(1, 0x00)
+
+    dsp.set_gate(1, 9, 9, 9, 9)
+    cfg = dsp.read_config()
+    assert cfg["gates"][0] == {"attack": 111, "release": 222, "hold": 333, "threshold": 44}
+
+    dsp.set_peq_band(4, 0, 130, 200, 50, 1, True)
+    dsp.prepare_link(4, 5)
+    dsp.set_channel_link(4, 0x03)
+    dsp.set_channel_link(5, 0x00)
+
+    dsp.set_peq_band(5, 0, 0, 0, 0, 0, False)
+    cfg = dsp.read_config()
+    assert cfg["peqs"][0]["bands"][0] == {
+        "gain": 130,
+        "freq": 200,
+        "q": 50,
+        "type": 1,
+        "bypass": True,
+    }
+
+
+def test_prepare_link_unlink_does_not_copy():
+    """Unlink is a pure set_channel_link sequence — no prepare_link, no copy.
+    Slave keeps the values it had inherited at link time; further master
+    mutations during the unlinked period must not propagate.
+    """
+    dsp = VirtualDSP()
+    dsp.set_gain(0, 250)
+    dsp.prepare_link(0, 1)
+    dsp.set_channel_link(0, 0x03)
+    dsp.set_channel_link(1, 0x00)
+    assert dsp.read_config()["gains"][1] == 250
+
+    dsp.set_gain(0, 99)
+    dsp.set_channel_link(0, 0x01)
+    dsp.set_channel_link(1, 0x02)
+
+    cfg = dsp.read_config()
+    assert cfg["gains"][0] == 99
+    assert cfg["gains"][1] == 250
+
+
 def test_offline_startup_seeded_from_blank_yields_factory_defaults():
     """End-to-end offline startup: blank.unt is empty → factory defaults remain."""
     from minidsp.defaults import load_factory_defaults

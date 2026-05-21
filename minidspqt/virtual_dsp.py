@@ -214,11 +214,41 @@ class VirtualDSP:
         return True
 
     def prepare_link(self, master_ch: int, slave_ch: int) -> bool:
-        # Real device requires this 0x2A "declare master/slave pair" handshake
-        # before a 0x3B set_channel_link can establish a new link. Offline,
-        # there's nothing to declare to — set_channel_link mutates link_flags
-        # directly. Kept as a no-op so DeviceThread can dispatch uniformly.
+        # 0x2A is the firmware's "declare master/slave pair" handshake; the
+        # device side-effect is copying every per-channel setting from master
+        # to slave so the next config re-read shows them in lock-step.
+        # Mirror that copy here so offline behaviour matches the wire.
+        self._copy_channel_params(master_ch, slave_ch)
         return True
+
+    def _copy_channel_params(self, src_ch: int, dst_ch: int) -> None:
+        """Replicate the firmware's master→slave parameter copy.
+
+        Deep-copies every per-channel setting from ``src_ch`` to ``dst_ch``
+        in ``self._config``. Excludes ``names`` (user identifiers), the
+        ``routings`` matrix (firmware keeps it per-channel — each linked
+        output still needs its own input source), the ``link_flags``
+        themselves (set separately by set_channel_link), and the global
+        ``test_tone_*`` keys.
+        """
+        if src_ch == dst_ch:
+            return
+        if (src_ch < 4) != (dst_ch < 4):
+            return  # input↔output mixing is a caller bug — refuse silently
+
+        cfg = self._config
+        for key in ("gains", "mutes", "phases"):
+            cfg[key][dst_ch] = cfg[key][src_ch]
+
+        if src_ch < 4:
+            cfg["gates"][dst_ch] = copy.deepcopy(cfg["gates"][src_ch])
+        else:
+            src_idx = src_ch - 4
+            dst_idx = dst_ch - 4
+            cfg["delays"][dst_idx] = cfg["delays"][src_idx]
+            cfg["crossovers"][dst_idx] = copy.deepcopy(cfg["crossovers"][src_idx])
+            cfg["compressors"][dst_idx] = copy.deepcopy(cfg["compressors"][src_idx])
+            cfg["peqs"][dst_idx] = copy.deepcopy(cfg["peqs"][src_idx])
 
     def set_channel_link(self, channel: int, link_flags: int) -> bool:
         self._config["link_flags"][channel] = link_flags
