@@ -9,7 +9,7 @@ description = "Graphical interface for the t.racks DSP 4x4 Mini"
 requires-python = ">=3.11"
 dependencies = [
     "PySide6-Essentials>=6.8",
-    "minidsp-linux>=1.0.0",
+    "minidsp-linux @ git+https://github.com/IMBArator/miniDSP-Linux.git@v1.0.0",
 ]
 
 [project.optional-dependencies]
@@ -21,12 +21,15 @@ dev = [
 [project.scripts]
 minidspqt = "minidspqt.cli:main"
 
+[tool.hatch.metadata]
+# Required for the PEP 508 direct URL ('minidsp-linux @ git+...') in
+# project.dependencies. Hatchling refuses to emit such refs into wheel
+# metadata unless this is explicitly enabled.
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["minidspqt"]
 artifacts = ["minidspqt/resources/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
-[tool.uv.sources]
-minidsp-linux = { git = "https://github.com/IMBArator/miniDSP-Linux.git", tag = "v1.0.0" }

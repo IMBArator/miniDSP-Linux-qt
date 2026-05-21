@@ -44,7 +44,7 @@ wheels = [
 [[package]]
 name = "minidsp-linux"
 version = "1.0.0"
-source = { git = "https://github.com/IMBArator/miniDSP-Linux.git?tag=v1.0.0#8bd69bcde093f449391d146819eea08ea6d47d09" }
+source = { git = "https://github.com/IMBArator/miniDSP-Linux.git?rev=v1.0.0#8bd69bcde093f449391d146819eea08ea6d47d09" }
 dependencies = [
     { name = "rich" },
     { name = "tomli-w" },
@@ -67,7 +67,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "minidsp-linux", git = "https://github.com/IMBArator/miniDSP-Linux.git?tag=v1.0.0" },
+    { name = "minidsp-linux", git = "https://github.com/IMBArator/miniDSP-Linux.git?rev=v1.0.0" },
     { name = "pyside6-essentials", specifier = ">=6.8" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
     { name = "pytest-qt", marker = "extra == 'dev'", specifier = ">=4.4" },
