@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=miniDSP Qt
+GenericName=DSP Controller
+Comment=GUI for the t.racks DSP 4x4 Mini
+Exec=minidspqt
+Icon=minidspqt
+Categories=AudioVideo;Audio;
+Terminal=false
+StartupNotify=true
+Keywords=DSP;Audio;miniDSP;tracks;Equalizer;

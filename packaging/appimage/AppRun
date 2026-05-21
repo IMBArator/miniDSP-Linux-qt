@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# AppRun for minidspqt — launched by the AppImage runtime when the user runs the .AppImage.
+# Sets up the bundled Python interpreter and its environment, then execs minidspqt.
+
+set -e
+
+HERE="$(dirname -- "$(readlink -f -- "${0}")")"
+export APPDIR="${HERE}"
+
+PYVER="3.11"
+PYBIN="${APPDIR}/usr/bin/python${PYVER}"
+SITE_PACKAGES="${APPDIR}/usr/lib/python${PYVER}/site-packages"
+
+# Pin Python's view of the world to the bundled prefix so it never picks up
+# the host's site-packages or PYTHONPATH leftovers.
+export PYTHONHOME="${APPDIR}/usr"
+unset PYTHONPATH
+
+# Bundled shared libs (libpython, OpenSSL, libffi, XCB, …) live in usr/lib.
+export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH:-}"
+
+# Point Qt at PySide6's bundled plugin tree. Without this, the xcb platform
+# plugin loader walks system paths and either fails or pulls in mismatched Qt.
+export QT_PLUGIN_PATH="${SITE_PACKAGES}/PySide6/Qt/plugins"
+export QML2_IMPORT_PATH="${SITE_PACKAGES}/PySide6/Qt/qml"
+
+# `-s` disables loading the user's ~/.local/lib/pythonX.Y/site-packages,
+# which would otherwise leak host-installed Python packages into the AppImage.
+exec "${PYBIN}" -s -m minidspqt.cli "$@"

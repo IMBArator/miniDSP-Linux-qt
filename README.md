@@ -165,6 +165,62 @@ minidspqt --offline    # virtual DSP, no hardware needed
 
 Use the menu button (top-right) to load or save `.unt` preset files. In offline mode, all 30 slots are editable and can be saved back to disk.
 
+## AppImage
+
+A self-contained AppImage — a single executable file bundling its own CPython 3.11 and PySide6 — can be built locally. End users only need to download the resulting `.AppImage`, make it executable, and run it. No Python, no `uv`, no virtualenv on the user's machine.
+
+### Run a prebuilt AppImage
+
+```bash
+chmod +x minidspqt-*-x86_64.AppImage
+./minidspqt-*-x86_64.AppImage              # connected mode
+./minidspqt-*-x86_64.AppImage --offline    # virtual DSP, no hardware
+```
+
+USB access still goes through `/dev/hidraw*`, so the udev rule under [Permissions](#permissions) is required for non-root use.
+
+### Build the AppImage yourself
+
+Two steps: build the project wheel on the host with `uv` (fast, uses your dev venv), then build the AppImage in a container which downloads pyenv's `python-build`, compiles CPython from source into an `AppDir`, installs that wheel, and runs `linuxdeploy` + `appimagetool`.
+
+**Step 1 — build the wheel on the host:**
+
+```bash
+make build      # produces dist/minidsp_linux_qt-<version>-py3-none-any.whl via uv
+```
+
+**Step 2a — Docker/Podman build** (recommended for releases — Ubuntu 20.04, glibc 2.31):
+
+```bash
+podman run --rm -v "$PWD":/src -w /src docker.io/library/ubuntu:20.04 bash -c \
+    "bash packaging/appimage/init_environment.sh && make appimage"
+# AppImage lands in ./dist/ on the host.
+```
+
+Replace `podman` with `docker` if that's what you have. With rootless Podman, add `--userns=keep-id` so `dist/` ends up owned by your host user.
+
+For an interactive session (faster iteration, keeps the apt/pyenv install warm):
+
+```bash
+podman run --rm -it -v "$PWD":/src -w /src docker.io/library/ubuntu:20.04 bash
+# inside the container, once:
+bash packaging/appimage/init_environment.sh
+# then, every time you want to (re)build (after `make build` on the host):
+make appimage
+exit
+```
+
+**Step 2b — native build** (without a container, whatever your host glibc is — fine for development):
+
+```bash
+bash packaging/appimage/init_environment.sh   # one-time, may prompt for sudo
+make appimage                                  # produces dist/minidspqt-<version>-x86_64.AppImage
+```
+
+The resulting AppImage only runs on systems with a glibc at least as new as your build host.
+
+`make appimage-clean` removes only the AppDir, the Python build tree, and `dist/*.AppImage`, leaving the `python-build` and `linuxdeploy` downloads cached under `build/cache/` so subsequent rebuilds are fast.
+
 ## Permissions
 
 The tool communicates via `/dev/hidraw*`. By default this requires root. To allow regular users, create a udev rule:

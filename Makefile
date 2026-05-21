@@ -1,6 +1,6 @@
 UV := uv
 
-.PHONY: sync install test build clean docs docs-serve docs-clean
+.PHONY: sync install test build clean docs docs-serve docs-clean appimage appimage-clean
 
 sync:
 	$(UV) sync --extra dev
@@ -15,7 +15,17 @@ test:
 build:
 	$(UV) build
 
-# Remove build artifacts
+# Build a self-contained AppImage with bundled CPython + PySide6.
+# Prereqs are listed in packaging/appimage/init_environment.sh — run that once
+# on a fresh host or inside an Ubuntu 20.04 container before invoking this.
+appimage:
+	bash packaging/appimage/build.sh
+
+# Remove only AppImage artifacts (keeps the python-build / linuxdeploy cache).
+appimage-clean:
+	rm -rf build/AppDir build/Python-* dist/*.AppImage
+
+# Remove all build artifacts (sdist/wheel + AppImage + caches)
 clean:
 	rm -rf dist build *.egg-info
 
