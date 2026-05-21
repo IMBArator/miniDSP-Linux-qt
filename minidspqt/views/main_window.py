@@ -31,6 +31,7 @@ from ..virtual_dsp import VirtualDSP
 from .channel_linking_dialog import ChannelLinkingDialog
 from .copy_channel_dialog import CopyChannelDialog
 from .detail_view import DetailView
+from .device_pin_dialog import SetPinDialog, UnlockPinDialog
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
 from .test_tone_dialog import TestToneDialog
@@ -67,6 +68,15 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._detail_view)
         self.setCentralWidget(self._stack)
 
+        if dsp_instance is None and offline:
+            # Defensive default: ``offline=True`` without an explicit
+            # instance should NEVER mean "talk to real hardware".
+            # ``app.py`` always supplies a VirtualDSP when offline, but
+            # tests sometimes pass ``offline=True`` alone — without this
+            # branch the worker would happily probe a real DSPmini and
+            # trip the unlock dialog if one is plugged in and locked.
+            dsp_instance = VirtualDSP()
+
         if dsp_instance is not None:
             factory = type(dsp_instance)
         else:
@@ -82,6 +92,9 @@ class MainWindow(QMainWindow):
         self._thread.levels_updated.connect(self._on_levels_updated)
         self._thread.connection_changed.connect(self._on_connection_changed)
         self._thread.config_loaded.connect(self._on_config_loaded)
+        self._thread.pin_required.connect(self._show_unlock_dialog)
+        self._thread.pin_result.connect(self._on_pin_result)
+        self._unlock_dialog: UnlockPinDialog | None = None
 
         self._home_view.gain_changed.connect(self._on_gain_changed)
         self._home_view.mute_changed.connect(self._on_mute_changed)
@@ -130,6 +143,18 @@ class MainWindow(QMainWindow):
         menu.addAction("Test tone\u2026").triggered.connect(self._on_test_tone)
         self._test_tone_dialog: TestToneDialog | None = None
         menu.addSeparator()
+        self._set_pin_action = menu.addAction("Set device PIN\u2026")
+        self._set_pin_action.triggered.connect(self._on_set_pin)
+        # Only meaningful while the device is connected (no-op on VirtualDSP
+        # in offline mode would still work, but we gate it the same way for
+        # consistency).
+        self._set_pin_action.setEnabled(False)
+        self._reconnect_action = menu.addAction("Reconnect")
+        self._reconnect_action.triggered.connect(self._on_reconnect)
+        # Reconnect is only useful when we've stopped \u2014 i.e. NOT connected.
+        # Hidden until disconnected.
+        self._reconnect_action.setEnabled(False)
+        menu.addSeparator()
         self._build_theme_menu(menu)
         menu.addSeparator()
         menu.addAction("About").triggered.connect(self._on_about)
@@ -157,6 +182,13 @@ class MainWindow(QMainWindow):
 
     def _on_connection_changed(self, connected: bool) -> None:
         self._state.connected = connected
+        # Set device PIN is a device-only action; it follows the worker's
+        # connection state even in offline mode (where VirtualDSP toggles
+        # _open during the set-PIN → relock cycle).
+        self._set_pin_action.setEnabled(connected)
+        # Reconnect is the inverse: only useful when we're not connected
+        # (e.g. after the user cancelled the unlock prompt).
+        self._reconnect_action.setEnabled(not connected)
         if self._offline:
             return
         self._home_view.set_connected(connected)
@@ -589,6 +621,61 @@ class MainWindow(QMainWindow):
             # shows all four rows, so refresh it explicitly even though the
             # main strip/panels don't need a full re-render.
             self._detail_view.refresh_delay_panel_state()
+
+    # --- Device PIN / unlock ---
+
+    def _show_unlock_dialog(self) -> None:
+        """Worker says the device is locked; pop a non-blocking modal dialog.
+
+        Must be non-blocking (``open()``, not ``exec()``) because the
+        worker is parked in ``_handle_locked`` waiting on its PIN queue —
+        a modal that blocks the UI thread would also block ``submit_pin``
+        signals from ever reaching it.
+        """
+        if self._unlock_dialog is not None and self._unlock_dialog.isVisible():
+            return
+        self._unlock_dialog = UnlockPinDialog(self)
+        self._unlock_dialog.pinEntered.connect(self._thread.submit_pin)
+        self._unlock_dialog.cancelled.connect(self._thread.cancel_pin_entry)
+        # If the user closes the dialog any other way (Esc, window close)
+        # the worker is still parked — treat that as a cancel.
+        self._unlock_dialog.rejected.connect(self._on_unlock_dialog_rejected)
+        self._unlock_dialog.open()
+
+    def _on_unlock_dialog_rejected(self) -> None:
+        # If the dialog was rejected without a prior pin_result(_, 0),
+        # the worker is still waiting — push the cancel sentinel.  Safe
+        # to call even after exhaustion: the queue.put just gets drained
+        # on the next prompt.
+        self._thread.cancel_pin_entry()
+
+    def _on_pin_result(self, success: bool, attempts_left: int) -> None:
+        if self._unlock_dialog is None:
+            return
+        self._unlock_dialog.on_pin_result(success, attempts_left)
+
+    def _on_set_pin(self) -> None:
+        dialog = SetPinDialog(self)
+        dialog.pinChosen.connect(self._thread.request_set_pin)
+        dialog.exec()
+
+    def _on_reconnect(self) -> None:
+        """Re-arm the worker after a user-initiated stop.
+
+        Reached via the menu after the user cancelled the unlock prompt,
+        exhausted attempts, or set a new PIN. We block briefly for the
+        previous run() to wind down (it may still be emitting
+        connection_changed under us) before restart().
+        """
+        if self._thread.isRunning():
+            # Already running — nothing to do. Should be visually
+            # impossible because the menu item is disabled while
+            # connected, but defensive against signal-ordering races.
+            return
+        # wait() returns immediately if the thread already finished;
+        # otherwise it gives the run() coroutine a moment to exit.
+        self._thread.wait(500)
+        self._thread.restart()
 
     # --- Channel linking ---
 

@@ -280,12 +280,15 @@ class TestMainWindowIntegration:
         # for the DeviceThread's config_loaded signal — keeps the test fast.
         w = MainWindow(offline=True)
         qtbot.addWidget(w)
+        # Stop the worker AND drain queued signals — see the sibling
+        # comment in test_channel_linking_sync.py's fixture.
+        w._thread.request_stop()
+        w._thread.wait(2000)
+        qtbot.wait(50)
         cfg = _make_preset_cfg()
         w._state = DeviceState.from_config(cfg)
         w._home_view.apply_state(w._state)
         yield w
-        w._thread.request_stop()
-        w._thread.wait(2000)
 
     def test_home_peq_click_navigates_to_peq_panel(self, window, qtbot):
         # Click PEQ on Out1 in the home view.

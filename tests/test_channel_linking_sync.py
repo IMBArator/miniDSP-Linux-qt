@@ -41,11 +41,16 @@ def window(qtbot, preset_cfg):
 
     w = MainWindow(offline=True)
     qtbot.addWidget(w)
+    # Stop the worker AND drain its already-queued signals before seeding
+    # state — otherwise the VirtualDSP's queued config_loaded (now that
+    # ``offline=True`` always wires one up) gets delivered later and
+    # overwrites our assignment with the default config.
+    w._thread.request_stop()
+    w._thread.wait(2000)
+    qtbot.wait(50)  # let any pending QueuedConnection signals deliver
     w._state = DeviceState.from_config(_linked_cfg(preset_cfg))
     w._home_view.apply_state(w._state)
     yield w
-    w._thread.request_stop()
-    w._thread.wait(2000)
 
 
 # ---------------------------------------------------------------------------
