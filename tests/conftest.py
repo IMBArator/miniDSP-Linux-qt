@@ -202,6 +202,15 @@ class FakeDSPmini(VirtualDSP):
         self.calls.append(("store_preset", (slot, name)))
         return super().store_preset(slot, name)
 
+    def submit_pin(self, pin: str) -> bool:
+        result = super().submit_pin(pin)
+        self.calls.append(("submit_pin", (pin, result)))
+        return result
+
+    def set_lock_pin(self, pin: str) -> bool:
+        self.calls.append(("set_lock_pin", (pin,)))
+        return super().set_lock_pin(pin)
+
 
 @pytest.fixture
 def fake_dsp() -> FakeDSPmini:

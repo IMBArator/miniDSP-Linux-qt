@@ -11,6 +11,7 @@ import copy
 from typing import Any
 
 from minidsp.defaults import load_factory_defaults
+from minidsp.device import DeviceLockedError
 
 _SLOT_KEYS = frozenset(
     {
@@ -59,6 +60,9 @@ class VirtualDSP:
         self._config: dict[str, Any] = _default_config()
         self._slots: list[dict[str, Any] | None] = [None] * 30
         self._source_bytes: bytes | None = None
+        self._open: bool = True
+        self._locked: bool = False
+        self._pin: str | None = None
 
     def load_from_unt_bytes(
         self,
@@ -104,20 +108,42 @@ class VirtualDSP:
     def _full_config(self) -> dict[str, Any]:
         return copy.deepcopy(self._config)
 
-    # --- Connection (no-ops) ---
+    # --- Connection ---
 
     def open(self) -> None:
-        pass
+        self._open = True
 
     def close(self) -> None:
-        pass
+        self._open = False
+
+    # --- Lock / unlock ---
+
+    def submit_pin(self, pin: str) -> bool:
+        if pin == self._pin:
+            self._locked = False
+            return True
+        return False
+
+    def set_lock_pin(self, pin: str) -> bool:
+        self._pin = pin
+        self._locked = True
+        # The real device ACKs and stays nominally connected; the client
+        # is what closes the USB session. We mirror that here — leave
+        # _open alone, the worker calls close() after the ACK.
+        return True
 
     # --- Config readback ---
 
     def read_config(self) -> dict:
+        if self._locked:
+            raise DeviceLockedError(
+                "Device is locked. Call submit_pin(pin) before read_config()."
+            )
         return self._full_config()
 
-    def poll_levels(self) -> dict:
+    def poll_levels(self) -> dict | None:
+        if not self._open or self._locked:
+            return None
         return {
             "inputs": [0, 0, 0, 0],
             "outputs": [0, 0, 0, 0],
