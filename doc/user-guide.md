@@ -34,6 +34,7 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
 - [Channel Linking](#channel-linking)
 - [Copy Channel Settings](#copy-channel-settings)
 - [Test Tone Generator](#test-tone-generator)
+- [Device Lock / PIN](#device-lock--pin)
 - [Themes (light / dark)](#themes-light--dark)
 - [USB Permissions](#usb-permissions)
 - [Troubleshooting](#troubleshooting)
@@ -488,6 +489,8 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
 | **Copy channel settings...** | Copy parameters from one channel to others (see [Copy Channel Settings](#copy-channel-settings)) |
 | **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |
+| **Set device PIN...** | Set a 4-character lock PIN; the device disconnects after applying (see [Device Lock / PIN](#device-lock--pin)). Enabled only while connected |
+| **Reconnect** | Manually re-attach to the device after a disconnect (e.g. after cancelling the unlock prompt). Enabled only while disconnected |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
 
@@ -631,6 +634,53 @@ Click **Close** (or press Esc) to dismiss the dialog. The generator keeps runnin
 The generator state (mode and last sine frequency) is part of the device's live configuration. It survives USB reconnects and power cycles. When you reopen the dialog, it reflects what the device is currently doing.
 
 > **Warning:** The test tone feeds all outputs at a hardware-fixed level that cannot be attenuated via this dialog. Use your monitoring volume control to manage listening level, and remember to disable the generator before leaving it unattended.
+
+---
+
+## Device Lock / PIN
+
+The DSP 4x4 Mini can be **locked with a 4-character PIN**. Once set, the device refuses to accept any configuration commands until the correct PIN is submitted on the next connection. This is useful for installs where the panel should not be tweaked by end users.
+
+> **⚠ Critical warning — read this first:** there is no documented factory-reset procedure for the DSP 4x4 Mini. **If you set a PIN and forget it, your device may be permanently bricked for configuration use.** Write the PIN down somewhere safe before applying it. There is also intentionally **no "Remove PIN" action** in this application — the protocol has no such command.
+
+### What counts as a PIN
+
+- **Exactly 4 characters**, any printable ASCII (digits, letters, punctuation). The protocol transmits 4 raw bytes; the firmware does not enforce digits-only despite what some documentation suggests.
+- The PIN is **case-sensitive**.
+- Characters are masked in the input field for shoulder-surfing protection.
+
+### Unlock prompt — entering a PIN
+
+When you start the application against a **locked** device, a modal dialog appears as soon as the worker detects the lock:
+
+- Type the 4-character PIN and press **Unlock** (or hit Enter).
+- On a correct PIN: the dialog closes, normal config load proceeds, all controls become live.
+- On a wrong PIN: the dialog stays open and shows `Wrong PIN — N attempts remaining`. The input is cleared so you can try again. You get **three attempts in total** per connection.
+- After **three wrong attempts**: the dialog closes, the worker disconnects, and **does not auto-reconnect** — you are not subjected to an endless prompt loop. Use **Menu ≡ → Reconnect** when you want to try again from a fresh batch of attempts.
+- Clicking **Cancel** (or pressing Esc) on the unlock prompt also disconnects without auto-reconnecting; same recovery via **Reconnect**.
+
+### Setting a new PIN
+
+1. Connect to an unlocked device (or unlock it first).
+2. Open **Menu ≡ → Set device PIN…** (this entry is greyed out while disconnected).
+3. Type the new PIN in the **PIN** field and again in **Confirm** — the **Set PIN** button is enabled only when both fields contain 4 matching characters; otherwise an inline `PINs do not match` warning is shown.
+4. Click **Set PIN**.
+5. The device acknowledges the change, then the application **closes the USB session and stops the worker**. There is no auto-reconnect — setting a PIN is a one-shot admin action, not a normal edit, and you typically want to walk away rather than be immediately re-prompted to unlock with the PIN you just chose.
+6. To use the device again, either restart the application or use **Menu ≡ → Reconnect** to re-attach. You will then see the unlock prompt described above.
+
+### Offline mode behaviour
+
+The `--offline` virtual DSP mirrors the same lock semantics:
+
+- **Set device PIN…** locks the virtual device. The worker disconnects and the in-memory device becomes "locked".
+- Use **Reconnect** to re-attach; you will then see the unlock prompt.
+- The lock state is **in-memory only** — restarting the application resets the virtual device to unlocked. The `.unt` file format has no field for the lock state, so it does not survive save/load either.
+
+This makes offline mode a safe playground for trying the PIN feature out before applying it to real hardware.
+
+### Recovery if you forget the PIN
+
+There is no known software recovery. If you set a PIN and forget it, you may need to contact the manufacturer for a factory-reset procedure (the steps for this device are not publicly documented at time of writing). **Treat the Set PIN action as semi-permanent and write the PIN down.**
 
 ---
 

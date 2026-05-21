@@ -2,7 +2,7 @@
 
 > **Status:** Work in progress — see [Features](#features) for completed features
 
-A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, light/dark theming, and an offline mode for editing without hardware.
+A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, device lock / PIN, light/dark theming, and an offline mode for editing without hardware.
 
 ## Home View
 
@@ -94,6 +94,15 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - Full-width red **Disable test tone** panic button for instant silence
 - Generator keeps running after closing the dialog; state survives power cycles (`parse_preset_params` test tone fields)
 
+### Device lock / PIN
+
+- **Auto-prompt on connect** — when the device reports it is locked (`cmd_device_info` byte 6 = `0x01`) the worker pauses config load and pops a modal **Unlock device** dialog. Up to three PIN attempts; wrong PIN shows inline `N attempts remaining`; cancel or exhaustion disconnects without auto-reconnecting so the user is not stuck in an unlock-prompt loop (`cmd_submit_pin`)
+- **Set a new PIN** from **Menu → Set device PIN…** with a confirm field; on ACK the application closes the USB session and stops the worker (set-PIN is a one-shot admin action, not a normal edit) (`cmd_set_lock_pin`)
+- **Reconnect** menu entry re-arms the worker after any user-initiated disconnect (cancel, three wrong PINs, or set-PIN ACK)
+- PINs are 4 raw bytes — any 4 printable ASCII characters work, not just digits, regardless of the upstream library docstring
+- No "Remove PIN" action is exposed because the protocol has no such command; offline mode mirrors the same semantics against the in-memory virtual DSP for safe experimentation
+- See [Device Lock / PIN in the user guide](doc/user-guide.md#device-lock--pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
+
 ### Knob interaction
 
 - **Click and drag** vertically, **scroll wheel**, or **arrow keys** for ±1 raw unit steps
@@ -170,7 +179,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-324 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), param knob widget, and .unt read/write round-trip.
+364 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), param knob widget, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -188,6 +197,7 @@ minidspqt/                     Main package
     main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
     home_view.py               8 channel strips + routing matrix + level meters
     preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
+    device_pin_dialog.py       UnlockPinDialog + SetPinDialog for the device-lock feature
     channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
     channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
     detail_view.py             Per-channel detail view with feature panels and routed meters
@@ -202,7 +212,7 @@ minidspqt/                     Main package
   widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
   resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (324 tests)
+tests/                         pytest suite (364 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
   test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
@@ -220,6 +230,8 @@ tests/                         pytest suite (324 tests)
   test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
   test_unt_loader.py           .unt parsing and validation
   test_unt_writer.py           Byte-identical round-trip, field-level edits
+  test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
+  test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
 
 doc/
   concept-art/                 UI mockups (.excalidraw + .png)
@@ -238,7 +250,6 @@ doc/
 | Detail View: mark with underline the currently edited feature | — | — |
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
-| Device lock / PIN | `cmd_device_info` (locked field), `cmd_submit_pin`, `cmd_set_lock_pin` | PIN entry dialog; dangerous feature |
 | Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
 | PEQ extras | — | draggable graph markers |
 
