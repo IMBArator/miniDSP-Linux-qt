@@ -10,6 +10,15 @@ module thin-wraps it for backward-compat with existing tests.
 
 from __future__ import annotations
 
+# pytest-qt's qt_compat.get_versions() reads PySide6.__version__ directly.
+# When we depend on PySide6-Essentials (no Addons), PySide6 is a namespace
+# package with no __init__.py, so the attribute is absent. Synthesize it from
+# QtCore.__version__ before pytest-qt's pytest_report_header fires.
+import PySide6 as _pyside6  # noqa: E402
+if not hasattr(_pyside6, "__version__"):
+    from PySide6.QtCore import __version__ as _qt_version
+    _pyside6.__version__ = _qt_version
+
 import threading
 
 import pytest
