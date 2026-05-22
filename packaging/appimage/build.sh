@@ -243,6 +243,11 @@ step_stage_assets() {
     install -Dm644 "${PACKAGING_DIR}/minidspqt.desktop" "${APPDIR}/usr/share/applications/minidspqt.desktop"
     install -Dm644 "${PACKAGING_DIR}/minidspqt.png"     "${APPDIR}/usr/share/icons/hicolor/256x256/apps/minidspqt.png"
 
+    # Host-environment shims (e.g. xdg-open) used by Qt to launch external
+    # tools without leaking the AppImage's bundled lib paths to children.
+    install -Dm755 "${PACKAGING_DIR}/host-wrappers/xdg-open" \
+        "${APPDIR}/usr/bin/host-wrappers/xdg-open"
+
     # AppImage spec requires the .desktop and icon to *also* live at the AppDir root.
     cp "${PACKAGING_DIR}/minidspqt.desktop" "${APPDIR}/minidspqt.desktop"
     cp "${PACKAGING_DIR}/minidspqt.png"     "${APPDIR}/minidspqt.png"

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Wrapper for xdg-open used when the app runs inside the AppImage.
+#
+# Qt's QDesktopServices.openUrl forks xdg-open, which in turn execs a browser.
+# Without this wrapper the child process inherits the AppImage's
+# LD_LIBRARY_PATH (pointing at usr/lib full of bundled glib/gobject/…), and a
+# system browser like Firefox crashes with:
+#   undefined symbol: g_dir_unref
+# because it ends up mixing the bundled libglib with the system libgobject.
+#
+# AppRun stashes the host's original values in APPIMAGE_ORIGINAL_*.
+# Here we restore them, then chain to the *next* xdg-open on PATH.
+
+restore() {
+    local var="$1" orig_var="APPIMAGE_ORIGINAL_${1}"
+    if [[ -n "${!orig_var-}" ]]; then
+        export "${var}=${!orig_var}"
+    else
+        unset "${var}"
+    fi
+}
+
+restore LD_LIBRARY_PATH
+restore LD_PRELOAD
+restore PYTHONHOME
+restore PYTHONPATH
+restore QT_PLUGIN_PATH
+restore QML2_IMPORT_PATH
+
+# Find a real xdg-open on PATH that isn't ourselves and exec it.
+self="$(readlink -f -- "$0")"
+IFS=':' read -ra dirs <<< "$PATH"
+for d in "${dirs[@]}"; do
+    cand="${d}/xdg-open"
+    if [[ -x "${cand}" && "$(readlink -f -- "${cand}")" != "${self}" ]]; then
+        exec "${cand}" "$@"
+    fi
+done
+
+echo "xdg-open (AppImage wrapper): no system xdg-open found on PATH" >&2
+exit 127

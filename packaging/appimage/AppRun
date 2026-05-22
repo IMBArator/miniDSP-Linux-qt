@@ -11,6 +11,17 @@ PYVER="3.11"
 PYBIN="${APPDIR}/usr/bin/python${PYVER}"
 SITE_PACKAGES="${APPDIR}/usr/lib/python${PYVER}/site-packages"
 
+# Save the host's view of every env var we are about to override. The
+# host-wrappers/xdg-open shim restores these before launching a browser, so
+# Qt's "open link" path doesn't poison the child process with the AppImage's
+# bundled glib/gobject/Qt libs.
+export APPIMAGE_ORIGINAL_LD_LIBRARY_PATH="${LD_LIBRARY_PATH-}"
+export APPIMAGE_ORIGINAL_LD_PRELOAD="${LD_PRELOAD-}"
+export APPIMAGE_ORIGINAL_PYTHONHOME="${PYTHONHOME-}"
+export APPIMAGE_ORIGINAL_PYTHONPATH="${PYTHONPATH-}"
+export APPIMAGE_ORIGINAL_QT_PLUGIN_PATH="${QT_PLUGIN_PATH-}"
+export APPIMAGE_ORIGINAL_QML2_IMPORT_PATH="${QML2_IMPORT_PATH-}"
+
 # Pin Python's view of the world to the bundled prefix so it never picks up
 # the host's site-packages or PYTHONPATH leftovers.
 export PYTHONHOME="${APPDIR}/usr"
@@ -23,6 +34,10 @@ export LD_LIBRARY_PATH="${APPDIR}/usr/lib:${LD_LIBRARY_PATH:-}"
 # plugin loader walks system paths and either fails or pulls in mismatched Qt.
 export QT_PLUGIN_PATH="${SITE_PACKAGES}/PySide6/Qt/plugins"
 export QML2_IMPORT_PATH="${SITE_PACKAGES}/PySide6/Qt/qml"
+
+# Prepend host-wrappers/ to PATH so QDesktopServices → xdg-open finds our
+# env-restoring shim ahead of the system binary.
+export PATH="${APPDIR}/usr/bin/host-wrappers:${PATH}"
 
 # `-s` disables loading the user's ~/.local/lib/pythonX.Y/site-packages,
 # which would otherwise leak host-installed Python packages into the AppImage.
