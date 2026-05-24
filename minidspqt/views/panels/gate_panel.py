@@ -72,17 +72,28 @@ def _parse_release(text: str) -> int:
 class GatePanel(QWidget):
     """Gate parameter controls for one input channel.
 
-    Signals
-    -------
-    gate_params_changed(int, int, int, int)
-        Emitted with ``(attack, release, hold, threshold)`` raw values
-        whenever any knob changes.
+    Four ``ParamKnob`` widgets (threshold, attack, hold, release)
+    feed a shared transfer-function graph. All four raw values reach
+    the device atomically via the ``gate_params_changed`` signal —
+    the caller forwards to ``DeviceThread.request_gate``.
+
+    Signals:
+        gate_params_changed (int, int, int, int): ``(attack, release,
+            hold, threshold)`` raw values, emitted on any knob change.
+        reset_requested (): Emitted after the user confirms the
+            "Reset" header button. The caller (typically the detail
+            view) decides what defaults to apply.
     """
 
     gate_params_changed = Signal(int, int, int, int)
     reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the panel seeded with the F00 factory gate values.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -207,13 +218,24 @@ class GatePanel(QWidget):
         )
 
     def reset_to_defaults(self) -> None:
-        """Reset all knobs to factory defaults silently."""
+        """Reset all knobs to F00 factory defaults without emitting signals."""
         self.set_params_silently(*default_gate_state())
 
     def set_params_silently(
         self, attack: int, release: int, hold: int, threshold: int
     ) -> None:
-        """Update all knobs without emitting signals."""
+        """Update all four knobs from device-driven state.
+
+        Args:
+            attack: Raw attack value.
+            release: Raw release value.
+            hold: Raw hold value.
+            threshold: Raw threshold value.
+
+        Does not emit ``gate_params_changed`` — used when the device
+        thread has just delivered fresh config so the UI mirrors it
+        without echoing right back.
+        """
         self._knob_threshold.setValueSilently(threshold)
         self._knob_attack.setValueSilently(attack)
         self._knob_hold.setValueSilently(hold)
@@ -226,6 +248,13 @@ class GatePanel(QWidget):
         Slaves are read-only mirrors of their master; the knobs stay
         visible so the user can see the inherited values but cannot
         change them. A banner above the panel explains the lock.
+
+        Args:
+            is_slave: True if the displayed channel is a slave in a
+                link group; disables knobs and shows the banner.
+            master_name: Display name of the master channel, used
+                inside the banner text. Empty falls back to a
+                generic "Linked — read-only" label.
         """
         apply_link_state(
             self._link_banner,

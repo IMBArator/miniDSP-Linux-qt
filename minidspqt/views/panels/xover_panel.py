@@ -68,16 +68,29 @@ def _parse_freq(text: str) -> int:
 class XoverPanel(QWidget):
     """Crossover controls + shared frequency-response graph for one output.
 
-    Signals
-    -------
-    xover_changed(int, int, int, int)
-        ``(hipass_freq, hipass_slope, lopass_freq, lopass_slope)``
+    Two rows (Hi-Pass and Lo-Pass), each with a frequency knob, slope
+    selector and bypass toggle. The bypass toggle is independent of
+    the slope selector (matching the manufacturer software): toggling
+    bypass remembers the previous slope so the user can flick the
+    filter on and off without losing their choice.
+
+    Signals:
+        xover_changed (int, int, int, int): ``(hipass_freq,
+            hipass_slope, lopass_freq, lopass_slope)`` raw values.
+            Slope of 0 means the filter is bypassed.
+        reset_requested (): Emitted after the user confirms the
+            "Reset" header button.
     """
 
     xover_changed = Signal(int, int, int, int)
     reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the panel seeded with the F00 factory crossover values.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._suppress_emit = False
         self._hp_last_slope: int = 10
@@ -188,11 +201,12 @@ class XoverPanel(QWidget):
         )
 
     def is_xover_active(self) -> bool:
+        """True if either hi-pass or lo-pass has a non-zero slope (not bypassed)."""
         xo = self._read_state()
         return xo.hipass_slope != 0 or xo.lopass_slope != 0
 
     def reset_to_defaults(self) -> None:
-        """Reset all controls to factory defaults silently."""
+        """Reset hi-pass and lo-pass to F00 factory values without emitting signals."""
         self.set_params_silently(*default_crossover_state())
 
     def set_params_silently(
@@ -202,6 +216,17 @@ class XoverPanel(QWidget):
         lopass_freq: int,
         lopass_slope: int,
     ) -> None:
+        """Apply device-driven crossover state without emitting signals.
+
+        Args:
+            hipass_freq: Raw hi-pass frequency value.
+            hipass_slope: Raw hi-pass slope index, or 0 for bypass.
+                A 0 here also hides the bypass-vs-slope distinction:
+                the slope combo holds onto whichever value it had
+                last so toggling bypass off restores it.
+            lopass_freq: Raw lo-pass frequency value.
+            lopass_slope: Raw lo-pass slope index, or 0 for bypass.
+        """
         prev = self._suppress_emit
         self._suppress_emit = True
         try:
@@ -233,13 +258,26 @@ class XoverPanel(QWidget):
         self._graph.set_crossover(self._read_state())
 
     def set_bands(self, bands, channel_bypass: bool) -> None:
+        """Forward the channel's PEQ bands into the shared graph.
+
+        Args:
+            bands: Up to 7 ``PEQBand`` instances.
+            channel_bypass: Channel-wide PEQ bypass flag.
+        """
         self._graph.set_bands(bands, channel_bypass)
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         """Lock the panel when displaying a slave channel's crossover.
 
-        Disables both Hi-Pass and Lo-Pass rows (freq knob, slope combo,
-        bypass toggle). The summed response graph stays visible.
+        Disables both Hi-Pass and Lo-Pass rows (freq knob, slope
+        combo, bypass toggle). The summed response graph stays
+        visible so the user still sees what the slave is doing.
+
+        Args:
+            is_slave: True if the displayed channel is a slave in a
+                link group.
+            master_name: Display name of the master, used inside the
+                banner text.
         """
         apply_link_state(
             self._link_banner,

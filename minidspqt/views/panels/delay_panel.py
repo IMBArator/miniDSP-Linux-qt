@@ -57,20 +57,32 @@ def _parse_delay(text: str) -> int:
 
 
 class DelayPanel(QWidget):
-    """Delay overview graph + single-channel edit knob.
+    """Delay overview graph plus a single-channel edit knob.
 
-    Signals
-    -------
-    delay_changed(int)
-        Emitted with the raw samples value whenever the active row's
-        knob changes.  The detail view knows which absolute channel is
-        currently displayed and re-emits with the channel index.
+    Renders the ``DelayGraph`` overview (all four output delays on a
+    shared axis) above a single edit knob that targets whichever
+    output is currently displayed. Switching channels via the strip
+    nav buttons calls ``set_active_channel``, which re-targets the
+    knob without rebuilding the panel.
+
+    Signals:
+        delay_changed (int): Raw samples value, emitted when the
+            active row's knob changes. The detail view knows which
+            absolute channel is currently displayed and re-emits
+            with the channel index attached.
+        reset_requested (): Emitted after the user confirms the
+            "Reset" header button.
     """
 
     delay_changed = Signal(int)
     reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the panel with all four delays at 0 samples.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._samples: list[int] = [0, 0, 0, 0]
         self._active_idx: int = 0
@@ -127,16 +139,25 @@ class DelayPanel(QWidget):
     # ---- public state-push API ---------------------------------------- #
 
     def set_channel_names(self, names: list[str]) -> None:
-        """Update the four row labels on the graph (e.g. ``["Out 1", ...]``)."""
+        """Replace the four row labels on the overview graph.
+
+        Args:
+            names: Exactly 4 strings, in output order (Out1 → Out4).
+                Wrong-length lists are ignored.
+        """
         if len(names) != 4:
             return
         self._graph.set_channel_names(list(names))
 
     def set_delays_silently(self, samples: list[int]) -> None:
-        """Mirror all four delay values into the graph + active knob.
+        """Replace all four delay values without emitting signals.
 
-        Used on initial render and on master→slave fan-out refreshes; no
-        ``delay_changed`` signal is emitted.
+        Args:
+            samples: List of exactly 4 raw sample counts. Wrong-length
+                lists are ignored.
+
+        Used on initial render and on master → slave fan-out
+        refreshes.
         """
         if len(samples) != 4:
             return
@@ -145,7 +166,14 @@ class DelayPanel(QWidget):
         self._knob.setValueSilently(self._samples[self._active_idx])
 
     def set_active_channel(self, output_idx: int, name: str, samples: int) -> None:
-        """Switch which row is the editable one and refresh its label/knob."""
+        """Switch which row is the editable one and refresh its label/knob.
+
+        Args:
+            output_idx: 0-based output index (0–3). Clamped.
+            name: Display name shown above the edit knob.
+            samples: Current raw delay value for that channel, used
+                to seed the knob.
+        """
         idx = max(0, min(3, int(output_idx)))
         self._active_idx = idx
         self._samples[idx] = max(0, min(_SAMPLES_MAX, int(samples)))
@@ -155,13 +183,23 @@ class DelayPanel(QWidget):
         self._knob.setValueSilently(self._samples[idx])
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
-        """Lock the knob (graph stays visible) when the active row is a slave."""
+        """Lock the edit knob when the active row is a slave channel.
+
+        The graph stays interactive (read-only by nature) so the
+        user can still see every channel's delay.
+
+        Args:
+            is_slave: True if the displayed channel is a slave in a
+                link group.
+            master_name: Display name of the master, used inside the
+                banner text.
+        """
         apply_link_state(
             self._link_banner, is_slave, master_name, [self._knob, self._reset_btn]
         )
 
     def reset_to_defaults(self) -> None:
-        """Reset the active channel's delay to the factory default silently."""
+        """Reset the active channel's delay to the F00 factory value silently."""
         default = default_delay_samples()
         self._samples[self._active_idx] = default
         self._graph.set_delays(self._samples)

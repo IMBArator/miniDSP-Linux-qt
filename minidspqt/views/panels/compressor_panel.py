@@ -85,17 +85,29 @@ def _parse_release(text: str) -> int:
 class CompressorPanel(QWidget):
     """Compressor parameter controls for one output channel.
 
-    Signals
-    -------
-    compressor_params_changed(int, int, int, int, int)
-        Emitted with ``(ratio, knee, attack, release, threshold)`` raw
-        values whenever any control changes.
+    Four ``ParamKnob`` widgets (threshold, knee, attack, release) plus
+    a 16-entry ratio combo feed the shared ``CompressorGraph``. All
+    five raw values are sent atomically via
+    ``compressor_params_changed`` — the caller forwards to
+    ``DeviceThread.request_compressor``.
+
+    Signals:
+        compressor_params_changed (int, int, int, int, int):
+            ``(ratio, knee, attack, release, threshold)`` raw values
+            emitted on any control change.
+        reset_requested (): Emitted after the user confirms the
+            "Reset" header button.
     """
 
     compressor_params_changed = Signal(int, int, int, int, int)
     reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the panel seeded with F00 factory compressor values.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -227,7 +239,7 @@ class CompressorPanel(QWidget):
         )
 
     def reset_to_defaults(self) -> None:
-        """Reset all controls to factory defaults silently."""
+        """Reset all controls to F00 factory defaults without emitting signals."""
         self.set_params_silently(*default_compressor_state())
 
     def set_params_silently(
@@ -238,7 +250,19 @@ class CompressorPanel(QWidget):
         release: int,
         threshold: int,
     ) -> None:
-        """Update every control without emitting :attr:`compressor_params_changed`."""
+        """Apply device-driven state without emitting ``compressor_params_changed``.
+
+        Args:
+            ratio: Raw ratio index (0–15); index 15 is the Limit
+                setting.
+            knee: Raw knee width in dB (0–12).
+            attack: Raw attack value.
+            release: Raw release value.
+            threshold: Raw threshold value.
+
+        Used when the device thread has just delivered fresh config
+        so the UI mirrors it without echoing right back.
+        """
         self._knob_threshold.setValueSilently(threshold)
         self._knob_knee.setValueSilently(knee)
         self._knob_attack.setValueSilently(attack)
@@ -249,7 +273,15 @@ class CompressorPanel(QWidget):
         self._sync_graph()
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
-        """Lock the panel when showing a slave channel."""
+        """Lock the panel when showing a slave channel.
+
+        Args:
+            is_slave: True if the displayed channel is a slave in a
+                link group; disables every control and shows the
+                banner.
+            master_name: Display name of the master channel, used
+                inside the banner text.
+        """
         apply_link_state(
             self._link_banner,
             is_slave,

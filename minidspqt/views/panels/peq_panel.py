@@ -147,12 +147,20 @@ def _parse_q(text: str) -> int:
 class PEQPanel(QWidget):
     """7-band PEQ controls + summed response graph for one output channel.
 
-    Signals
-    -------
-    peq_band_changed(int, int, int, int, int, bool)
-        ``(band, gain_raw, freq_raw, q_raw, filter_type, bypass)``.
-    peq_channel_bypass_changed(bool)
-        Channel-wide PEQ bypass toggle.
+    A 5-row × 7-column grid (Type / Bypass / Freq / Gain / Q per band)
+    sits below the shared ``FreqResponseGraph``. Per-type Q ranges
+    follow the official editor — shelves and pass filters cap Q at
+    3.0; peak and the two allpass forms allow the full range.
+
+    Signals:
+        peq_band_changed (int, int, int, int, int, bool): One band
+            update — ``(band, gain_raw, freq_raw, q_raw,
+            filter_type, bypass)``. Emitted atomically when any
+            per-band control changes.
+        peq_channel_bypass_changed (bool): The channel-wide PEQ
+            bypass toggle.
+        reset_requested (): Emitted after the user confirms the
+            "Reset" header button.
     """
 
     peq_band_changed = Signal(int, int, int, int, int, bool)
@@ -160,6 +168,11 @@ class PEQPanel(QWidget):
     reset_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the panel seeded with the F00 factory PEQ values.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._suppress_emit = False
 
@@ -381,7 +394,7 @@ class PEQPanel(QWidget):
     # ------------------------------------------------------------------ #
 
     def reset_to_defaults(self) -> None:
-        """Reset all bands and channel bypass to factory defaults silently."""
+        """Reset all 7 bands plus channel bypass to F00 factory values."""
         bands = [
             PEQBand(gain_raw=g, freq_raw=f, q_raw=q, filter_type=t, bypass=b)
             for g, f, q, t, b in default_peq_bands()
@@ -397,6 +410,21 @@ class PEQPanel(QWidget):
         filter_type: int,
         bypass: bool,
     ) -> None:
+        """Apply device-driven state to one band without emitting signals.
+
+        Sets the filter type *before* the Q value so the per-type
+        Q range is in place when the Q knob clamps the incoming
+        value — otherwise loading e.g. ``(LowShelf, Q=80)`` would
+        briefly accept Q=80 then truncate on the next type change.
+
+        Args:
+            band: Band index 0–6.
+            gain_raw: Raw gain (120 = 0 dB).
+            freq_raw: Raw frequency value.
+            q_raw: Raw Q value (clamped to the type's allowed range).
+            filter_type: Filter-type index into ``PEQ_TYPE_NAMES``.
+            bypass: Per-band bypass flag.
+        """
         prev = self._suppress_emit
         self._suppress_emit = True
         try:
@@ -421,6 +449,7 @@ class PEQPanel(QWidget):
             self._suppress_emit = prev
 
     def set_channel_bypass_silently(self, bypass: bool) -> None:
+        """Update the channel-wide bypass toggle without emitting signals."""
         prev = self._suppress_emit
         self._suppress_emit = True
         try:
@@ -431,6 +460,15 @@ class PEQPanel(QWidget):
             self._suppress_emit = prev
 
     def set_bands_silently(self, bands: list[PEQBand], channel_bypass: bool) -> None:
+        """Replace all 7 bands and the channel-bypass flag at once.
+
+        Args:
+            bands: Up to 7 ``PEQBand`` instances; missing entries
+                are filled with neutral defaults (0 dB peak filter
+                at the freq-knob midpoint, unbypassed).
+            channel_bypass: New value for the per-channel PEQ
+                bypass toggle.
+        """
         prev = self._suppress_emit
         self._suppress_emit = True
         try:
@@ -453,14 +491,21 @@ class PEQPanel(QWidget):
         self._graph.set_bands(self._all_bands(), channel_bypass)
 
     def set_crossover(self, xo: CrossoverData) -> None:
+        """Forward the channel's crossover state into the shared graph."""
         self._graph.set_crossover(xo)
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         """Lock the panel when displaying a slave channel's PEQ.
 
-        Disables every per-band control plus the channel-bypass toggle.
-        The summed response graph stays visible (read-only by nature) so
-        the user still sees what the slave is doing.
+        Disables every per-band control plus the channel-bypass
+        toggle. The summed response graph stays visible (read-only by
+        nature) so the user still sees what the slave is doing.
+
+        Args:
+            is_slave: True if the displayed channel is a slave in a
+                link group.
+            master_name: Display name of the master, used inside the
+                banner text.
         """
         interactive: list[QWidget] = [self._channel_bypass, self._reset_btn]
         interactive.extend(self._type_combos)
