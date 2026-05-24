@@ -46,7 +46,17 @@ CORNER_RADIUS = 2
 
 
 def _db_to_segments(db: float) -> int:
-    """Map a dB value to the number of lit segments (0..NUM_SEGMENTS)."""
+    """Map a dB value to the number of lit segments.
+
+    Args:
+        db: dB level (``-inf`` is allowed and means "no signal").
+
+    Returns:
+        Lit-segment count in ``[0, NUM_SEGMENTS]``. The first
+        ``GREEN_SEGMENTS`` cover ``DB_FLOOR..0``, the next
+        ``YELLOW_SEGMENTS`` cover ``0..DB_CEIL``, and the final red
+        segment lights only at ``DB_CEIL`` and above.
+    """
     if db == float("-inf") or db <= DB_FLOOR:
         return 0
     if db < 0.0:
@@ -98,26 +108,26 @@ class LevelMeter(QProgressBar):
     """LED-segment audio level meter with peak-hold.
 
     Visual elements:
-      - 20 discrete LED segments (green → yellow → red) driven by the
-        EMA-smoothed signal level.
-      - A white semi-transparent peak-hold marker that tracks the highest
-        level and decays slowly.
-      - A numeric dB readout (via :pyattr:`display_db`) with its own
-        hold-then-decay behaviour for stable readability.
+        * 20 discrete LED segments (green → yellow → red) driven by
+          the EMA-smoothed signal level.
+        * A white semi-transparent peak-hold marker that tracks the
+          highest level and decays slowly.
+        * A numeric dB readout (via the ``display_db`` property) with
+          its own hold-then-decay behaviour for stable readability.
 
-    The widget is driven entirely by :meth:`set_level`, called from the
-    device poll loop (~150 ms interval).  There are no internal timers.
-
-    Parameters
-    ----------
-    vertical:
-        When ``True`` the meter is drawn bottom-to-top instead of
-        left-to-right.  Useful for side panels showing routed channel
-        levels in the detail view.
+    The widget is driven entirely by ``set_level``, called from the
+    device poll loop (~150 ms interval). There are no internal timers.
     """
 
     def __init__(self, parent=None, *, vertical: bool = False) -> None:
-        """Set up the progress bar, apply styling and initialise state."""
+        """Build a level meter, optionally in vertical orientation.
+
+        Args:
+            parent: Qt parent widget.
+            vertical: When True the meter is drawn bottom-to-top
+                instead of left-to-right. Used by the detail view's
+                side panels showing routed channel levels.
+        """
         super().__init__(parent)
         self._vertical = vertical
         self._peak = 0.0
@@ -141,9 +151,13 @@ class LevelMeter(QProgressBar):
     def set_level(self, value: int) -> None:
         """Feed a raw uint16 level sample from the DSP.
 
-        Updates the EMA-smoothed level, the LED peak-hold marker, and the
-        numeric dB display peak.  Triggers a repaint when the peak position
-        changes even if the bar value stays the same.
+        Updates the EMA-smoothed level, the LED peak-hold marker, and
+        the numeric dB display peak. Triggers a repaint when the peak
+        position changes even if the bar value stays the same.
+
+        Args:
+            value: Raw uint16 level reading from ``parse_levels``;
+                negative values are clamped to 0.
         """
         clamped = max(0.0, float(value))
         self._smoothed = EMA_ALPHA * clamped + (1 - EMA_ALPHA) * self._smoothed

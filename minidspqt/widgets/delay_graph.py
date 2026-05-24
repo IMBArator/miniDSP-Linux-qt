@@ -65,9 +65,21 @@ def _bar_colors(is_light: bool) -> tuple[QColor, QColor]:
 
 
 class DelayGraph(QWidget):
-    """Horizontal bar chart of four output delays on an auto-scaling axis."""
+    """Horizontal bar chart of four output delays on an auto-scaling axis.
+
+    Shows all four outputs as horizontal bars on a shared x-axis that
+    snaps to the next 20 ms above the largest active delay (clamped to
+    the 680 ms protocol maximum). The "active row" — typically the
+    output currently shown in the detail view — is outlined so the
+    user can see which bar belongs to the panel they are editing.
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build a graph with all four delays at 0 samples.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._samples: list[int] = [0, 0, 0, 0]
         self._names: list[str] = ["Out1", "Out2", "Out3", "Out4"]
@@ -76,7 +88,13 @@ class DelayGraph(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_delays(self, samples: list[int]) -> None:
-        """Update all four delay values; values outside 0..32640 are clamped."""
+        """Replace all four output delay values.
+
+        Args:
+            samples: List of exactly 4 raw sample counts. Values are
+                clamped into ``[0, 32640]`` (the 680 ms protocol
+                ceiling at 48 kHz). Wrong-length lists are ignored.
+        """
         if len(samples) != 4:
             return
         clamped = [max(0, min(_SAMPLES_MAX, int(s))) for s in samples]
@@ -85,6 +103,13 @@ class DelayGraph(QWidget):
             self.update()
 
     def set_channel_names(self, names: list[str]) -> None:
+        """Replace the row labels.
+
+        Args:
+            names: List of exactly 4 strings. Wrong-length lists are
+                ignored. Names propagate from the user's renames in
+                the home view.
+        """
         if len(names) != 4:
             return
         new = list(names)
@@ -93,6 +118,11 @@ class DelayGraph(QWidget):
             self.update()
 
     def set_active_row(self, idx: int) -> None:
+        """Highlight one of the four rows.
+
+        Args:
+            idx: 0-based row index. Clamped to ``[0, 3]``.
+        """
         idx = max(0, min(3, int(idx)))
         if idx != self._active_row:
             self._active_row = idx

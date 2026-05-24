@@ -38,9 +38,29 @@ def _point_to_segment_dist(p: QPointF, a: QPointF, b: QPointF) -> float:
 
 
 class RoutingMatrix(QWidget):
+    """Interactive 4-input × 4-output routing matrix.
+
+    Renders connection lines between input nodes (left) and output
+    nodes (right) at the vertical positions of their respective
+    channel strips, so the user reads each connection straight across
+    a row in the home view. Drag an input node to an output to
+    create a connection; double-click an existing connection to
+    remove it.
+
+    Signals:
+        routing_changed (int, int): Emitted on every routing edit
+            with ``(output_index, new_mask)`` — the caller writes
+            ``new_mask`` to the device via ``cmd_matrix_route``.
+    """
+
     routing_changed = Signal(int, int)
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build a matrix seeded with the identity routing (i → i).
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._masks: list[int] = [1 << i for i in range(NUM)]
         self.setMinimumSize(80, 200)
@@ -57,12 +77,32 @@ class RoutingMatrix(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_routing(self, masks: list[int]) -> None:
+        """Replace all four output routing masks and repaint.
+
+        Args:
+            masks: Exactly 4 4-bit input bitmasks (one per output).
+                Wrong-length lists are ignored. Bit ``i`` in the mask
+                for output ``j`` means "input ``i`` is routed to
+                output ``j``".
+        """
         if len(masks) != NUM:
             return
         self._masks = list(masks)
         self.update()
 
     def set_strips(self, inputs: list[QWidget], outputs: list[QWidget]) -> None:
+        """Tell the matrix which channel strip widgets to align with.
+
+        The matrix reads each strip's screen position on every
+        ``paintEvent`` and centres its endpoints on the strip
+        midline — this keeps the connection lines aligned with the
+        home-view rows even when the user resizes the window or
+        scrolls.
+
+        Args:
+            inputs: Up to 4 input-strip widgets.
+            outputs: Up to 4 output-strip widgets.
+        """
         self._input_strips = list(inputs)
         self._output_strips = list(outputs)
 

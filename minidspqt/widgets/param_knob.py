@@ -26,20 +26,22 @@ _DRAG_PIXELS_PER_STEP = 1.5
 
 
 class ParamKnob(QWidget):
-    """Rotary knob for an arbitrary integer raw parameter.
+    """Rotary knob bound to an integer raw protocol value.
 
-    Parameters
-    ----------
-    minimum, maximum:
-        Raw integer range accepted by the device.
-    default:
-        Initial raw value.
-    formatter:
-        ``callable(raw: int) -> str`` used for the value label.
-        Defaults to ``str(raw)``.
-    parser:
-        ``callable(text: str) -> int`` used when the user types a value.
-        Should raise ``ValueError`` on bad input.  Defaults to ``int(text)``.
+    Used by every parameter panel — the formatter/parser callables let
+    each panel define its own dB/Hz/ms display while the knob handles
+    drag, scroll, keyboard, and the typed-value flow uniformly.
+
+    Interaction:
+        * Drag vertically or use the scroll wheel for ±1 raw step.
+        * Hold Ctrl for range-adaptive fast editing (~2 % of range).
+        * Click the value label and type an exact value.
+        * Double-click to reset to the constructor's ``default``.
+
+    Signals:
+        valueChanged (int): Emitted whenever the value changes
+            (drag, wheel, keyboard, typed input, or ``setValue``).
+            NOT emitted by ``setValueSilently``.
     """
 
     valueChanged = Signal(int)
@@ -53,6 +55,20 @@ class ParamKnob(QWidget):
         parser=None,
         parent: QWidget | None = None,
     ) -> None:
+        """Build a knob bound to ``[minimum, maximum]``.
+
+        Args:
+            minimum: Smallest raw value the device accepts.
+            maximum: Largest raw value the device accepts.
+            default: Initial raw value, also the value that
+                double-clicking the knob resets to.
+            formatter: ``callable(raw: int) -> str`` for the value
+                label. Defaults to ``str(raw)``.
+            parser: ``callable(text: str) -> int`` used when the user
+                types a value. Should raise ``ValueError`` on bad
+                input. Defaults to ``int(text)``.
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._minimum = minimum
         self._maximum = maximum
@@ -95,14 +111,26 @@ class ParamKnob(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def setRange(self, minimum: int, maximum: int) -> None:
+        """Change the accepted ``[minimum, maximum]`` raw range.
+
+        The current value is re-clamped into the new range; this may
+        emit ``valueChanged`` if the clamp changes the stored value.
+        """
         self._minimum = minimum
         self._maximum = maximum
         self.setValue(self._value)
 
     def value(self) -> int:
+        """Return the current raw value."""
         return self._value
 
     def setValue(self, raw: int) -> None:
+        """Set the raw value (clamped) and emit ``valueChanged``.
+
+        Args:
+            raw: New raw value. Values outside ``[minimum, maximum]``
+                are clamped before being stored.
+        """
         clamped = max(self._minimum, min(self._maximum, int(raw)))
         if clamped != self._value:
             self._value = clamped
@@ -113,6 +141,11 @@ class ParamKnob(QWidget):
             self._arc_widget.update()
 
     def setValueSilently(self, raw: int) -> None:
+        """Set the raw value (clamped) without emitting ``valueChanged``.
+
+        Used when applying device-driven state to avoid an echo loop
+        back to the device thread. Args are the same as ``setValue``.
+        """
         clamped = max(self._minimum, min(self._maximum, int(raw)))
         if clamped != self._value:
             self._value = clamped
@@ -120,6 +153,11 @@ class ParamKnob(QWidget):
             self._value_edit.setText(self._formatter(self._value))
 
     def highlight(self) -> None:
+        """Pulse the knob's arc with a brief glow.
+
+        Used by the copy-channel flow to draw attention to the
+        parameters that were just overwritten.
+        """
         self._blink_count = 0
         self._highlighted = True
         self._arc_widget.update()

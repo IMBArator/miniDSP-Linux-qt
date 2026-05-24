@@ -19,11 +19,17 @@ LED_SIZE = 14
 class LedIndicator(QWidget):
     """A single circular LED indicator.
 
-    Call :meth:`set_active` to toggle between active (bright red) and
-    idle (dim dark-red) states.
+    Call ``set_active`` to toggle between the active (bright) and
+    idle (dim) themed colours. Used on output channel strips to mimic
+    the device's compressor / limiter activity LED.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build an idle LED.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._active = False
         self.setFixedSize(LED_SIZE, LED_SIZE)
@@ -38,6 +44,10 @@ class LedIndicator(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_active(self, active: bool) -> None:
+        """Switch between the active and idle LED colours.
+
+        No-op (no repaint) if the state already matches ``active``.
+        """
         if self._active == active:
             return
         self._active = active
@@ -45,6 +55,7 @@ class LedIndicator(QWidget):
 
     @property
     def is_active(self) -> bool:
+        """True while the LED is showing its bright (active) colour."""
         return self._active
 
     def paintEvent(self, event) -> None:

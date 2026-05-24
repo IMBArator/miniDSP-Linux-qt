@@ -86,17 +86,40 @@ _NUM_SAMPLES = 256
 
 
 class PEQGraph(QWidget):
-    """Frequency-response graph for one channel's 7 PEQ bands."""
+    """Frequency-response graph for one channel's 7 PEQ bands.
+
+    Draws the summed magnitude response across 10 Hz – 25 kHz on a log
+    frequency axis and ±18 dB on the linear dB axis, plus a numbered
+    circular marker per band. When the channel-wide bypass is on the
+    curve collapses to a flat 0 dB line drawn with the bypassed colour
+    so the visual hierarchy still reads at a glance.
+
+    Driven by ``set_bands``; reruns biquad coefficient math on each
+    update.
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build an empty graph; call ``set_bands`` to populate it.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._bands: list[PEQBand] = []
         self._channel_bypass: bool = False
         self.setMinimumHeight(160)
-        # Repaint when the active theme flips (system or user toggle).
         theme_manager.themeChanged.connect(self.update)
 
     def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
+        """Replace the band list and re-paint.
+
+        Args:
+            bands: List of up to 7 ``PEQBand`` instances; their order
+                determines the numbered marker labels (1–N).
+            channel_bypass: When True the curve is forced flat and
+                the bypassed colour palette is used for both curve
+                and markers.
+        """
         self._bands = list(bands)
         self._channel_bypass = bool(channel_bypass)
         self.update()

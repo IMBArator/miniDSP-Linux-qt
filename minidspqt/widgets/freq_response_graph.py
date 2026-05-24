@@ -85,6 +85,14 @@ _BUTTERWORTH_Q = {
 
 @dataclass
 class CrossoverData:
+    """Plain-data carrier for crossover values passed to the graph.
+
+    Mirrors the fields of ``CrossoverState`` but is a separate type so
+    widget code stays decoupled from the model layer; either dataclass
+    can be converted to the other field-for-field. ``hipass_slope`` /
+    ``lopass_slope`` of 0 means "no filter on this half".
+    """
+
     hipass_freq: int = 0
     hipass_slope: int = 0
     lopass_freq: int = 0
@@ -194,9 +202,28 @@ def _second_order_coeffs(f0: float, q: float, is_highpass: bool) -> tuple[float,
 
 
 class FreqResponseGraph(QWidget):
-    """Combined crossover + PEQ frequency-response graph for one channel."""
+    """Combined crossover + PEQ frequency-response graph for one channel.
+
+    Used by both the PEQ panel and the crossover panel. The summed
+    magnitude response includes every PEQ band (skipping bypassed
+    ones) cascaded with the hi-pass and lo-pass biquad sections of
+    the channel's crossover. The active curve colour follows the
+    panel feature (``"peq"`` for the PEQ panel, ``"xover"`` for the
+    crossover panel) so the two views are visually distinct.
+
+    PEQ bands appear as numbered circular markers; crossover corner
+    frequencies appear as triangular markers.
+    """
 
     def __init__(self, parent: QWidget | None = None, *, feature: str = "peq") -> None:
+        """Build an empty graph with the given feature accent.
+
+        Args:
+            parent: Qt parent widget.
+            feature: ``"peq"`` or ``"xover"`` — picks the curve
+                colour palette so the two host panels read as
+                distinct views of the same response.
+        """
         super().__init__(parent)
         self._feature = feature
         self._bands: list[PEQBand] = []
@@ -206,11 +233,21 @@ class FreqResponseGraph(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
+        """Replace the PEQ band list and repaint.
+
+        Args:
+            bands: Up to 7 ``PEQBand`` instances; order drives the
+                numbered marker labels.
+            channel_bypass: When True the PEQ contribution is hidden
+                from the curve and the bypassed-marker palette is
+                used for the band markers.
+        """
         self._bands = list(bands)
         self._channel_bypass = bool(channel_bypass)
         self.update()
 
     def set_crossover(self, xo: CrossoverData) -> None:
+        """Replace the crossover state and repaint."""
         self._crossover = xo
         self.update()
 
@@ -220,6 +257,13 @@ class FreqResponseGraph(QWidget):
         channel_bypass: bool,
         xo: CrossoverData,
     ) -> None:
+        """Replace bands and crossover at once with a single repaint.
+
+        Same args as ``set_bands`` plus ``set_crossover``; use this
+        when both inputs change together (e.g. switching the panel
+        to a different channel) to avoid a flicker between the two
+        single-setter updates.
+        """
         self._bands = list(bands)
         self._channel_bypass = bool(channel_bypass)
         self._crossover = xo

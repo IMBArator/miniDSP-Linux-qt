@@ -41,9 +41,23 @@ _CURVE_WIDTH = 2.5
 
 
 class GateGraph(QWidget):
-    """Gate transfer function graph driven by a raw threshold value."""
+    """Gate transfer-function graph driven by a single threshold value.
+
+    Shows the ideal hard-knee gate response: signal below the
+    threshold is muted (flat fill), signal above passes through
+    unchanged (identity diagonal). The threshold marker is drawn as
+    a vertical line with its dB label.
+
+    Drive with either ``set_threshold`` (raw protocol value) or
+    ``set_threshold_db`` (already-converted dB).
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build a graph showing the gate floor (-89.5 dB) by default.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._threshold_db: float = -89.5
         self.setMinimumHeight(140)
@@ -54,12 +68,23 @@ class GateGraph(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_threshold(self, raw: int) -> None:
+        """Update the threshold from a raw protocol value.
+
+        Args:
+            raw: Raw gate-threshold value as the device represents it;
+                converted to dB via ``gate_threshold_to_db``.
+        """
         db = gate_threshold_to_db(raw)
         if db != self._threshold_db:
             self._threshold_db = db
             self.update()
 
     def set_threshold_db(self, db: float) -> None:
+        """Update the threshold directly with a dB value.
+
+        Skips the raw → dB conversion; useful for tests and for code
+        paths that already have the dB number handy.
+        """
         if db != self._threshold_db:
             self._threshold_db = db
             self.update()

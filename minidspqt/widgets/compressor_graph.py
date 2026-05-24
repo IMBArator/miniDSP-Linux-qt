@@ -84,9 +84,24 @@ COMP_RATIO_VALUES: tuple[float, ...] = (
 
 
 class CompressorGraph(QWidget):
-    """Compressor transfer-function graph driven by raw parameter values."""
+    """Compressor transfer-function graph driven by raw parameter values.
+
+    Plots input dB on the x-axis vs output dB on the y-axis: identity
+    below the threshold, ratio-compressed slope above, with a
+    soft-knee quadratic interpolation across ``knee_db`` centred on
+    the threshold. ``ratio == ∞`` (Limit) clamps to a flat line at
+    the threshold.
+
+    The attack/release parameters are not modelled here — this is a
+    static curve, not a time-domain simulation.
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build a graph at the device default: +20 dB threshold, 1:1, no knee.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._threshold_db: float = comp_threshold_to_db(220)  # +20 dB default
         self._ratio: float = 1.0
@@ -95,6 +110,15 @@ class CompressorGraph(QWidget):
         theme_manager.themeChanged.connect(self.update)
 
     def set_params(self, threshold_raw: int, ratio_raw: int, knee_raw: int) -> None:
+        """Update threshold / ratio / knee and repaint.
+
+        Args:
+            threshold_raw: Raw protocol threshold; converted via
+                ``comp_threshold_to_db``.
+            ratio_raw: Index into ``COMP_RATIO_VALUES`` (0–15);
+                index 15 is the Limit setting (∞:1).
+            knee_raw: Knee width in dB (0–12). Clamped to that range.
+        """
         thr = comp_threshold_to_db(threshold_raw)
         ratio = COMP_RATIO_VALUES[max(0, min(15, ratio_raw))]
         knee = float(max(0, min(12, knee_raw)))
