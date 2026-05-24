@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from minidsp.device import DeviceLockedError
+from minidsp.device import DeviceClosedError, DeviceLockedError
 from minidspqt.device_thread import MAX_PIN_ATTEMPTS, CommandType, DeviceThread
 
 
@@ -353,17 +353,18 @@ class _NoAckDSP:
 
 def test_poll_loop_exits_before_touching_dsp_after_set_pin(thread, fake_dsp):
     """Regression: set_pin closes the dsp mid-iteration; the loop must
-    not call poll_levels / _drain_pending on the closed handle, otherwise
-    the real DSPmini raises AssertionError ("Device not open") which
-    isn't in DEVICE_ERRORS and tears down the thread silently."""
+    not call poll_levels / _drain_pending on the closed handle. The real
+    DSPmini raises DeviceClosedError on a closed handle — caught by
+    DEVICE_ERRORS, but it would emit a misleading 'Device disconnected'
+    warning for what is really an orderly user-initiated shutdown."""
     thread.request_set_pin("9999")
     # Manually drive one iteration of the poll loop. With the bug, this
     # would call poll_levels after close — surface that by patching
-    # poll_levels to raise the same AssertionError the real lib raises.
+    # poll_levels to raise the same exception the real lib raises.
     real_poll = fake_dsp.poll_levels
 
     def boom(*_a, **_k):
-        raise AssertionError("Device not open")
+        raise DeviceClosedError("Device not open")
 
     fake_dsp.poll_levels = boom
     try:

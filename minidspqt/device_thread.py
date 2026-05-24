@@ -18,7 +18,7 @@ from enum import Enum, auto
 
 from PySide6.QtCore import QThread, Signal
 
-from minidsp.device import DeviceLockedError, DSPmini
+from minidsp.device import DeviceClosedError, DeviceLockedError, DSPmini
 
 # Sentinel used on the PIN queue when the UI cancels the unlock dialog.
 _CANCEL_PIN = object()
@@ -30,7 +30,13 @@ log = logging.getLogger(__name__)
 # Errors expected from the device/transport layer. Anything else raised from
 # inside the poll loop or a command dispatch is a programming bug and should
 # propagate to surface in logs/test failures rather than being swallowed.
-DEVICE_ERRORS: tuple[type[BaseException], ...] = (OSError, DeviceLockedError)
+# DeviceClosedError is an OSError subclass; listing it explicitly documents
+# that hitting a closed handle is a known shutdown race, not a bug.
+DEVICE_ERRORS: tuple[type[BaseException], ...] = (
+    OSError,
+    DeviceClosedError,
+    DeviceLockedError,
+)
 
 
 class CommandType(Enum):
@@ -267,15 +273,14 @@ class DeviceThread(QThread):
                 self._poll_loop(dsp)
             finally:
                 # Defense in depth: even if _poll_loop raises something
-                # unexpected (an assertion from the library, a programming
-                # bug), the UI must still see connection_changed(False)
+                # unexpected, the UI must still see connection_changed(False)
                 # so the connection indicator clears. Without this finally
                 # the worker thread can die silently and the UI is stuck
                 # showing "Connected".
                 log.info("Poll loop exited, closing device")
                 try:
                     dsp.close()
-                except (OSError, AssertionError, DeviceLockedError):
+                except DEVICE_ERRORS:
                     log.exception("Error closing device")
                 self.connection_changed.emit(False)
 
@@ -302,8 +307,8 @@ class DeviceThread(QThread):
                 # A preset op (e.g. successful set_pin) may have closed the
                 # device and flipped _stop. Bail before touching dsp again
                 # — otherwise the next call hits an already-closed handle
-                # and raises an AssertionError that the DEVICE_ERRORS
-                # catch won't recognise.
+                # and emits a spurious "Device disconnected" warning for what
+                # is actually an orderly user-initiated shutdown.
                 if self._stop:
                     return
                 self._drain_pending(dsp)
