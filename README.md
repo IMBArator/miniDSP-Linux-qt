@@ -2,6 +2,8 @@
 
 > **Status:** Work in progress — see [Features](#features) for completed features
 
+> 📖 **New here?** Read the [**User Guide**](doc/user-guide.md) — a full walkthrough of every panel, dialog, and workflow.
+
 A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, device lock / PIN, light/dark theming, and an offline mode for editing without hardware.
 
 ## Home View
