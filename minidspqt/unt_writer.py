@@ -73,13 +73,30 @@ def save_unt(
     active_slot: int,
     template: bytes | None = None,
 ) -> None:
-    """Write a 13,010-byte .unt file.
+    """Write a full 13,010-byte miniDSP .unt file to disk.
 
-    *slots*: 30 entries (0-indexed, U01–U30); ``None`` means empty.
-    *slot_names*: 30 preset name strings.
-    *active_slot*: 0-indexed active preset (0 = U01, …, 29 = U30).
-    *template*: raw 13,010 bytes to start from (preserves unknown fields).
-        Falls back to the bundled blank.unt if ``None``.
+    Starts from ``template`` (or the bundled ``blank.unt``), overwrites
+    only the fields this codebase models, and writes the result to
+    ``path``. Unknown / reserved bytes carry over from the template so
+    untouched data round-trips byte-identically.
+
+    Args:
+        path: Destination path. The file is written atomically by
+            ``Path.write_bytes``.
+        slots: 30 entries (0-indexed, U01–U30) in the same shape
+            ``parse_preset_params`` produces; ``None`` means "leave
+            slot empty" — the template's empty-slot bytes are kept.
+        slot_names: 30 preset name strings, each truncated to 14
+            ASCII characters and space-padded.
+        active_slot: 0-indexed active preset (0 = U01 … 29 = U30).
+            Written to the active-slot header byte as a 1-indexed
+            value.
+        template: Raw 13,010-byte source file to start from. When
+            ``None`` (default), the bundled ``blank.unt`` template is
+            loaded from package resources.
+
+    Raises:
+        ValueError: If ``template`` is the wrong size.
     """
     if template is not None:
         data = bytearray(template)

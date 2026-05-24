@@ -8,6 +8,18 @@ from .app import run
 
 
 def main() -> None:
+    """Parse CLI flags and launch the Qt application.
+
+    Flags:
+        ``-v`` / ``--verbose``: counted; ``-v`` enables INFO logging,
+        ``-vv`` enables DEBUG (including USB frame traces).
+        ``--offline``: bypass hardware and run against the in-RAM
+        ``VirtualDSP``.
+
+    The function calls into ``app.run``, which itself enters the Qt
+    event loop and ultimately calls ``sys.exit``; this entry point
+    therefore does not return under normal use.
+    """
     parser = argparse.ArgumentParser(prog="minidspqt")
     parser.add_argument(
         "-v",

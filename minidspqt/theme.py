@@ -290,25 +290,33 @@ def _load_qss_for(scheme: Qt.ColorScheme) -> str:
 class ThemeManager(QObject):
     """Owns the active ``Theme`` and applies it to the ``QApplication``.
 
-    Lifecycle
-    ---------
-    1. ``bind_to_app(app)`` is called once at startup.  It:
-       - Reads the user's last preference from ``QSettings``.
-       - Tells Qt about it via ``setColorScheme`` / ``unsetColorScheme``.
-       - Connects ``QStyleHints.colorSchemeChanged`` so OS-level toggles
-         re-apply automatically.
-       - Applies the resolved theme (palette + QSS + emits ``themeChanged``).
+    Lifecycle:
+        1. ``bind_to_app(app)`` is called once at startup. It reads the
+           user's last preference from ``QSettings``, pushes it to Qt
+           via ``setColorScheme`` / ``unsetColorScheme``, connects
+           ``QStyleHints.colorSchemeChanged`` so OS-level toggles
+           re-apply automatically, and applies the resolved theme
+           (palette + QSS + emits ``themeChanged``).
+        2. ``set_user_preference("system" | "light" | "dark")`` is
+           called by the View → Theme menu. It persists the choice
+           and re-applies.
 
-    2. ``set_user_preference("system"|"light"|"dark")`` is called by the
-       View → Theme menu.  It persists the choice and re-applies.
+    Custom widgets connect to ``themeChanged`` and call ``update()``;
+    their ``paintEvent`` reads ``theme_manager.current.<field>``
+    afresh.
 
-    Custom widgets connect to ``themeChanged`` and call ``update()``; their
-    ``paintEvent`` reads ``theme_manager.current.<field>`` afresh.
+    Signals:
+        themeChanged (): Emitted after a re-apply so widgets repaint.
     """
 
     themeChanged = Signal()
 
     def __init__(self) -> None:
+        """Create an unbound manager defaulting to ``DARK_THEME``.
+
+        Call ``bind_to_app`` exactly once during startup before the
+        first widget paints.
+        """
         super().__init__()
         self._app: QApplication | None = None
         self._pref: ThemePreference = "system"
@@ -316,13 +324,24 @@ class ThemeManager(QObject):
 
     @property
     def current(self) -> Theme:
+        """The currently-applied theme (``DARK_THEME`` or ``LIGHT_THEME``)."""
         return self._current
 
     @property
     def preference(self) -> ThemePreference:
+        """The user's persisted preference: ``"system"``, ``"light"`` or ``"dark"``."""
         return self._pref
 
     def bind_to_app(self, app: QApplication) -> None:
+        """Bind to ``app`` and apply the persisted preference.
+
+        Must be called exactly once at startup before any widget
+        paints. Subscribes to ``QStyleHints.colorSchemeChanged`` so
+        the theme follows OS-level toggles.
+
+        Args:
+            app: The process's ``QApplication`` instance.
+        """
         self._app = app
         self._pref = self._load_preference()
         # Connect *before* pushing the preference so we don't miss the
@@ -334,6 +353,12 @@ class ThemeManager(QObject):
         self._reapply()
 
     def set_user_preference(self, pref: ThemePreference) -> None:
+        """Persist and apply a new theme preference.
+
+        Args:
+            pref: One of ``"system"``, ``"light"``, ``"dark"``. Other
+                values are ignored.
+        """
         if pref not in ("system", "light", "dark"):
             return
         self._pref = pref
@@ -402,8 +427,11 @@ theme_manager = ThemeManager()
 
 
 def current_theme() -> Theme:
-    """Convenience accessor used by widgets that don't want to import the
-    manager singleton just to read one property."""
+    """Return the currently-applied theme.
+
+    Convenience accessor for widgets that don't want to import the
+    manager singleton just to read one property.
+    """
     return theme_manager.current
 
 

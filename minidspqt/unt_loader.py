@@ -22,14 +22,27 @@ class UntParseError(ValueError):
 def load_unt_all_slots(
     path: str | os.PathLike,
 ) -> tuple[list[dict | None], int, list[str], bytes]:
-    """Load a .unt file and parse **all** 30 slots.
+    """Load a .unt file and parse all 30 user preset slots.
 
-    Returns ``(slots, active_slot, preset_names, raw_bytes)``.
+    Args:
+        path: Filesystem path of the .unt file to read.
 
-    *slots*: 30 entries (0-indexed); ``None`` for empty slots.
-    *active_slot*: 0-indexed (0 = U01, …, 29 = U30).
-    *preset_names*: 30 strings.
-    *raw_bytes*: the full 13,010-byte file content.
+    Returns:
+        A 4-tuple ``(slots, active_slot, preset_names, raw_bytes)``:
+
+        * ``slots`` — 30 entries (0-indexed); each entry is the parsed
+          config dict (the same shape ``parse_preset_params`` produces)
+          or ``None`` for an empty slot.
+        * ``active_slot`` — 0-indexed slot number (0 = U01 … 29 = U30).
+        * ``preset_names`` — 30 ASCII strings; empty string for unused
+          slots.
+        * ``raw_bytes`` — the full 13,010-byte file content, retained
+          so the writer can do byte-identical round-trips for any
+          field it does not overwrite.
+
+    Raises:
+        UntParseError: If the file is the wrong size, the magic header
+            is wrong, or the active-slot byte is out of range.
     """
     with open(path, "rb") as f:
         data = f.read()
@@ -66,11 +79,28 @@ def load_unt_all_slots(
 
 
 def load_unt(path: str | os.PathLike) -> tuple[dict, int, list[str]]:
-    """Load a .unt preset file and return (cfg_dict, active_slot, preset_names).
+    """Load a .unt file and return only the *active* slot's config.
 
-    active_slot is 0-indexed (0=U01 ... 29=U30).
-    preset_names is a list of 30 strings (empty string for unused slots).
-    cfg_dict is the dict produced by parse_preset_params, ready for DeviceState.from_config.
+    Lighter-weight than ``load_unt_all_slots`` for callers that just
+    need to seed a ``DeviceState``.
+
+    Args:
+        path: Filesystem path of the .unt file to read.
+
+    Returns:
+        A 3-tuple ``(cfg, active_slot, preset_names)``:
+
+        * ``cfg`` — config dict for the active slot (same shape as
+          ``parse_preset_params``), ready for
+          ``DeviceState.from_config``.
+        * ``active_slot`` — 0-indexed slot number (0 = U01 … 29 = U30).
+        * ``preset_names`` — 30 ASCII names, empty string for unused
+          slots.
+
+    Raises:
+        UntParseError: If the file is malformed (size, magic header,
+            active-slot byte, or the active slot itself fails to
+            parse).
     """
     with open(path, "rb") as f:
         data = f.read()

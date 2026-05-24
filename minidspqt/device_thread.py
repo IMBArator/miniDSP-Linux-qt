@@ -40,6 +40,14 @@ DEVICE_ERRORS: tuple[type[BaseException], ...] = (
 
 
 class CommandType(Enum):
+    """Identifies one kind of write the UI can send to the device.
+
+    Used as part of the dict-key tuple in ``DeviceThread._pending``;
+    pairing a ``CommandType`` with a channel index (and PEQ band index
+    where relevant) lets repeated edits coalesce into a single send
+    per poll cycle.
+    """
+
     GAIN = auto()
     MUTE = auto()
     PHASE = auto()
@@ -58,7 +66,30 @@ class CommandType(Enum):
 
 
 class DeviceThread(QThread):
-    """Polls levels and dispatches commands on a background thread."""
+    """Background worker that owns the DSP and serialises all I/O.
+
+    All USB / virtual-DSP calls happen on this thread. The UI calls
+    the ``request_*`` methods from the main thread; each request goes
+    into a coalescing dict keyed by ``(CommandType, channel[, band])``
+    and is drained once per poll cycle (150 ms by default), so rapid
+    slider drags collapse to a single device write. Preset
+    load/store, ``read_config`` refreshes and the set-PIN admin op
+    use a separate FIFO queue because they also re-read the full
+    config and must not be coalesced.
+
+    Signals:
+        levels_updated (dict): Emitted every poll cycle with the
+            ``parse_levels`` result.
+        connection_changed (bool): True when a session opens, False
+            when it closes.
+        config_loaded (dict): Emitted when a full config has been
+            read (initial connect, after a preset recall, or after a
+            ``request_read_config``).
+        pin_required (): The device reported it is locked; the UI
+            should show the unlock dialog and call ``submit_pin``.
+        pin_result (bool, int): ``(success, attempts_remaining)`` —
+            result of one ``submit_pin`` round.
+    """
 
     levels_updated = Signal(dict)
     connection_changed = Signal(bool)
@@ -71,6 +102,18 @@ class DeviceThread(QThread):
     MAX_CONSECUTIVE_FAILURES = 3
 
     def __init__(self, dsp_factory=DSPmini, dsp_instance=None, parent=None) -> None:
+        """Build a worker; pass ``dsp_instance`` for offline / tests.
+
+        Args:
+            dsp_factory: Callable returning a fresh DSP object on each
+                connect attempt. Used in connected mode so the worker
+                can re-open after a USB drop.
+            dsp_instance: Pre-built DSP instance to use instead of the
+                factory. The worker reuses the same instance across
+                reconnects — required for the in-RAM ``VirtualDSP`` so
+                state survives close/open cycles.
+            parent: Qt parent for the ``QThread``.
+        """
         super().__init__(parent)
         self._dsp_factory = dsp_factory
         self._dsp_instance = dsp_instance
@@ -81,25 +124,44 @@ class DeviceThread(QThread):
         self._pin_queue: queue.Queue = queue.Queue()
 
     # --- Thread-safe command interface (called from UI thread) ---
+    # Each request_* method coalesces by (CommandType, channel[, band]),
+    # so repeated edits during a slider drag collapse to one device send
+    # per poll cycle.
 
     def request_gain(self, channel: int, raw_value: int) -> None:
+        """Queue a gain change for ``channel`` (0–7); ``raw_value`` 120 = 0 dB."""
         self._enqueue((CommandType.GAIN, channel), (raw_value,))
 
     def request_mute(self, channel: int, mute: bool) -> None:
+        """Queue a mute change for ``channel`` (0–7)."""
         self._enqueue((CommandType.MUTE, channel), (mute,))
 
     def request_phase(self, channel: int, inverted: bool) -> None:
+        """Queue a phase-invert change for ``channel`` (0–7)."""
         self._enqueue((CommandType.PHASE, channel), (inverted,))
 
     def request_gate(
         self, channel: int, attack: int, release: int, hold: int, threshold: int
     ) -> None:
+        """Queue an atomic four-parameter gate update on input ``channel``.
+
+        All four raw values reach the device in a single ``cmd_gate``
+        send.
+        """
         self._enqueue((CommandType.GATE, channel), (attack, release, hold, threshold))
 
     def request_hipass(self, channel: int, freq_raw: int, slope: int) -> None:
+        """Queue a hi-pass update on output ``channel`` (4–7).
+
+        ``slope`` of 0 means bypass.
+        """
         self._enqueue((CommandType.HIPASS, channel), (freq_raw, slope))
 
     def request_lopass(self, channel: int, freq_raw: int, slope: int) -> None:
+        """Queue a lo-pass update on output ``channel`` (4–7).
+
+        ``slope`` of 0 means bypass.
+        """
         self._enqueue((CommandType.LOPASS, channel), (freq_raw, slope))
 
     def request_compressor(
@@ -111,12 +173,14 @@ class DeviceThread(QThread):
         release: int,
         threshold: int,
     ) -> None:
+        """Queue an atomic five-parameter compressor update on output ``channel``."""
         self._enqueue(
             (CommandType.COMPRESSOR, channel),
             (ratio, knee, attack, release, threshold),
         )
 
     def request_delay(self, channel: int, samples: int) -> None:
+        """Queue an output-delay change on ``channel`` (4–7), in samples."""
         self._enqueue((CommandType.DELAY, channel), (samples,))
 
     def request_peq_band(
@@ -129,69 +193,106 @@ class DeviceThread(QThread):
         filter_type: int,
         bypass: bool,
     ) -> None:
+        """Queue an atomic update of one PEQ band on output ``channel``.
+
+        Coalescing is keyed by ``(channel, band)`` — each of the seven
+        bands can have its own pending update during a single cycle.
+        """
         self._enqueue(
             (CommandType.PEQ_BAND, channel, band),
             (gain_raw, freq_raw, q_raw, filter_type, bypass),
         )
 
     def request_peq_channel_bypass(self, channel: int, bypass: bool) -> None:
+        """Queue a channel-wide PEQ bypass change on output ``channel`` (4–7)."""
         self._enqueue((CommandType.PEQ_CHANNEL_BYPASS, channel), (bypass,))
 
     def request_matrix_route(self, output_ch: int, input_mask: int) -> None:
+        """Queue an update of the 4-bit input mask for one output (4–7)."""
         self._enqueue((CommandType.MATRIX_ROUTE, output_ch), (input_mask,))
 
     def request_prepare_link(self, master_ch: int, slave_ch: int) -> None:
-        # Order matters: this MUST reach the device before the matching
-        # CHANNEL_LINK for the same slave. Callers should enqueue all
-        # prepare-link requests first; dict insertion order preserves
-        # that ordering through the coalescing batch.
+        """Queue an ``OP_PREPARE_LINK`` (0x2A) declaring a master/slave pair.
+
+        Order matters: this MUST reach the device before the matching
+        ``CHANNEL_LINK`` for the same slave. Callers should enqueue
+        all prepare-link requests first; dict insertion order
+        preserves that ordering through the coalescing batch.
+        """
         self._enqueue(
             (CommandType.PREPARE_LINK, master_ch, slave_ch), (master_ch, slave_ch)
         )
 
     def request_channel_link(self, channel: int, link_flags: int) -> None:
+        """Queue a write of the raw link-flag bitmask on ``channel`` (0–7)."""
         self._enqueue((CommandType.CHANNEL_LINK, channel), (link_flags,))
 
     def request_channel_name(self, channel: int, name: str) -> None:
+        """Queue a rename of ``channel`` (0–7); caller truncates ``name`` to 8 chars."""
         self._enqueue((CommandType.CHANNEL_NAME, channel), (name,))
 
     def request_test_tone(self, mode: int, freq_index: int) -> None:
-        # Device-wide command (no channel); pin to slot 0 so rapid changes
-        # coalesce into a single send and _dispatch's key[1] unpack still works.
+        """Queue a test-tone change (device-wide).
+
+        Pinned to channel slot 0 so rapid mode flips coalesce into a
+        single send and ``_dispatch``'s ``key[1]`` unpack still works.
+        """
         self._enqueue((CommandType.TEST_TONE, 0), (mode, freq_index))
 
     def request_load_preset(self, slot: int) -> None:
+        """Queue a preset recall.
+
+        Args:
+            slot: Device slot — 0 = F00, 1–30 = U01–U30.
+        """
         with self._lock:
             self._preset_queue.append(("load", slot))
 
     def request_store_preset(self, slot: int, name: str) -> None:
+        """Queue a preset store with a name.
+
+        Args:
+            slot: Target user slot 1–30 (U01–U30). F00 cannot be
+                written.
+            name: Preset name (caller truncates to 14 ASCII chars).
+        """
         with self._lock:
             self._preset_queue.append(("store", slot, name))
 
     def request_read_config(self) -> None:
-        # Re-read the live device config without changing the active slot,
-        # used after multi-step edits (e.g. channel-link changes) to refresh
-        # the UI from the device's authoritative state.
+        """Queue a re-read of the current device config.
+
+        Used after multi-step edits (e.g. channel-link changes) to
+        refresh the UI from the device's authoritative state without
+        changing the active slot.
+        """
         with self._lock:
             self._preset_queue.append(("read_config",))
 
     def request_stop(self) -> None:
+        """Ask the worker to stop after the current iteration.
+
+        If the worker is currently parked in ``_handle_locked`` waiting
+        for a PIN, also unblocks it with the cancel sentinel so it can
+        exit cleanly instead of hanging on the queue.
+        """
         self._stop = True
-        # If the worker is parked in _handle_locked, unblock it so it can
-        # exit cleanly.
         self._pin_queue.put(_CANCEL_PIN)
 
     def restart(self) -> None:
         """Bring the worker back online after it stopped itself.
 
         Used by the "Reconnect" menu item to recover from a cancelled
-        unlock prompt, exhausted PIN attempts, or any other state that
-        flipped ``_stop`` to True. No-op if the worker is still running.
+        unlock prompt, exhausted PIN attempts, or any other state
+        that flipped ``_stop`` to True. No-op if the worker is still
+        running.
 
-        Callers MUST ensure the previous run() has exited (the thread is
-        not isRunning) before calling — otherwise ``start()`` is a no-op
-        on Qt's side and we'd leave _stop=False on a still-stopping
-        worker, which would race the next iteration.
+        Note:
+            Callers MUST ensure the previous ``run()`` has exited
+            (``isRunning()`` is False) before calling — otherwise
+            ``start()`` is a no-op on Qt's side and we would leave
+            ``_stop=False`` on a still-stopping worker, which races
+            the next iteration.
         """
         if self.isRunning():
             log.info("restart: thread is still running, ignoring")
@@ -210,15 +311,33 @@ class DeviceThread(QThread):
         self.start()
 
     def submit_pin(self, pin: str) -> None:
-        """Hand a PIN to the worker that's blocked waiting in _handle_locked."""
+        """Hand a PIN to the worker blocked in ``_handle_locked``.
+
+        The worker tries the PIN and emits ``pin_result`` with the
+        outcome. Safe to call from the UI thread.
+        """
         self._pin_queue.put(pin)
 
     def cancel_pin_entry(self) -> None:
-        """Tell the worker to give up on the unlock prompt and disconnect."""
+        """Tell the worker to give up on the unlock prompt and disconnect.
+
+        Unblocks ``_handle_locked`` with the cancel sentinel; the
+        worker then flips ``_stop`` so it does not auto-reconnect into
+        the same unlock prompt.
+        """
         self._pin_queue.put(_CANCEL_PIN)
 
     def request_set_pin(self, pin: str) -> None:
-        """Queue a set-PIN admin op. Serialises with other device ops."""
+        """Queue a set-PIN admin op.
+
+        Serialised with other preset / config ops on the FIFO queue.
+        After a successful set, the worker closes the USB session and
+        stops itself — setting a PIN is a one-shot admin action and
+        immediately cycling into the unlock prompt would be hostile UX.
+
+        Args:
+            pin: 4-character ASCII PIN to install on the device.
+        """
         with self._lock:
             self._preset_queue.append(("set_pin", pin))
 
@@ -231,6 +350,16 @@ class DeviceThread(QThread):
     # --- Thread body ---
 
     def run(self) -> None:
+        """Connect → read config → poll loop, repeating on reconnect.
+
+        Qt entry point invoked by ``QThread.start``. Loops until
+        ``_stop`` is set: each pass opens a DSP session, emits
+        ``config_loaded`` (driving the unlock dialog via
+        ``_handle_locked`` if the device is locked), then enters the
+        poll loop until disconnect, error, or shutdown. Always emits
+        ``connection_changed(False)`` on exit so the UI indicator
+        clears even on unexpected errors.
+        """
         while not self._stop:
             if self._dsp_instance is not None:
                 dsp = self._dsp_instance
@@ -343,9 +472,12 @@ class DeviceThread(QThread):
                 log.exception("Failed dispatching %s(%s)", key, args)
 
     def _drain_preset_queue(self, dsp) -> bool:
-        """Process pending preset load/store requests.
+        """Process pending preset load/store/set-PIN/read-config requests.
 
-        Returns True if a preset load was attempted (whether it succeeded or not).
+        Returns:
+            True if a preset load was attempted (whether it succeeded
+            or not). Other entry kinds — store, set_pin, read_config
+            — do not affect the return value.
         """
         with self._lock:
             pending = list(self._preset_queue)
@@ -435,19 +567,20 @@ class DeviceThread(QThread):
         return did_recall
 
     def _handle_locked(self, dsp) -> dict | None:
-        """Drive the UI through up to MAX_PIN_ATTEMPTS unlock attempts.
+        """Drive the UI through up to ``MAX_PIN_ATTEMPTS`` unlock attempts.
 
-        Emits :attr:`pin_required` once so the UI shows the dialog, then
-        blocks on the PIN queue. Each ``submit_pin`` from the UI is tried
-        against :meth:`DSPmini.submit_pin`; ``pin_result`` reports whether
-        it worked and how many attempts remain so the dialog can show
-        inline feedback.
+        Emits ``pin_required`` once so the UI shows the dialog, then
+        blocks on the PIN queue. Each ``submit_pin`` from the UI is
+        tried against ``dsp.submit_pin``; ``pin_result`` reports
+        whether it worked and how many attempts remain so the dialog
+        can show inline feedback.
 
-        Returns the freshly-loaded config on success. On cancel or after
-        ``MAX_PIN_ATTEMPTS`` wrong PINs returns ``None`` AND sets
-        ``self._stop`` so the worker exits instead of immediately
-        reconnecting back into the same unlock prompt (which would make
-        Cancel pointless).
+        Returns:
+            The freshly-loaded config on success. On cancel or after
+            ``MAX_PIN_ATTEMPTS`` wrong PINs returns ``None`` and sets
+            ``self._stop`` so the worker exits instead of immediately
+            reconnecting back into the same unlock prompt (which
+            would make Cancel pointless).
         """
         # Drain any stale entries from a previous lock cycle.
         while not self._pin_queue.empty():
