@@ -10,7 +10,7 @@ inputs 0–3, outputs 4–7. `gates` is input-only; `delays`, `crossovers`,
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, ClassVar
+from typing import Any, Callable, ClassVar
 
 from minidsp.protocol import decode_link_groups, decode_routing_matrix
 
@@ -261,7 +261,7 @@ class DeviceState:
             return self.outputs[channel - 4]
         return None
 
-    def set_field(self, channel: int, field: str, value) -> bool:
+    def set_field(self, channel: int, field: str, value: Any) -> bool:
         """Set a single attribute on the channel state at ``channel``.
 
         Args:
@@ -317,7 +317,9 @@ class DeviceState:
                 affected.append(slave)
         return affected
 
-    def set_field_with_links(self, channel: int, field: str, value) -> list[int]:
+    def set_field_with_links(
+        self, channel: int, field: str, value: Any
+    ) -> list[int]:
         """Set one flat attribute on ``channel`` and on every linked slave.
 
         Thin wrapper around ``mutate_with_links`` for flat-attribute

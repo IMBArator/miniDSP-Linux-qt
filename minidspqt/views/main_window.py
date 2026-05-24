@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
     mirror that ``MainWindow`` mutates on each device-driven update.
     """
 
-    def __init__(self, *, dsp_instance=None, offline: bool = False) -> None:
+    def __init__(self, *, dsp_instance: object | None = None, offline: bool = False) -> None:
         """Build the main window and start the device worker thread.
 
         Args:

@@ -29,6 +29,7 @@ from minidsp.protocol import CHANNEL_NAMES, raw_to_db
 
 from ..widgets import GainIndicator, LedIndicator, LevelMeter, ParamKnob, ToggleButton
 from ..defaults import default_gain
+from ..model import InputChannelState, OutputChannelState
 
 GAIN_RAW_MIN = 0
 GAIN_RAW_MAX = 400
@@ -430,7 +431,7 @@ class OutputChannelStrip(ChannelStrip):
 def apply_input_strip_state(
     strip: InputChannelStrip,
     channel: int,
-    ch_state,
+    ch_state: InputChannelState,
     master_name: str,
     is_slave: bool,
 ) -> None:
@@ -464,7 +465,7 @@ def apply_input_strip_state(
 def apply_output_strip_state(
     strip: OutputChannelStrip,
     channel: int,
-    ch_state,
+    ch_state: OutputChannelState,
     master_name: str,
     is_slave: bool,
 ) -> None:

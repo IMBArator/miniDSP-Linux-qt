@@ -101,7 +101,12 @@ class DeviceThread(QThread):
     RECONNECT_INTERVAL_MS = 2000
     MAX_CONSECUTIVE_FAILURES = 3
 
-    def __init__(self, dsp_factory=DSPmini, dsp_instance=None, parent=None) -> None:
+    def __init__(
+        self,
+        dsp_factory: type = DSPmini,
+        dsp_instance: object | None = None,
+        parent: QThread | None = None,
+    ) -> None:
         """Build a worker; pass ``dsp_instance`` for offline / tests.
 
         Args:

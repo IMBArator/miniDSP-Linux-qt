@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 
 from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
 
+from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
 from ._slave_lock import apply_link_state, install_link_banner
@@ -257,7 +258,7 @@ class XoverPanel(QWidget):
             self._suppress_emit = prev
         self._graph.set_crossover(self._read_state())
 
-    def set_bands(self, bands, channel_bypass: bool) -> None:
+    def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
         """Forward the channel's PEQ bands into the shared graph.
 
         Args:

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import QProgressBar
+from PySide6.QtWidgets import QProgressBar, QWidget
 
 from minidsp.protocol import level_uint16_to_dbu
 
@@ -119,7 +119,7 @@ class LevelMeter(QProgressBar):
     device poll loop (~150 ms interval). There are no internal timers.
     """
 
-    def __init__(self, parent=None, *, vertical: bool = False) -> None:
+    def __init__(self, parent: QWidget | None = None, *, vertical: bool = False) -> None:
         """Build a level meter, optionally in vertical orientation.
 
         Args:

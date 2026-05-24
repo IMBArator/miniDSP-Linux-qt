@@ -117,11 +117,11 @@ class VirtualDSP:
             A 3-tuple ``(slots_0based, active_slot_0based, source_bytes)``:
 
             * ``slots_0based`` — 30 slot dicts in user-slot order, with
-              ``None`` for empty slots.
+                ``None`` for empty slots.
             * ``active_slot_0based`` — 0-indexed active slot.
             * ``source_bytes`` — the original 13,010-byte file content
-              if this instance was seeded via ``load_from_unt_bytes``,
-              else ``None`` (caller falls back to the bundled template).
+                if this instance was seeded via ``load_from_unt_bytes``,
+                else ``None`` (caller falls back to the bundled template).
         """
         return list(self._slots), self._active_slot - 1, self._source_bytes
 

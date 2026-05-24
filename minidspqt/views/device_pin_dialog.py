@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QVBoxLayout,
+    QWidget,
 )
 
 PIN_LENGTH = 4
@@ -76,7 +77,7 @@ class UnlockPinDialog(QDialog):
     pinEntered = Signal(str)
     cancelled = Signal()
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Build a fresh unlock prompt.
 
         Args:
@@ -187,7 +188,7 @@ class SetPinDialog(QDialog):
 
     pinChosen = Signal(str)
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QWidget | None = None) -> None:
         """Build a fresh set-PIN prompt.
 
         Args:

@@ -1,5 +1,7 @@
 """Dialog for copying channel settings from one channel to others."""
 
+from __future__ import annotations
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -10,9 +12,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QVBoxLayout,
+    QWidget,
 )
 
 from minidsp.protocol import CHANNEL_NAMES
+
+from ..model import DeviceState
 
 INPUT_PARAMS = ["Name", "Gain", "Mute", "Phase", "Gate"]
 OUTPUT_PARAMS = [
@@ -44,7 +49,7 @@ class CopyChannelDialog(QDialog):
     requests.
     """
 
-    def __init__(self, device_state, parent=None) -> None:
+    def __init__(self, device_state: DeviceState, parent: QWidget | None = None) -> None:
         """Build the dialog seeded with the current device state.
 
         Args:

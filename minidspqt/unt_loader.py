@@ -31,14 +31,14 @@ def load_unt_all_slots(
         A 4-tuple ``(slots, active_slot, preset_names, raw_bytes)``:
 
         * ``slots`` — 30 entries (0-indexed); each entry is the parsed
-          config dict (the same shape ``parse_preset_params`` produces)
-          or ``None`` for an empty slot.
+            config dict (the same shape ``parse_preset_params`` produces)
+            or ``None`` for an empty slot.
         * ``active_slot`` — 0-indexed slot number (0 = U01 … 29 = U30).
         * ``preset_names`` — 30 ASCII strings; empty string for unused
-          slots.
+            slots.
         * ``raw_bytes`` — the full 13,010-byte file content, retained
-          so the writer can do byte-identical round-trips for any
-          field it does not overwrite.
+            so the writer can do byte-identical round-trips for any
+            field it does not overwrite.
 
     Raises:
         UntParseError: If the file is the wrong size, the magic header
@@ -91,11 +91,11 @@ def load_unt(path: str | os.PathLike) -> tuple[dict, int, list[str]]:
         A 3-tuple ``(cfg, active_slot, preset_names)``:
 
         * ``cfg`` — config dict for the active slot (same shape as
-          ``parse_preset_params``), ready for
-          ``DeviceState.from_config``.
+            ``parse_preset_params``), ready for
+            ``DeviceState.from_config``.
         * ``active_slot`` — 0-indexed slot number (0 = U01 … 29 = U30).
         * ``preset_names`` — 30 ASCII names, empty string for unused
-          slots.
+            slots.
 
     Raises:
         UntParseError: If the file is malformed (size, magic header,

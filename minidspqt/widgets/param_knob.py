@@ -9,6 +9,7 @@ scroll interaction are shared by all parameter types.
 from __future__ import annotations
 
 import math
+from typing import Callable
 
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
@@ -51,8 +52,8 @@ class ParamKnob(QWidget):
         minimum: int = 0,
         maximum: int = 100,
         default: int = 0,
-        formatter=None,
-        parser=None,
+        formatter: Callable[[int], str] | None = None,
+        parser: Callable[[str], int] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         """Build a knob bound to ``[minimum, maximum]``.
