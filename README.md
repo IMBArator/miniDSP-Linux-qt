@@ -2,15 +2,15 @@
 
 > **Status:** Work in progress — see [Features](#features) for completed features
 
-> 📖 **New here?** Read the [**User Guide**](doc/user-guide.md) — a full walkthrough of every panel, dialog, and workflow.
+> 📖 **New here?** Read the [**User Guide**](docs/user-guide.md) — a full walkthrough of every panel, dialog, and workflow.
 
 A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, device lock / PIN, light/dark theming, and an offline mode for editing without hardware.
 
 ## Home View
 
-![Home View](doc/img/Home-View.gif)
+![Home View](docs/img/Home-View.gif)
 
-See [UI Concepts](doc/concepts.md) for original design mockups.
+See [UI Concepts](docs/concepts.md) for original design mockups.
 
 ## Features
 
@@ -103,7 +103,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - **Reconnect** menu entry re-arms the worker after any user-initiated disconnect (cancel, three wrong PINs, or set-PIN ACK)
 - PINs are 4 raw bytes — any 4 printable ASCII characters work, not just digits, regardless of the upstream library docstring
 - No "Remove PIN" action is exposed because the protocol has no such command; offline mode mirrors the same semantics against the in-memory virtual DSP for safe experimentation
-- See [Device Lock / PIN in the user guide](doc/user-guide.md#device-lock--pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
+- See [Device Lock / PIN in the user guide](docs/user-guide.md#device-lock--pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
 
 ### Knob interaction
 
@@ -235,11 +235,14 @@ tests/                         pytest suite (364 tests)
   test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
   test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
 
-doc/
-  concept-art/                 UI mockups (.excalidraw + .png)
+docs/                          MkDocs Material site source
+  index.md                     Transcludes README at the site root
   user-guide.md                End-user documentation
-  architecture-plan.md         Original architecture plan (historical)
-  offline-mode-unt-read-write.md  Implementation plan
+  concepts.md                  UI concepts page (references concept-art/)
+  concept-art/                 UI mockups (.excalidraw + .png)
+  img/                         Screenshots and recordings
+  gen_ref_pages.py             Builds the mkdocstrings API reference
+  hooks.py                     Post-processes the transcluded README
 ```
 
 ## Roadmap
