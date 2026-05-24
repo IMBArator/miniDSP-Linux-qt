@@ -50,7 +50,32 @@ def _logo_path() -> Path:
 
 
 class MainWindow(QMainWindow):
+    """Top-level application window: owns the worker thread and the views.
+
+    The window stitches together every other widget — home view,
+    detail view, menus, the device worker thread, every dialog. Its
+    job is mostly **signal routing**: forward UI signals to
+    ``DeviceThread.request_*`` calls, and forward ``DeviceThread``
+    signals (``config_loaded`` / ``levels_updated`` /
+    ``pin_required`` / ``pin_result`` / ``connection_changed``)
+    back into the views. State lives in a single ``DeviceState``
+    mirror that ``MainWindow`` mutates on each device-driven update.
+    """
+
     def __init__(self, *, dsp_instance=None, offline: bool = False) -> None:
+        """Build the main window and start the device worker thread.
+
+        Args:
+            dsp_instance: Pre-built DSP object passed straight through
+                to ``DeviceThread`` — required for offline mode (an
+                in-RAM ``VirtualDSP``) and for tests (a ``FakeDSPmini``).
+                When ``None`` and ``offline`` is also False, the
+                worker uses the real ``DSPmini`` factory.
+            offline: True selects offline UX (no auto-reconnect, no
+                "Connected" indicator) and provides a defensive
+                ``VirtualDSP`` if ``dsp_instance`` is ``None`` — see
+                the comment inline for why.
+        """
         super().__init__()
         self.setWindowTitle("DSP 4x4 Mini")
         self.setMinimumWidth(960)
@@ -863,6 +888,11 @@ class MainWindow(QMainWindow):
     # --- Lifecycle ---
 
     def closeEvent(self, event) -> None:
+        """Stop the worker thread (waiting up to 2 s) before closing.
+
+        Without this hook the QThread would outlive the QApplication
+        and emit signals into already-destroyed widgets on shutdown.
+        """
         self._thread.request_stop()
         self._thread.wait(2000)
         event.accept()

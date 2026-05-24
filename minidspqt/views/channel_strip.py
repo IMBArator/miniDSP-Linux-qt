@@ -35,6 +35,16 @@ GAIN_RAW_MAX = 400
 
 
 def _format_db_full(raw: int) -> str:
+    """Format a raw gain value as a signed dB string.
+
+    Args:
+        raw: Raw protocol gain value.
+
+    Returns:
+        A signed dB string for the value label, or ``"-inf dB"`` at
+        and below ``-60 dB`` so the bottom of the range reads as
+        "fully attenuated" rather than a misleading number.
+    """
     db = raw_to_db(raw)
     if db <= -60.0:
         return "-inf dB"
@@ -42,6 +52,16 @@ def _format_db_full(raw: int) -> str:
 
 
 def _parse_db(text: str) -> int:
+    """Parse a typed dB string back into a raw gain value.
+
+    Accepts a signed number with an optional ``dB`` suffix, plus the
+    special tokens ``-inf`` and ``-∞`` (with or without the ``dB``
+    suffix) which map to ``GAIN_RAW_MIN``. Values are clamped into
+    ``[-60, +12]`` dB before conversion.
+
+    Raises:
+        ValueError: If the numeric part fails to parse as a float.
+    """
     text = text.strip().lower()
     if text in ("-inf", "-∞", "-inf db", "-∞ db"):
         return GAIN_RAW_MIN
@@ -71,10 +91,21 @@ OUTPUT_TOGGLES = [
 
 
 class ChannelStrip(QFrame):
-    """Base channel strip with gain knob, level meter, and toggle row.
+    """Base channel strip — gain knob, level meter, toggle row, name button.
 
-    Subclasses set ``_toggle_specs`` and ``_show_limiter`` before calling
-    ``_build_ui()``.
+    Concrete subclasses (``InputChannelStrip``, ``OutputChannelStrip``)
+    set ``_toggle_specs`` and ``_show_limiter`` at class level so that
+    ``_build_ui`` can place the right toggles for the channel type. The
+    base class owns the gain knob, level meter and the renamable title
+    button.
+
+    Signals:
+        gain_changed (int): New raw gain value.
+        toggle_changed (str, bool): ``(toggle_key, checked)`` where
+            ``toggle_key`` is one of ``"gate"``/``"mute"``/``"phase"``/
+            ``"xover"``/``"peq"``/``"comp"``/``"delay"`` depending on
+            the channel type.
+        name_changed (str): The user accepted a new channel name.
     """
 
     gain_changed = Signal(int)
@@ -85,6 +116,12 @@ class ChannelStrip(QFrame):
     _show_limiter: bool = False
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        """Build a strip with the given title.
+
+        Args:
+            title: Initial channel name shown on the title button.
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._title_text = title
         self._is_linked_slave = False
@@ -301,12 +338,17 @@ class ChannelStrip(QFrame):
 
 
 class InputChannelStrip(ChannelStrip):
-    """Input channel strip: Gate / Phase / Mute toggles.
+    """Input channel strip: Gain / Gate / Phase / Mute toggles.
 
-    The Gate button acts as a **navigation** button — clicking it emits
-    :attr:`gate_clicked` and immediately unchecks itself.  It turns green
-    via the ``gate_active`` QSS property when the gate threshold is above
-    -90 dB.
+    The Gate button is a navigation button — clicking it emits
+    ``gate_clicked`` and immediately unchecks itself so the detail
+    view opens cleanly. It turns green via the ``gate_active`` QSS
+    property when the gate threshold is above -90 dB.
+
+    Signals:
+        gate_clicked (): Fired when the user presses the Gate
+            button (in addition to the inherited toggle/gain/name
+            signals).
     """
 
     _toggle_specs = INPUT_TOGGLES
@@ -314,6 +356,7 @@ class InputChannelStrip(ChannelStrip):
     gate_clicked = Signal()
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        """Build an input strip; ``title`` is the initial channel name."""
         super().__init__(title, parent)
         gate_btn = self._toggles.get("gate")
         if gate_btn is not None:
@@ -326,17 +369,21 @@ class InputChannelStrip(ChannelStrip):
 
 
 class OutputChannelStrip(ChannelStrip):
-    """Output channel strip: Xover / PEQ / Comp / Phase / Delay / Mute toggles.
+    """Output channel strip: Xover / PEQ / Gain / Comp / Phase / Delay / Mute.
 
-    Includes a limiter LED indicator.  Xover and PEQ are wired as
-    navigation buttons (auto-uncheck on click, green/purple indicator
-    via QSS dynamic properties when active).
+    Includes a limiter LED indicator on the meter. Xover, PEQ, Comp
+    and Delay are wired as navigation buttons (auto-uncheck on
+    click); their per-feature accent colour lights up via QSS
+    dynamic properties (``xover_active``, ``comp_active``,
+    ``delay_active``, and the inherited ``peq_active``) when the
+    corresponding feature is shaping the signal.
     """
 
     _toggle_specs = OUTPUT_TOGGLES
     _show_limiter = True
 
     def __init__(self, title: str, parent: QWidget | None = None) -> None:
+        """Build an output strip; ``title`` is the initial channel name."""
         super().__init__(title, parent)
         # Xover/PEQ/Comp/Delay are navigation buttons — they open the
         # corresponding detail-view panel and immediately uncheck so the
@@ -353,6 +400,7 @@ class OutputChannelStrip(ChannelStrip):
             self.set_toggle_silent(feature, False)
 
     def set_xover_active(self, active: bool) -> None:
+        """Light the Xover button's accent (amber) when the crossover is active."""
         btn = self._toggles.get("xover")
         if btn is None:
             return
@@ -361,6 +409,7 @@ class OutputChannelStrip(ChannelStrip):
         btn.style().polish(btn)
 
     def set_comp_active(self, active: bool) -> None:
+        """Light the Comp button's accent (teal) when the compressor is active."""
         btn = self._toggles.get("comp")
         if btn is None:
             return
@@ -369,6 +418,7 @@ class OutputChannelStrip(ChannelStrip):
         btn.style().polish(btn)
 
     def set_delay_active(self, active: bool) -> None:
+        """Light the Delay button's accent (blue) when the output delay is non-zero."""
         btn = self._toggles.get("delay")
         if btn is None:
             return
@@ -384,13 +434,23 @@ def apply_input_strip_state(
     master_name: str,
     is_slave: bool,
 ) -> None:
-    """Render an :class:`InputChannelState` onto an input strip.
+    """Render an ``InputChannelState`` onto an input strip.
 
-    Single source of truth shared by HomeView (4 strips at once) and
-    DetailView (1 strip + nav). Sets title, silent control values, the
-    gate-active indicator and the link indicator. Mute/phase/gate toggles
-    are set silently to avoid feedback loops when called during a
-    state refresh.
+    Single source of truth shared by ``HomeView`` (4 strips at once)
+    and ``DetailView`` (1 strip + nav). Sets the title, silent
+    control values, the gate-active indicator and the link
+    indicator. Mute/phase/gate toggles are set silently to avoid
+    feedback loops when called during a state refresh.
+
+    Args:
+        strip: The widget to update.
+        channel: Channel index 0–3; used to fall back to the
+            default ``CHANNEL_NAMES`` entry when the channel has no
+            user-set name.
+        ch_state: The ``InputChannelState`` to mirror.
+        master_name: Display name of the master if this channel is a
+            slave; empty otherwise.
+        is_slave: True if the channel is a slave in a link group.
     """
     strip.set_title(ch_state.name or CHANNEL_NAMES[channel])
     strip.set_gain_silent(ch_state.gain_raw)
@@ -408,12 +468,22 @@ def apply_output_strip_state(
     master_name: str,
     is_slave: bool,
 ) -> None:
-    """Render an :class:`OutputChannelState` onto an output strip.
+    """Render an ``OutputChannelState`` onto an output strip.
 
-    Sister of :func:`apply_input_strip_state` for output channels. Active-
-    state indicators (PEQ, Xover) are derived from the state object's
-    computed properties so they stay consistent with the values the
-    feature panels show.
+    Sister of ``apply_input_strip_state`` for output channels. The
+    per-feature active indicators (PEQ / Xover / Comp / Delay) are
+    derived from the state object's computed properties so they
+    stay consistent with the values the feature panels show.
+
+    Args:
+        strip: The widget to update.
+        channel: Channel index 4–7; used to fall back to the
+            default ``CHANNEL_NAMES`` entry when the channel has no
+            user-set name.
+        ch_state: The ``OutputChannelState`` to mirror.
+        master_name: Display name of the master if this channel is a
+            slave; empty otherwise.
+        is_slave: True if the channel is a slave in a link group.
     """
     strip.set_title(ch_state.name or CHANNEL_NAMES[channel])
     strip.set_gain_silent(ch_state.gain_raw)

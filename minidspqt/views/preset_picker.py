@@ -27,6 +27,15 @@ from PySide6.QtWidgets import (
 
 
 class PresetPickerDialog(QDialog):
+    """Modal dialog for choosing a preset to recall or store.
+
+    The active slot is bolded in the list so the user can see what
+    they are about to overwrite or where they currently are. Read
+    the picked slot via ``chosen_slot`` and (in store mode) the
+    typed name via ``chosen_name`` after ``exec()`` returns
+    ``Accepted``.
+    """
+
     def __init__(
         self,
         parent: QWidget | None,
@@ -35,6 +44,23 @@ class PresetPickerDialog(QDialog):
         mode: Literal["recall", "store"],
         current_name: str = "",
     ) -> None:
+        """Build the dialog populated with the current slot names.
+
+        Args:
+            parent: Qt parent (modal dialogs centre on this window).
+            slot_names: 30 names for slots U01–U30; empty string for
+                unused slots. F00 is always shown as "F00 — Factory"
+                regardless of this list.
+            active_slot: Device slot number of the currently-active
+                preset (0 = F00, 1–30 = U01–U30). Bolded in the list.
+            mode: ``"recall"`` to load a preset, ``"store"`` to save
+                the current config. In ``"recall"`` empty user slots
+                are dimmed and unselectable; in ``"store"`` F00 is
+                unselectable (factory cannot be overwritten).
+            current_name: In ``"store"`` mode, pre-fills the name
+                field so the user can keep the existing name with one
+                click.
+        """
         super().__init__(parent)
         self._mode = mode
         self._slot_names = slot_names
@@ -124,6 +150,7 @@ class PresetPickerDialog(QDialog):
 
     @property
     def chosen_name(self) -> str:
+        """The typed preset name (store mode) or empty string (recall mode)."""
         if self._name_edit is not None:
             return self._name_edit.text().strip()
         return ""

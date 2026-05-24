@@ -100,13 +100,35 @@ def _initial_target_for(role: str, master: int | None, ch_in_group: int) -> int:
 
 
 class ChannelLinkingDialog(QDialog):
-    """Edit input/output channel link groups via triangular radio matrices."""
+    """Edit input/output channel link groups via triangular radio matrices.
 
-    # Emitted when the user clicks Apply.  Argument is an 8-entry
-    # link_flags list: inputs 0-3 followed by outputs 4-7.
+    The dialog renders two triangular radio matrices — one for the 4
+    inputs, one for the 4 outputs. Each row picks the column it is
+    linked to (or its own diagonal for "standalone"). Forbidden
+    configurations are greyed out: a slave cannot itself be picked
+    as a target (no chains), and a master with active slaves cannot
+    be demoted before they are released.
+
+    Signals:
+        applyRequested (list): Emitted on Apply with the resolved
+            8-entry ``link_flags`` list (inputs 0–3 followed by
+            outputs 4–7). Caller forwards each flag to
+            ``DeviceThread.request_channel_link`` plus the matching
+            ``OP_PREPARE_LINK`` for every new pair.
+    """
+
     applyRequested = Signal(list)
 
     def __init__(self, parent: QWidget | None, state: DeviceState) -> None:
+        """Build the dialog seeded with the current link topology.
+
+        Args:
+            parent: Qt parent window. The dialog is non-modal.
+            state: Current ``DeviceState``; the dialog reads
+                ``link_info`` plus channel names so the matrices and
+                status text reflect what the user sees in the home
+                view.
+        """
         super().__init__(parent)
         self.setWindowTitle("Channel linking")
         self.setMinimumWidth(380)
@@ -181,9 +203,12 @@ class ChannelLinkingDialog(QDialog):
     def refresh(self, state: DeviceState) -> None:
         """Re-check the radios against ``state`` and update status labels.
 
-        Used both at construction and after an Apply round-trip, so the
-        dialog mirrors whatever the device just reported — including any
-        channel renames that happened in the meantime.
+        Used both at construction and after an Apply round-trip, so
+        the dialog mirrors whatever the device just reported —
+        including any channel renames that happened in the meantime.
+
+        Args:
+            state: The fresh ``DeviceState`` to mirror.
         """
         # Pull the live, user-editable names from state.  Fall back to
         # the canonical labels if a name is empty (defensive — the model

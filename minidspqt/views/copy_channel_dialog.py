@@ -29,17 +29,31 @@ OUTPUT_PARAMS = [
 
 
 class CopyChannelDialog(QDialog):
-    """Dialog for copying channel settings from source to target channels.
+    """Modal dialog for copying parameter groups between channels.
 
-    User selects:
-    - Source channel (all 8 channels)
-    - Which parameter groups to copy (based on source type)
-    - Target channels (same type as source, excluding source)
+    User picks a source channel (any of the 8 strips), which parameter
+    groups to copy (the choices depend on whether the source is an
+    input or an output), and the target channels. Targets are filtered
+    to the same channel type as the source — input → input or
+    output → output only.
 
-    Emits accepted with (source_channel, targets, groups).
+    After ``exec()`` returns ``Accepted``, read ``result_data`` as
+    ``(source_channel, targets, groups)`` — a tuple of an int, a list
+    of ints, and a set of group-name strings — and pass it to
+    ``DeviceState.copy_params`` plus the matching device-thread
+    requests.
     """
 
     def __init__(self, device_state, parent=None) -> None:
+        """Build the dialog seeded with the current device state.
+
+        Args:
+            device_state: The current ``DeviceState``. The dialog
+                reads channel names, link topology, and which groups
+                have non-default values so the UI can pre-tick
+                meaningful options.
+            parent: Qt parent window; the dialog is modal w.r.t. it.
+        """
         super().__init__(parent)
         self._device_state = device_state
         self._setup_ui()

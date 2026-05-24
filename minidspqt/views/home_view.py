@@ -34,6 +34,30 @@ NUM_CHANNELS = 4
 
 
 class HomeView(QWidget):
+    """Top-level home page: 4 input + 4 output strips and the routing matrix.
+
+    The view is a stateless layout — it owns no device state itself.
+    The main window pushes fresh state in via ``apply_state`` after
+    every config change and the view re-renders every strip. User
+    interaction surfaces as signals that the main window translates
+    into ``DeviceThread.request_*`` calls.
+
+    Signals:
+        gain_changed (int, int): ``(channel, raw_value)``.
+        mute_changed (int, bool): ``(channel, muted)``.
+        phase_changed (int, bool): ``(channel, inverted)``.
+        gate_clicked (int): Input gate button clicked; the caller
+            opens the gate detail view.
+        output_feature_toggled (int, str, bool): ``(output_channel,
+            feature_name, checked)``. ``feature_name`` is one of
+            ``"peq"``, ``"xover"``, ``"comp"``, ``"delay"``.
+        name_changed (int, str): User renamed channel ``(channel,
+            new_name)``.
+        route_changed (int, int): Routing matrix edit
+            ``(output_channel, new_input_mask)``.
+        recall_clicked, store_clicked (): Header buttons.
+    """
+
     gain_changed = Signal(int, int)
     mute_changed = Signal(int, bool)
     phase_changed = Signal(int, bool)
@@ -45,6 +69,11 @@ class HomeView(QWidget):
     store_clicked = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build the home view with 4 input + 4 output strips.
+
+        Args:
+            parent: Qt parent widget.
+        """
         super().__init__(parent)
         self._build_ui()
 
@@ -201,6 +230,16 @@ class HomeView(QWidget):
     # --- State application ---
 
     def apply_state(self, state: DeviceState) -> None:
+        """Render the full device state into every strip and the matrix.
+
+        Pushes each channel's gain/mute/phase/feature flags into its
+        strip, fills the routing matrix from the per-output masks,
+        and updates the preset label. Called by the main window
+        after every ``config_loaded`` from the device thread.
+
+        Args:
+            state: The current ``DeviceState`` mirror.
+        """
         self._cached_state = state
         strips = self._all_strips()
         for i, ch_state in enumerate(state.inputs):
@@ -252,6 +291,14 @@ class HomeView(QWidget):
             self.presetLabel.setText("Preset: \u2014")
 
     def update_levels(self, payload: dict) -> None:
+        """Push a poll-cycle level reading into every strip.
+
+        Args:
+            payload: The dict produced by ``parse_levels`` — must
+                contain ``"inputs"``, ``"outputs"`` (4-element lists)
+                and ``"limiter_mask"`` (per-output bit set when the
+                compressor is actively limiting).
+        """
         inputs = payload.get("inputs", [])
         outputs = payload.get("outputs", [])
         limiter_mask = payload.get("limiter_mask", 0)
@@ -264,6 +311,7 @@ class HomeView(QWidget):
 
     @property
     def menu_button(self):
+        """The hamburger menu button in the header (used to attach a QMenu)."""
         return self.menuButton
 
     def _all_strips(self) -> list[ChannelStrip]:
@@ -275,11 +323,17 @@ class HomeView(QWidget):
         self.connectionLabel.style().polish(self.connectionLabel)
 
     def show_preview_banner(self, filename: str) -> None:
+        """Switch the header into "Preview" mode for an unsaved .unt load.
+
+        Args:
+            filename: Display name shown in the title bar.
+        """
         self.titleLabel.setText(f"Preview \u2014 {filename}")
         self.connectionLabel.setText("Preview")
         self._set_connection_state("preview")
 
     def set_offline_mode(self) -> None:
+        """Mark the view as running against a ``VirtualDSP`` (no hardware)."""
         self.titleLabel.setText("Home")
         self.connectionLabel.setText("Offline")
         self._set_connection_state("offline")
@@ -289,6 +343,16 @@ class HomeView(QWidget):
             self._apply_link_state(self._state)
 
     def set_connected(self, connected: bool) -> None:
+        """Toggle the strip-enabled state to follow USB connection status.
+
+        When disconnected, every channel strip is disabled so the user
+        cannot edit values that won't reach the device; when connected,
+        link state is re-applied so master/slave relationships are
+        respected.
+
+        Args:
+            connected: True if a USB session is currently open.
+        """
         self.titleLabel.setText("Home")
         if connected:
             self.connectionLabel.setText("Connected")

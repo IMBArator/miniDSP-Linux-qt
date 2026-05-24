@@ -71,9 +71,16 @@ NUM_CHANNELS = 4
 
 
 class RoutedMetersPanel(QWidget):
-    """Vertical level meters for channels routed via the matrix."""
+    """Side strip of vertical level meters for routed neighbour channels.
+
+    On the input side of the detail view it shows outputs the input
+    feeds; on the output side it shows the inputs that feed the
+    displayed output. The channel set is rebuilt by ``set_channels``
+    every time the user switches between strips.
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """Build an empty panel; ``set_channels`` populates the meters."""
         super().__init__(parent)
         self._layout = QHBoxLayout(self)
         self._layout.setContentsMargins(4, 4, 4, 4)
@@ -84,6 +91,15 @@ class RoutedMetersPanel(QWidget):
     def set_channels(
         self, channel_indices: list[int], names: dict[int, str] | None = None
     ) -> None:
+        """Rebuild the meter column from ``channel_indices``.
+
+        Args:
+            channel_indices: Channel indices to show (0–3 for
+                inputs, 4–7 for outputs); order drives left-to-right.
+            names: Optional override map from channel index to
+                display name; defaults to ``CHANNEL_NAMES`` for any
+                missing entry.
+        """
         while self._layout.count():
             item = self._layout.takeAt(0)
             w = item.widget()
@@ -111,6 +127,12 @@ class RoutedMetersPanel(QWidget):
             self._meters.append((ch, lbl, meter))
 
     def update_levels(self, payload: dict) -> None:
+        """Push a poll-cycle ``parse_levels`` reading into every meter.
+
+        Args:
+            payload: The dict produced by ``parse_levels``; missing
+                slots reset the corresponding meter.
+        """
         inputs = payload.get("inputs", [])
         outputs = payload.get("outputs", [])
         for ch, _lbl, meter in self._meters:
@@ -123,26 +145,38 @@ class RoutedMetersPanel(QWidget):
 
 
 class DetailView(QWidget):
-    """Per-channel detail view with feature panels and routed meters.
+    """Per-channel detail view: header strip, nav buttons, feature panel.
 
-    Signals
-    -------
-    back_clicked()
-        User pressed the back button.
-    gain_changed(int, int)
-        ``(channel, raw)``
-    mute_changed(int, bool)
-        ``(channel, muted)``
-    phase_changed(int, bool)
-        ``(channel, inverted)``
-    gate_enable_changed(int, bool)
-        ``(channel, enabled)``
-    gate_params_changed(int, int, int, int, int)
-        ``(channel, attack, release, hold, threshold)``
-    output_feature_toggled(int, str, bool)
-        ``(channel, feature, checked)``
-    name_changed(int, str)
-        ``(channel, name)``
+    Hosts the channel strip at the top, navigation buttons for the
+    other 7 channels, the routed-meters side panels, and the active
+    feature panel (Gate / PEQ / Xover / Comp / Delay /
+    ``PlaceholderPanel`` when N/A). All per-channel writes are
+    surfaced as signals carrying the *absolute* channel index so the
+    main window can fan out to the device thread without needing to
+    track which strip is in focus.
+
+    Signals:
+        back_clicked (): User pressed the back button.
+        gain_changed (int, int): ``(channel, raw)``.
+        mute_changed (int, bool): ``(channel, muted)``.
+        phase_changed (int, bool): ``(channel, inverted)``.
+        gate_clicked (int): User pressed an input strip's Gate
+            button; the detail view itself responds by switching
+            features, but the main window also listens to refresh
+            the gate panel state.
+        gate_params_changed (int, int, int, int, int): ``(channel,
+            attack, release, hold, threshold)`` — atomic gate update.
+        output_feature_toggled (int, str, bool): ``(channel,
+            feature, checked)`` — mirrors the home-view signal.
+        peq_band_changed (int, int, int, int, int, int, bool):
+            ``(channel, band, gain, freq, q, type, bypass)``.
+        peq_channel_bypass_changed (int, bool): ``(channel, bypass)``.
+        xover_changed (int, int, int, int, int): ``(channel,
+            hipass_freq, hipass_slope, lopass_freq, lopass_slope)``.
+        compressor_changed (int, int, int, int, int, int):
+            ``(channel, ratio, knee, attack, release, threshold)``.
+        delay_changed (int, int): ``(channel, samples)``.
+        name_changed (int, str): ``(channel, name)``.
     """
 
     back_clicked = Signal()
@@ -322,6 +356,17 @@ class DetailView(QWidget):
     # ------------------------------------------------------------------ #
 
     def set_channel(self, channel: int, state: DeviceState) -> None:
+        """Switch the displayed channel and re-render every sub-widget.
+
+        Preserves the current feature panel if it applies to the new
+        channel type (e.g. PEQ stays PEQ when moving from Out1 to
+        Out2); falls back to Gate (inputs) / PEQ (outputs) otherwise.
+
+        Args:
+            channel: Absolute channel index 0–7.
+            state: Current ``DeviceState`` used to seed every
+                sub-widget from authoritative values.
+        """
         self._channel = channel
         self._is_input = channel < 4
         self._cached_state = state
@@ -498,6 +543,13 @@ class DetailView(QWidget):
         return ch_state.name or CHANNEL_NAMES[master_ch]
 
     def update_levels(self, payload: dict) -> None:
+        """Push a poll-cycle ``parse_levels`` reading into header + side meters.
+
+        Args:
+            payload: The dict produced by ``parse_levels`` —
+                forwarded verbatim to both ``RoutedMetersPanel``
+                instances.
+        """
         inputs = payload.get("inputs", [])
         outputs = payload.get("outputs", [])
         limiter_mask = payload.get("limiter_mask", 0)
@@ -512,6 +564,7 @@ class DetailView(QWidget):
         self._right_meters.update_levels(payload)
 
     def set_connected(self, connected: bool) -> None:
+        """Update the connection chip and enable/disable the channel strip."""
         if connected:
             self._connection_label.setText("Connected")
             self._set_connection_state("connected")
@@ -524,40 +577,58 @@ class DetailView(QWidget):
                 s.set_enabled_state(False)
 
     def set_offline_mode(self) -> None:
+        """Mark the view as offline; strips stay editable against ``VirtualDSP``."""
         self._connection_label.setText("Offline")
         self._set_connection_state("offline")
         for s in (self._input_strip, self._output_strip):
             s.set_enabled_state(True)
 
     def show_preview_banner(self, filename: str) -> None:
+        """Switch the header chip into "Preview" mode for an unsaved .unt load.
+
+        The ``filename`` is not displayed here (the home view shows
+        it); this just keeps the connection chip in sync.
+        """
         self._connection_label.setText("Preview")
         self._set_connection_state("preview")
 
     @property
     def menu_button(self) -> QPushButton:
+        """The hamburger menu button in the header (for attaching a QMenu)."""
         return self._menu_button
 
     @property
     def gate_panel(self) -> GatePanel:
+        """The owned ``GatePanel`` instance (used by tests / main window)."""
         return self._gate_panel
 
     @property
     def peq_panel(self) -> PEQPanel:
+        """The owned ``PEQPanel`` instance."""
         return self._peq_panel
 
     @property
     def xover_panel(self) -> XoverPanel:
+        """The owned ``XoverPanel`` instance."""
         return self._xover_panel
 
     @property
     def channel(self) -> int:
+        """Absolute index (0–7) of the channel currently displayed."""
         return self._channel
 
     def show_feature(self, channel: int, feature_name: str) -> None:
-        """Switch the detail view to ``channel`` and ``feature_name``.
+        """Switch the view to ``channel`` and bring up ``feature_name``.
 
-        Called by MainWindow when an output's feature nav button is hit
-        on either the home view or the detail view.
+        Called by ``MainWindow`` when an output's feature nav button
+        is hit on either the home view or the detail view.
+
+        Args:
+            channel: Absolute channel index 0–7.
+            feature_name: ``"Gate"``, ``"PEQ"``, ``"Xover"``,
+                ``"Comp"`` or ``"Delay"``. Features that don't apply
+                to the channel type render the placeholder panel
+                with a helpful message.
         """
         if self._cached_state is not None and channel != self._channel:
             self.set_channel(channel, self._cached_state)

@@ -81,22 +81,40 @@ _MODE_LABELS = ("Off", "Pink noise", "White noise", "Sine")
 
 
 class TestToneDialog(QDialog):
-    """Non-modal dialog to control the internal test signal generator."""
+    """Non-modal dialog to control the internal test signal generator.
+
+    Stays open so the user can flip frequencies and listen
+    continuously. The generator is device-wide — switching modes here
+    affects every output. The big red panic button issues
+    ``disableRequested`` so the user can drop the tone with one click
+    from anywhere in the dialog.
+
+    Signals:
+        applyRequested (int, int): ``(mode, freq_index)`` where mode
+            is one of ``TONE_OFF``/``TONE_PINK``/``TONE_WHITE``/
+            ``TONE_SINE``. ``freq_index`` is always sent — the device
+            ignores it for non-sine modes but stores it so a later
+            sine selection picks the user's last frequency.
+        disableRequested (): Emitted by the panic button. Caller
+            sends ``TONE_OFF`` and refreshes the dialog.
+    """
 
     # Suppresses pytest's name-based collection heuristic that otherwise
     # tries to treat this class as a test class.
     __test__ = False
 
-    # mode is one of TONE_OFF/TONE_PINK/TONE_WHITE/TONE_SINE.
-    # freq_index is always sent — the device ignores it for non-sine modes
-    # but stores it in config so it survives mode switches.
     applyRequested = Signal(int, int)
-
-    # Emitted by the big red panic button. The main window's handler
-    # sends TONE_OFF and refreshes the dialog.
     disableRequested = Signal()
 
     def __init__(self, parent: QWidget | None, state: DeviceState) -> None:
+        """Build the dialog with widgets reflecting ``state.test_tone``.
+
+        Args:
+            parent: Qt parent window. The dialog is non-modal so it
+                will not block the parent.
+            state: Current device state; the dialog seeds its radios
+                and frequency spinbox from ``state.test_tone``.
+        """
         super().__init__(parent)
         self.setWindowTitle("Test tone")
         self.setMinimumWidth(320)
@@ -202,6 +220,12 @@ class TestToneDialog(QDialog):
         )
 
     def current_freq_index(self) -> int:
+        """Return the 0–30 ISO 1/3-octave sine frequency index.
+
+        Always returns the spin-box value, even when the current
+        mode isn't sine — the device stores the index across mode
+        switches.
+        """
         return self._freq_spin.value()
 
     # ----------------------------------------------------------------- #
