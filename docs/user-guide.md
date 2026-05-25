@@ -2,45 +2,6 @@
 
 Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
 
----
-
-## Table of Contents
-
-- [Installation](#installation)
-- [Starting the Application](#starting-the-application)
-- [Home View Layout](#home-view-layout)
-- [Channel Strips](#channel-strips)
-  - [Gain Knob](#gain-knob)
-  - [Level Meter](#level-meter)
-  - [Toggle Buttons](#toggle-buttons)
-  - [Channel Names](#channel-names)
-  - [Linked Channels](#linked-channels)
-- [Channel Detail View](#channel-detail-view)
-  - [Gate Panel](#gate-panel)
-  - [PEQ Panel](#peq-panel)
-  - [Crossover Panel](#crossover-panel)
-  - [Compressor Panel](#compressor-panel)
-  - [Delay Panel](#delay-panel)
-  - [Reset to Factory Defaults](#reset-to-factory-defaults)
-- [Routing Matrix](#routing-matrix)
-- [Preset Management](#preset-management)
-  - [Recalling a Preset](#recalling-a-preset)
-  - [Storing a Preset](#storing-a-preset)
-- [Offline Mode](#offline-mode)
-- [.unt Preset Files](#unt-preset-files)
-  - [Loading a .unt File](#loading-a-unt-file)
-  - [Saving a .unt File](#saving-a-unt-file)
-- [Menu](#menu)
-- [Channel Linking](#channel-linking)
-- [Copy Channel Settings](#copy-channel-settings)
-- [Test Tone Generator](#test-tone-generator)
-- [Device Lock / PIN](#device-lock--pin)
-- [Themes (light / dark)](#themes-light--dark)
-- [USB Permissions](#usb-permissions)
-- [Troubleshooting](#troubleshooting)
-
----
-
 ## Installation
 
 ### Requirements
