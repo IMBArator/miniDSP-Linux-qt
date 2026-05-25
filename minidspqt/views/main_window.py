@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from ..blank_seed import seed_virtual_dsp_from_blank
 from ..device_thread import DeviceThread
 from ..model import (
     CompressorState,
@@ -85,6 +87,10 @@ class MainWindow(QMainWindow):
         self._offline = offline
 
         self._state = DeviceState()
+        # Most-recent raw config dict from the worker. Cached deep-copy so a
+        # later online → offline switch can seed the new VirtualDSP with the
+        # device's last-known state without re-querying the worker.
+        self._last_config: dict | None = None
 
         self._stack = QStackedWidget()
         self._home_view = HomeView()
@@ -102,24 +108,8 @@ class MainWindow(QMainWindow):
             # trip the unlock dialog if one is plugged in and locked.
             dsp_instance = VirtualDSP()
 
-        if dsp_instance is not None:
-            factory = type(dsp_instance)
-        else:
-            from minidsp.device import DSPmini
-
-            factory = DSPmini
-
-        self._thread = DeviceThread(
-            dsp_factory=factory,
-            dsp_instance=dsp_instance,
-            parent=self,
-        )
-        self._thread.levels_updated.connect(self._on_levels_updated)
-        self._thread.connection_changed.connect(self._on_connection_changed)
-        self._thread.config_loaded.connect(self._on_config_loaded)
-        self._thread.pin_required.connect(self._show_unlock_dialog)
-        self._thread.pin_result.connect(self._on_pin_result)
         self._unlock_dialog: UnlockPinDialog | None = None
+        self._create_and_start_thread(dsp_instance)
 
         self._home_view.gain_changed.connect(self._on_gain_changed)
         self._home_view.mute_changed.connect(self._on_mute_changed)
@@ -149,8 +139,6 @@ class MainWindow(QMainWindow):
         self._detail_view.compressor_changed.connect(self._on_detail_compressor_changed)
         self._detail_view.delay_changed.connect(self._on_detail_delay_changed)
 
-        self._thread.start()
-
         menu = QMenu(self)
         menu.addAction("Load .unt file\u2026").triggered.connect(self._on_load_unt)
         self._save_action = menu.addAction("Save .unt file\u2026")
@@ -179,6 +167,7 @@ class MainWindow(QMainWindow):
         # Reconnect is only useful when we've stopped \u2014 i.e. NOT connected.
         # Hidden until disconnected.
         self._reconnect_action.setEnabled(False)
+        self._build_connection_mode_menu(menu)
         menu.addSeparator()
         self._build_theme_menu(menu)
         menu.addSeparator()
@@ -226,6 +215,11 @@ class MainWindow(QMainWindow):
             cfg.get("active_slot"),
             len(cfg.get("preset_names", [])),
         )
+        # Cache a deep copy so a later online → offline switch can seed a
+        # VirtualDSP with the device's last-known state. Deep copy because
+        # downstream consumers (DeviceState.from_config) don't mutate today
+        # but might tomorrow — this is cheap insurance.
+        self._last_config = copy.deepcopy(cfg)
         old_names = list(self._state.preset_names)
         try:
             self._state = DeviceState.from_config(cfg)
@@ -884,6 +878,201 @@ class MainWindow(QMainWindow):
         _add("System", "system")
         _add("Light", "light")
         _add("Dark", "dark")
+
+    # --- Connection mode menu / runtime switch ---
+
+    def _build_connection_mode_menu(self, parent_menu: QMenu) -> None:
+        """Add a "Connection mode" submenu with Connected / Offline radios.
+
+        Mirrors :meth:`_build_theme_menu`'s exclusive-radio pattern. The
+        choice is **session-only** — re-launching the app without
+        ``--offline`` returns to connected mode.
+
+        Args:
+            parent_menu: The hamburger menu the submenu should be appended
+                to. The radio actions are stored on ``self`` so later code
+                (e.g. :meth:`_sync_mode_actions`) can update their checked
+                state without re-traversing the menu.
+        """
+        mode_menu = parent_menu.addMenu("Connection mode")
+        group = QActionGroup(self)
+        group.setExclusive(True)
+
+        self._mode_action_online = mode_menu.addAction("Connected (USB)")
+        self._mode_action_online.setCheckable(True)
+        self._mode_action_online.setChecked(not self._offline)
+        self._mode_action_online.triggered.connect(
+            lambda _checked: self._on_mode_chosen(offline=False)
+        )
+        group.addAction(self._mode_action_online)
+
+        self._mode_action_offline = mode_menu.addAction("Offline")
+        self._mode_action_offline.setCheckable(True)
+        self._mode_action_offline.setChecked(self._offline)
+        self._mode_action_offline.triggered.connect(
+            lambda _checked: self._on_mode_chosen(offline=True)
+        )
+        group.addAction(self._mode_action_offline)
+
+    def _sync_mode_actions(self) -> None:
+        """Push ``self._offline`` to the menu radios.
+
+        Called after a successful switch and whenever the user cancels a
+        switch — without this the radio would visually flip to the
+        cancelled choice and lie about the active mode.
+        """
+        self._mode_action_online.setChecked(not self._offline)
+        self._mode_action_offline.setChecked(self._offline)
+
+    def _on_mode_chosen(self, *, offline: bool) -> None:
+        """Switch between online and offline at runtime.
+
+        Tears down the current worker, rebuilds it against the right DSP
+        source (``DSPmini`` factory or a freshly seeded ``VirtualDSP``), and
+        snaps the views to the new mode. Online → offline keeps the live
+        device state (via ``VirtualDSP.seed_from_config``); offline → online
+        warns first because unsaved edits are discarded.
+
+        Args:
+            offline: Target mode. ``True`` switches to the in-RAM
+                ``VirtualDSP``; ``False`` reconnects to the real USB
+                device via the ``DSPmini`` factory. A no-op when the
+                target equals ``self._offline``.
+        """
+        if offline == self._offline:
+            return
+
+        # 1. Offline → Online: warn before discarding offline edits.
+        if self._offline and not offline:
+            reply = QMessageBox.question(
+                self,
+                "Switch to Connected mode?",
+                "Unsaved offline edits will be discarded when switching to "
+                "the live device. Save your .unt file first if you want to "
+                "keep them.\n\nContinue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                # Restore the radio so it doesn't visually lie about the
+                # active mode after the user cancelled.
+                self._sync_mode_actions()
+                return
+
+        # 2. Close any open transient dialogs — they hold references to the
+        #    old thread or to ``self._state`` and would emit/show stale data
+        #    after the swap.
+        for dlg_attr in ("_unlock_dialog", "_linking_dialog", "_test_tone_dialog"):
+            dlg = getattr(self, dlg_attr, None)
+            if dlg is not None and dlg.isVisible():
+                if hasattr(dlg, "reject"):
+                    dlg.reject()
+                else:
+                    dlg.close()
+            setattr(self, dlg_attr, None)
+
+        # 3. Disconnect every signal from the old thread BEFORE stopping it.
+        #    Without this, signals already queued on the UI thread could
+        #    fire into _on_connection_changed / _on_levels_updated after
+        #    we've flipped self._offline and mis-update the chip.
+        for sig, slot in (
+            (self._thread.levels_updated, self._on_levels_updated),
+            (self._thread.connection_changed, self._on_connection_changed),
+            (self._thread.config_loaded, self._on_config_loaded),
+            (self._thread.pin_required, self._show_unlock_dialog),
+            (self._thread.pin_result, self._on_pin_result),
+        ):
+            try:
+                sig.disconnect(slot)
+            except (RuntimeError, TypeError):
+                # Already disconnected or never connected — fine.
+                pass
+
+        # 4. Stop the current worker. Even when parked in _handle_locked,
+        #    request_stop pushes _CANCEL_PIN to unblock it.
+        self._thread.request_stop()
+        self._thread.wait(2000)
+        old_thread = self._thread
+        old_thread.setParent(None)
+        old_thread.deleteLater()
+
+        # 5. Build the new DSP instance.
+        if offline:
+            new_instance: VirtualDSP | None = VirtualDSP()
+            if self._last_config is not None:
+                new_instance.seed_from_config(self._last_config)
+            else:
+                # Cold switch with no live config ever seen (e.g. device
+                # unplugged at launch). Fall back to the bundled blank.unt
+                # so the strips have sane defaults to edit.
+                seed_virtual_dsp_from_blank(new_instance)
+        else:
+            new_instance = None  # → DSPmini factory path
+
+        # 6. Update flag BEFORE creating the new thread so the first signal
+        #    that arrives lands on a consistent self._offline.
+        self._offline = offline
+        if not offline:
+            # Drop the offline-mode config so a subsequent switch back to
+            # offline doesn't re-seed from a stale offline snapshot. The
+            # views keep showing whatever they had (with strips disabled
+            # via set_connected(False) below) until the real device
+            # answers — matching the existing disconnect UX.
+            self._last_config = None
+
+        self._create_and_start_thread(new_instance)
+
+        if offline:
+            # Push the freshly seeded config through the normal pipeline so
+            # the views snap to the new state immediately — the worker will
+            # re-emit the same thing shortly, but this removes visual lag.
+            assert new_instance is not None
+            self._on_config_loaded(new_instance.read_config())
+            self._home_view.set_offline_mode()
+            self._detail_view.set_offline_mode()
+        else:
+            self._home_view.set_connected(False)
+            self._detail_view.set_connected(False)
+
+        self._save_action.setEnabled(offline)
+        if offline:
+            # Reconnect is meaningless against VirtualDSP (it doesn't drop).
+            self._reconnect_action.setEnabled(False)
+        self._sync_mode_actions()
+
+    def _create_and_start_thread(self, dsp_instance: object | None) -> None:
+        """Build a fresh :class:`DeviceThread`, wire every signal, and start.
+
+        Single source of truth for thread construction — used both at startup
+        and on every runtime mode switch. ``dsp_instance=None`` selects the
+        real ``DSPmini`` factory; passing a ``VirtualDSP`` (or test fake)
+        pins that instance across reconnects so its in-RAM state survives
+        the worker's close/open cycle.
+
+        Args:
+            dsp_instance: Pre-built DSP object to pin across reconnects, or
+                ``None`` to use the real ``DSPmini`` factory. Must already
+                be seeded with the desired state — this method does not
+                populate it.
+        """
+        if dsp_instance is not None:
+            factory = type(dsp_instance)
+        else:
+            from minidsp.device import DSPmini
+
+            factory = DSPmini
+
+        self._thread = DeviceThread(
+            dsp_factory=factory,
+            dsp_instance=dsp_instance,
+            parent=self,
+        )
+        self._thread.levels_updated.connect(self._on_levels_updated)
+        self._thread.connection_changed.connect(self._on_connection_changed)
+        self._thread.config_loaded.connect(self._on_config_loaded)
+        self._thread.pin_required.connect(self._show_unlock_dialog)
+        self._thread.pin_result.connect(self._on_pin_result)
+        self._thread.start()
 
     # --- Lifecycle ---
 

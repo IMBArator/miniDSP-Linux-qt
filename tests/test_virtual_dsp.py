@@ -374,10 +374,10 @@ def test_prepare_link_unlink_does_not_copy():
 def test_offline_startup_seeded_from_blank_yields_factory_defaults():
     """End-to-end offline startup: blank.unt is empty → factory defaults remain."""
     from minidsp.defaults import load_factory_defaults
-    from minidspqt.app import _seed_from_blank
+    from minidspqt.blank_seed import seed_virtual_dsp_from_blank
 
     dsp = VirtualDSP()
-    _seed_from_blank(dsp)
+    seed_virtual_dsp_from_blank(dsp)
     cfg = dsp.read_config()
     factory = load_factory_defaults()["params"]
     assert cfg["crossovers"] == factory["crossovers"]

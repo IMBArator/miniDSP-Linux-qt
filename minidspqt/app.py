@@ -9,21 +9,9 @@ import sys
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtWidgets import QApplication
 
-from pathlib import Path
-
+from .blank_seed import seed_virtual_dsp_from_blank
 from .theme import theme_manager
-from .unt_loader import load_unt_all_slots
 from .views.main_window import MainWindow
-
-BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
-
-
-def _seed_from_blank(dsp) -> None:
-    """Load the bundled blank.unt into a VirtualDSP instance."""
-    if not BLANK_UNT.exists():
-        return
-    slots, active_slot, names, raw = load_unt_all_slots(BLANK_UNT)
-    dsp.load_from_unt_bytes(raw, slots, active_slot, names)
 
 
 def run(*, offline: bool = False, verbose: int = 0) -> None:
@@ -71,7 +59,7 @@ def run(*, offline: bool = False, verbose: int = 0) -> None:
         from .virtual_dsp import VirtualDSP
 
         dsp_instance = VirtualDSP()
-        _seed_from_blank(dsp_instance)
+        seed_virtual_dsp_from_blank(dsp_instance)
     else:
         dsp_instance = None
 

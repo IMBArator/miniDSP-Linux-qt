@@ -394,11 +394,15 @@ The DSP 4x4 Mini stores 1 factory preset (F00) and 30 user presets (U01–U30). 
 
 ## Offline Mode
 
-Run without hardware using the `--offline` flag:
+You can enter offline mode in two ways:
+
+**At launch** — pass the `--offline` flag:
 
 ```bash
 minidspqt --offline
 ```
+
+**At runtime** — open the menu (≡), choose **Connection mode → Offline**. The two radio items (`Connected (USB)` / `Offline`) are mutually exclusive and reflect the current mode.
 
 In offline mode:
 
@@ -409,6 +413,12 @@ In offline mode:
 - You can load and save `.unt` preset files
 
 This is useful for designing presets on the go, testing configurations, or exploring the UI without a device connected.
+
+### Switching modes at runtime
+
+- **Connected → Offline** carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to `.unt` without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP is seeded from the bundled `blank.unt` template instead.
+- **Offline → Connected** prompts a confirmation first: switching back discards any unsaved offline edits. Save your `.unt` file first if you want to keep them. After confirming, the worker re-attaches to the real USB device exactly as if you had relaunched without `--offline`.
+- The mode choice is **session-only** — restarting the app drops you back into connected mode (unless you pass `--offline` on the command line).
 
 ---
 
@@ -452,6 +462,7 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |
 | **Set device PIN...** | Set a 4-character lock PIN; the device disconnects after applying (see [Device Lock / PIN](#device-lock--pin)). Enabled only while connected |
 | **Reconnect** | Manually re-attach to the device after a disconnect (e.g. after cancelling the unlock prompt). Enabled only while disconnected |
+| **Connection mode ▸** | Submenu — toggle between **Connected (USB)** and **Offline** at runtime (see [Offline Mode](#offline-mode)) |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
 | **About** | Show version, license, and project information |
 

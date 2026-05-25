@@ -108,6 +108,27 @@ class VirtualDSP:
         self._config["active_slot"] = active
         self._config["preset_names"] = list(preset_names)
 
+    def seed_from_config(self, cfg: dict[str, Any]) -> None:
+        """Replace the active-slot state from a ``read_config``-shaped dict.
+
+        Used by the runtime mode-switcher to seed a fresh ``VirtualDSP`` with
+        whatever the live ``DSPmini`` last reported, so users carry their
+        current device state into offline mode instead of starting from a
+        factory default. Only the keys this class already understands are
+        copied — anything else in ``cfg`` is ignored.
+
+        Args:
+            cfg: Config dict shaped like ``DSPmini.read_config()`` /
+                ``VirtualDSP.read_config()`` output.
+        """
+        for k in _SLOT_KEYS:
+            if k in cfg:
+                self._config[k] = copy.deepcopy(cfg[k])
+        if "active_slot" in cfg:
+            self._config["active_slot"] = cfg["active_slot"]
+        if "preset_names" in cfg:
+            self._config["preset_names"] = list(cfg["preset_names"])
+
     def export_to_unt_args(
         self,
     ) -> tuple[list[dict[str, Any] | None], int, bytes | None]:

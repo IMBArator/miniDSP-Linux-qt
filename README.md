@@ -76,12 +76,15 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - Confirmation dialog before writing to device flash
 - Preset name label updates in real time (`cmd_read_name`, `parse_preset_name`)
 
-### Offline mode (`--offline`)
+### Offline mode
 
+- Enter at launch with `--offline`, or switch at runtime via **Menu → Connection mode → Offline**
 - In-RAM virtual DSP — no hardware required
 - Edit gains, mutes, phases, routing, PEQ, crossovers, compressors, delays
 - **Load and save .unt files** — round-trip with the manufacturer file format
-- Seed from a bundled `blank.unt` template
+- Online → Offline carries the live device state into the virtual DSP so you keep editing what was on the device
+- Offline → Online prompts before discarding offline edits (save your `.unt` first to keep them)
+- Cold-launching offline (no live config seen yet) seeds from the bundled `blank.unt` template
 
 ### .unt file support
 
@@ -181,7 +184,7 @@ Then reconnect the device.
 uv run --with pytest --with pytest-qt pytest tests/ -v
 ```
 
-364 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), param knob widget, and .unt read/write round-trip.
+374 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
 
 ## Repository structure
 
@@ -193,6 +196,7 @@ minidspqt/                     Main package
   model.py                     Typed device state (DeviceState dataclass)
   device_thread.py             QThread: poll loop, command coalescing, preset queue
   virtual_dsp.py               In-RAM DSP implementing DSPmini interface
+  blank_seed.py                Bundled blank.unt seed helper (shared by app + runtime mode switch)
   unt_loader.py                Parse .unt files (single-slot and all-slots)
   unt_writer.py                Write .unt files with field-level overwrites
   views/
