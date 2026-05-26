@@ -10,6 +10,12 @@ To run from source for development, see the [Development Guide](development.md).
 
 ---
 
+## USB Permissions
+
+The application talks to the DSP via `/dev/hidraw*`, which requires root by default. To use it as a regular user, add the udev rule documented in the [**Permissions**](../README.md#permissions) section of the README, then disconnect and reconnect the device.
+
+---
+
 ## Starting the Application
 
 ```bash
@@ -673,21 +679,6 @@ Graph backgrounds are intentionally a **soft tinted off-white** in light mode ra
 - **GNOME / XFCE / GTK-based environments** — fully supported, including live switching when you toggle the system theme.
 - **KDE Plasma** — Qt's platform-theme integration is still evolving; the manual override (Light / Dark) always works, but live system tracking may not flip the app until KDE wires up the `requestColorScheme()` portal call.
 - If automatic tracking ever returns "Unknown" on your setup (e.g. headless or unusual desktops), the app falls back to the last preference you chose (defaulting to Dark on the very first launch).
-
----
-
-## USB Permissions
-
-The application communicates with the DSP via `/dev/hidraw*` device files. By default, these require root access. To use the application as a regular user, create a udev rule:
-
-```bash
-sudo tee /etc/udev/rules.d/99-dspmini.rules << 'EOF'
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0168", ATTRS{idProduct}=="0821", MODE="0666"
-EOF
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
-
-Then disconnect and reconnect the DSP. The device should now be accessible without `sudo`.
 
 ---
 
