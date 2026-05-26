@@ -309,13 +309,33 @@ step_appimagetool() {
     py="${APPDIR}/usr/bin/python${PYTHON_SHORT}"
     version="$("${py}" -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["version"])' \
         "${REPO_ROOT}/pyproject.toml")"
-    local out="${DIST_DIR}/minidspqt-${version}-x86_64.AppImage"
+    local out_name="minidspqt-${version}-x86_64.AppImage"
+    local out="${DIST_DIR}/${out_name}"
 
+    # Optional: embed update-info so AppImageUpdate-aware clients can fetch
+    # only changed chunks of the AppImage between versions. When set,
+    # appimagetool also emits a sibling .zsync file. For a GitHub-Releases-
+    # hosted artifact the value looks like:
+    #   gh-releases-zsync|<owner>|<repo>|latest|minidspqt-*-x86_64.AppImage.zsync
+    local -a appimagetool_args=()
+    if [[ -n "${APPIMAGE_UPDATE_INFO:-}" ]]; then
+        log "embedding update info: ${APPIMAGE_UPDATE_INFO}"
+        appimagetool_args+=( -u "${APPIMAGE_UPDATE_INFO}" )
+    fi
+
+    # Run appimagetool from inside DIST_DIR. The .AppImage lands where we
+    # name it either way, but appimagetool's bundled zsyncmake writes the
+    # .zsync file to the *current* working directory rather than next to
+    # the output, so chdir-ing is the only way to land both artifacts in
+    # dist/.
     # ARCH must be set; appimagetool refuses to infer it from a relative path.
     # Extract-vs-mount is governed by APPIMAGE_EXTRACT_AND_RUN (set in
     # step_linuxdeploy when no FUSE is available) — no CLI flag here.
-    ARCH=x86_64 "${CACHE_DIR}/appimagetool-x86_64.AppImage" \
-        "${APPDIR}" "${out}"
+    (
+        cd "${DIST_DIR}"
+        ARCH=x86_64 "${CACHE_DIR}/appimagetool-x86_64.AppImage" \
+            "${appimagetool_args[@]}" "${APPDIR}" "${out_name}"
+    )
 
     chmod +x "${out}"
     log "produced ${out}"

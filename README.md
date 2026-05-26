@@ -221,6 +221,29 @@ The resulting AppImage only runs on systems with a glibc at least as new as your
 
 `make appimage-clean` removes only the AppDir, the Python build tree, and `dist/*.AppImage`, leaving the `python-build` and `linuxdeploy` downloads cached under `build/cache/` so subsequent rebuilds are fast.
 
+### Delta updates (optional)
+
+Set `APPIMAGE_UPDATE_INFO` before `make appimage` to embed update metadata into the AppImage and emit a sibling `.zsync` file. AppImageUpdate-aware clients can then download only the chunks that changed between versions instead of the full ~160 MB.
+
+For a GitHub-Releases-hosted artifact, run a native build with:
+
+```bash
+APPIMAGE_UPDATE_INFO="gh-releases-zsync|<owner>|<repo>|latest|minidspqt-*-x86_64.AppImage.zsync" \
+    make appimage
+# dist/ now also contains minidspqt-<version>-x86_64.AppImage.zsync
+```
+
+…or, inside the Podman/Docker container, pass the value via `-e` **without** adding inner double quotes (the single quotes around the whole `-e` argument already protect the `|` and `*` from the host shell — extra inner quotes end up *inside* the env var and `appimagetool` rejects the result as "unknown format"):
+
+```bash
+podman run --rm \
+    -e 'APPIMAGE_UPDATE_INFO=gh-releases-zsync|<owner>|<repo>|latest|minidspqt-*-x86_64.AppImage.zsync' \
+    -v "$PWD":/src -w /src docker.io/library/ubuntu:20.04 bash -c \
+    "bash packaging/appimage/init_environment.sh && make appimage"
+```
+
+Upload both files (`.AppImage` and `.AppImage.zsync`) as release assets. Without `APPIMAGE_UPDATE_INFO`, no `.zsync` is produced and the AppImage carries no update info — that's the right choice for one-off local builds.
+
 ## Permissions
 
 The tool communicates via `/dev/hidraw*`. By default this requires root. To allow regular users, create a udev rule:
