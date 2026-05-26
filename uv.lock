@@ -319,11 +319,29 @@ wheels = [
 [[package]]
 name = "minidsp-linux"
 version = "1.0.1"
-source = { git = "https://github.com/IMBArator/miniDSP-Linux.git?rev=v1.0.1#9a9fc9bf1a21de06c30d8b9e78cca97183d6fd6f" }
+source = { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.0.1/minidsp_linux-1.0.1-py3-none-any.whl" }
 dependencies = [
     { name = "rich" },
     { name = "tomli-w" },
 ]
+wheels = [
+    { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.0.1/minidsp_linux-1.0.1-py3-none-any.whl", hash = "sha256:772c704be4a2c941ee82140f882cf50f0cc653bb23960640f33c049eb8bab066" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2.0" },
+    { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5" },
+    { name = "mkdocs-include-markdown-plugin", marker = "extra == 'docs'", specifier = ">=6.2" },
+    { name = "mkdocs-literate-nav", marker = "extra == 'docs'", specifier = ">=0.6" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.5" },
+    { name = "mkdocs-section-index", marker = "extra == 'docs'", specifier = ">=0.3" },
+    { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.26" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
+    { name = "rich", specifier = ">=13.0" },
+    { name = "tomli-w", specifier = ">=1.0" },
+]
+provides-extras = ["dev", "docs"]
 
 [[package]]
 name = "minidsp-linux-qt"
@@ -351,7 +369,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "minidsp-linux", git = "https://github.com/IMBArator/miniDSP-Linux.git?rev=v1.0.1" },
+    { name = "minidsp-linux", url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.0.1/minidsp_linux-1.0.1-py3-none-any.whl" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5" },
     { name = "mkdocs-include-markdown-plugin", marker = "extra == 'docs'", specifier = ">=6.2" },
