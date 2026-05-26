@@ -239,6 +239,9 @@ step_pip_install() {
 step_stage_assets() {
     log "staging AppRun, .desktop and icon"
 
+    # Catch typos / malformed Categories / missing keys early — costs ~5 ms.
+    desktop-file-validate "${PACKAGING_DIR}/minidspqt.desktop"
+
     install -Dm755 "${PACKAGING_DIR}/AppRun"            "${APPDIR}/AppRun"
     install -Dm644 "${PACKAGING_DIR}/minidspqt.desktop" "${APPDIR}/usr/share/applications/minidspqt.desktop"
     install -Dm644 "${PACKAGING_DIR}/minidspqt.png"     "${APPDIR}/usr/share/icons/hicolor/256x256/apps/minidspqt.png"
@@ -265,8 +268,12 @@ step_linuxdeploy() {
 
     # Inside an unprivileged container, /dev/fuse isn't available, so
     # AppImages can't self-mount. APPIMAGE_EXTRACT_AND_RUN=1 makes every
-    # AppImage extract itself to a temp dir instead.
-    export APPIMAGE_EXTRACT_AND_RUN=1
+    # AppImage extract itself to a temp dir instead. On a host with FUSE
+    # we let linuxdeploy/appimagetool mount themselves directly (a few
+    # seconds faster, no /tmp churn).
+    if [[ ! -c /dev/fuse ]] || ! command -v fusermount >/dev/null 2>&1; then
+        export APPIMAGE_EXTRACT_AND_RUN=1
+    fi
 
     # We DO NOT use linuxdeploy-plugin-qt. That plugin needs `qmake` to
     # discover Qt's install layout, which we don't have (Ubuntu 20.04 doesn't
@@ -277,7 +284,12 @@ step_linuxdeploy() {
     # linuxdeploy ELF walk handles all the system library bundling we need
     # (libxcb, libssl, libffi, …) and fixes up rpaths on PySide6's own .so
     # files so they find each other inside the AppDir.
-    "${CACHE_DIR}/linuxdeploy-x86_64.AppImage" --appimage-extract-and-run \
+    #
+    # Whether the tool extracts or self-mounts is decided by the
+    # APPIMAGE_EXTRACT_AND_RUN env var set above. Don't also pass
+    # --appimage-extract-and-run on the CLI: that would force extraction
+    # even on hosts with FUSE.
+    "${CACHE_DIR}/linuxdeploy-x86_64.AppImage" \
         --appdir "${APPDIR}" \
         --executable "${py}"
 }
@@ -290,12 +302,19 @@ step_appimagetool() {
     log "packaging AppDir into .AppImage"
     mkdir -p "${DIST_DIR}"
 
-    local version
-    version="$(grep -E '^version *= *' "${REPO_ROOT}/pyproject.toml" | head -1 | cut -d'"' -f2)"
+    # Use the bundled CPython (always present at this point) to parse
+    # pyproject.toml properly, so quote style or whitespace tweaks can't
+    # silently break version extraction.
+    local py version
+    py="${APPDIR}/usr/bin/python${PYTHON_SHORT}"
+    version="$("${py}" -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["version"])' \
+        "${REPO_ROOT}/pyproject.toml")"
     local out="${DIST_DIR}/minidspqt-${version}-x86_64.AppImage"
 
     # ARCH must be set; appimagetool refuses to infer it from a relative path.
-    ARCH=x86_64 "${CACHE_DIR}/appimagetool-x86_64.AppImage" --appimage-extract-and-run \
+    # Extract-vs-mount is governed by APPIMAGE_EXTRACT_AND_RUN (set in
+    # step_linuxdeploy when no FUSE is available) — no CLI flag here.
+    ARCH=x86_64 "${CACHE_DIR}/appimagetool-x86_64.AppImage" \
         "${APPDIR}" "${out}"
 
     chmod +x "${out}"
@@ -308,16 +327,38 @@ step_appimagetool() {
 # -----------------------------------------------------------------------------
 
 step_smoke_test() {
-    log "smoke-testing the AppImage (--help)"
     local img
     img="$(ls -t "${DIST_DIR}"/minidspqt-*-x86_64.AppImage | head -1)"
-    # `--help` exits 0 without needing a display — proves the bundled Python
-    # boots, imports the package, and resolves the entry point.
+
+    # Pass 1: `--help` exits 0 without needing a display — proves the bundled
+    # Python boots, imports the package, and resolves the entry point.
+    log "smoke-testing the AppImage (--help)"
     if ! "${img}" --help >/dev/null 2>&1; then
-        warn "smoke test failed; re-running with output:"
+        warn "--help smoke test failed; re-running with output:"
         "${img}" --help || fail "AppImage --help failed"
     fi
-    log "smoke test passed"
+
+    # Pass 2: actually start Qt. --help bails before Qt is initialised, so it
+    # can't catch a missing platform plugin or a libQt6*.so version mismatch.
+    # We boot the app in offline mode (no hardware needed) under the Qt
+    # offscreen QPA (no display needed) and let timeout kill it after a few
+    # seconds. With --preserve-status, that produces exit 143 (128+SIGTERM)
+    # which is what we want: the event loop ran long enough to be killed.
+    # Anything else (segfault, traceback, plugin load failure) is a real
+    # failure.
+    log "smoke-testing the AppImage (Qt offscreen boot)"
+    local rc=0
+    QT_QPA_PLATFORM=offscreen timeout --preserve-status 5 \
+        "${img}" --offline >/dev/null 2>&1 || rc=$?
+    case "${rc}" in
+        0|124|143) log "Qt offscreen smoke test passed (exit ${rc})" ;;
+        *)
+            warn "Qt offscreen smoke test failed (exit ${rc}); re-running with output:"
+            QT_QPA_PLATFORM=offscreen timeout --preserve-status 5 \
+                "${img}" --offline || true
+            fail "AppImage Qt smoke test failed"
+            ;;
+    esac
 }
 
 # -----------------------------------------------------------------------------
