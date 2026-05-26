@@ -1,11 +1,13 @@
-"""mkdocs hooks: post-process the transcluded README and clean up SUMMARY.
+"""mkdocs hooks: post-process transcluded pages and clean up SUMMARY.
 
-The site index transcludes ``../README.md`` via
+Several pages (``docs/index.md``, ``docs/changelog.md``) transclude
+source Markdown from outside the docs tree via
 mkdocs-include-markdown-plugin with ``rewrite_relative_urls=true``. That
 rewrites docs-tree-relative paths correctly, but the README also points
-at ``../LICENSE`` — a file outside the docs tree that mkdocs cannot
-render. Remap it to the GitHub URL so the link works on the rendered
-site and MkDocs' link checker stops warning.
+at ``../LICENSE`` and ``../CHANGELOG.md`` — files outside the docs tree
+that mkdocs cannot render. Remap them to the GitHub URL (or the in-site
+changelog page) so the links work on the rendered site and MkDocs' link
+checker stops warning.
 
 The second hook drops ``api/SUMMARY.md`` from the build after
 mkdocs-literate-nav has consumed it (otherwise it would render as an
@@ -18,10 +20,12 @@ import re
 # Pages that transclude an upstream Markdown file and therefore need
 # their relative links rewritten. Any page not listed here is passed
 # through unchanged.
-_TRANSCLUDED_PAGES = {"index.md"}
+_TRANSCLUDED_PAGES = {"index.md", "changelog.md", "user-guide.md"}
 
 _LINK_MAP = {
     "../LICENSE": "https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/LICENSE",
+    "../CHANGELOG.md": "changelog.md",
+    "../README.md": "index.md",
 }
 
 

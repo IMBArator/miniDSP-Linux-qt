@@ -81,5 +81,7 @@ hooks:
 nav:
   - Home: index.md
   - User Guide: user-guide.md
+  - Development: development.md
   - UI Concepts: concepts.md
   - API Reference: api/
+  - Changelog: changelog.md

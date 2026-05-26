@@ -4,22 +4,9 @@ Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor.
 
 ## Installation
 
-### Requirements
+See the [**Installation**](../README.md#installation) section of the README for the two supported install methods — the prebuilt **AppImage** (recommended) or the **pip** release wheel. A t.racks DSP 4x4 Mini connected via USB is required, or use [offline mode](#offline-mode) to explore without hardware.
 
-- Python 3.11 or newer
-- [uv](https://docs.astral.sh/uv/) package manager
-- Linux with kernel HID driver
-- A t.racks DSP 4x4 Mini connected via USB (or use [offline mode](#offline-mode))
-
-### Install
-
-```bash
-git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
-cd miniDSP-Linux-qt
-uv sync
-```
-
-This creates a `.venv` directory and installs all dependencies, including the `minidsp-linux` protocol library.
+To run from source for development, see the [Development Guide](development.md).
 
 ---
 
