@@ -1,6 +1,6 @@
 UV := uv
 
-.PHONY: sync install test build clean docs docs-serve docs-clean appimage appimage-clean
+.PHONY: sync install test build version publish clean docs docs-serve docs-clean appimage appimage-clean
 
 sync:
 	$(UV) sync --extra dev
@@ -14,6 +14,17 @@ test:
 # Build the package (sdist and wheel into dist/)
 build:
 	$(UV) build
+
+# Create a release (usage: make version VERSION=X.Y.Z)
+version:
+	@bash scripts/version.sh $(VERSION)
+
+# Publish an already-tagged version to GitHub Releases + Pages
+# (usage: make publish               -> prompts for version
+#         make publish VERSION=X.Y.Z -> non-interactive)
+# Requires GITHUB_TOKEN env var with `repo` scope.
+publish:
+	@bash scripts/publish.sh $(VERSION)
 
 # Build a self-contained AppImage with bundled CPython + PySide6.
 # Prereqs are listed in packaging/appimage/init_environment.sh — run that once

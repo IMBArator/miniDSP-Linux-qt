@@ -1,0 +1,55 @@
+[git]
+conventional_commits = true
+# Keep a Changelog is for humans — drop infra/meta commits so only
+# user-visible changes show up.
+filter_unconventional = true
+filter_commits = true
+commit_parsers = [
+    # Map conventional commit types to Keep a Changelog 1.0.0 categories.
+    { message = "^feat", group = "Added" },
+    { message = "^fix", group = "Fixed" },
+    { message = "^refactor", group = "Changed" },
+    { message = "^perf", group = "Changed" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^doc\\b", group = "Documentation" },
+    # Everything below is skipped: not user-visible per Keep a Changelog.
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^chore", skip = true },
+    { message = "^build", skip = true },
+    { message = "^test", skip = true },
+    { message = "^ci", skip = true },
+    { message = "^style", skip = true },
+    { message = "^data", skip = true },
+]
+protect_breaking_commits = false
+tag_pattern = "v[0-9]*"
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+"""
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {{ commit.message | upper_first }}\
+        {% if commit.breaking %} **(breaking)**{% endif %}\
+        {% if commit.remote.pr_number %} ([#{{ commit.remote.pr_number }}](https://github.com/IMBArator/miniDSP-Linux-qt/pull/{{ commit.remote.pr_number }})){% endif %} \
+        ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/{{ commit.id }}))\
+    {% endfor %}
+{% endfor %}
+
+"""
+trim = true
+
+[remote.github]
+owner = "IMBArator"
+repo = "miniDSP-Linux-qt"
