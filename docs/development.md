@@ -34,9 +34,21 @@ whenever you want to test fresh local changes.
 
 ## Running tests
 
+The suite uses `pytest` and `pytest-qt`, which ship in the `dev`
+optional-dependency group. Install them once with:
+
 ```bash
-uv run --with pytest --with pytest-qt pytest tests/ -v
+make sync            # runs `uv sync --extra dev`
 ```
+
+Then run the tests:
+
+```bash
+make test            # QT_QPA_PLATFORM=offscreen uv run pytest -v
+```
+
+`make test` sets `QT_QPA_PLATFORM=offscreen` so the Qt widgets run headless —
+no display server required, which also makes it safe for CI.
 
 374 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
 

@@ -28,7 +28,7 @@ chmod +x minidspqt-*-x86_64.AppImage
 
 ### pip (release wheel)
 
-Prefer a normal Python install? Grab the wheel from the same [Releases page](https://github.com/IMBArator/miniDSP-Linux-qt/releases) and install it into a virtual environment. Requires Python 3.11+ and `git` on PATH (the protocol library is pulled from its git tag):
+Prefer a normal Python install? Grab the wheel from the same [Releases page](https://github.com/IMBArator/miniDSP-Linux-qt/releases) and install it into a virtual environment (requires Python 3.11+):
 
 ```bash
 python3 -m venv .venv
