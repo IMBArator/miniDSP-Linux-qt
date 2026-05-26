@@ -7,8 +7,11 @@ set -e
 HERE="$(dirname -- "$(readlink -f -- "${0}")")"
 export APPDIR="${HERE}"
 
-PYVER="3.11"
-PYBIN="${APPDIR}/usr/bin/python${PYVER}"
+# Discover the bundled CPython at runtime so bumping PYTHON_VERSION in
+# build.sh doesn't require a parallel edit here. The glob "python3.*[0-9]"
+# matches "python3.11" but excludes "python3.11-config" and similar siblings.
+PYBIN="$(echo "${APPDIR}/usr/bin"/python3.*[0-9])"
+PYVER="${PYBIN##*/python}"
 SITE_PACKAGES="${APPDIR}/usr/lib/python${PYVER}/site-packages"
 
 # Save the host's view of every env var we are about to override. The
