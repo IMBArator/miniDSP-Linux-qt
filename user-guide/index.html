@@ -1,0 +1,5145 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Qt graphical interface for the t.racks DSP 4x4 Mini">
+      
+      
+      
+        <link rel="canonical" href="https://imbarator.github.io/miniDSP-Linux-qt/user-guide/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../development/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>User Guide - miniDSP-Linux-qt</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dsp-4x4-mini-user-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="miniDSP-Linux-qt" class="md-header__button md-logo" aria-label="miniDSP-Linux-qt" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            miniDSP-Linux-qt
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              User Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/IMBArator/miniDSP-Linux-qt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    IMBArator/miniDSP-Linux-qt
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  User Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../development/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Development
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../concepts/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  UI Concepts
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../api/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Reference
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="miniDSP-Linux-qt" class="md-nav__button md-logo" aria-label="miniDSP-Linux-qt" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    miniDSP-Linux-qt
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/IMBArator/miniDSP-Linux-qt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    IMBArator/miniDSP-Linux-qt
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting the Application
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#home-view-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Home View Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-strips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Strips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Strips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gain-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gain Knob
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#level-meter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Level Meter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limiter-indicator-outputs-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limiter Indicator (Outputs Only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toggle-buttons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Buttons
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Toggle Buttons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gain-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gain indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-toggles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feature toggles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#channel-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked Channels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-detail-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Detail View
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Detail View">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gate-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#peq-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PEQ Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PEQ Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-band-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-band controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#channel-wide-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel-wide bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frequency-response-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#peq-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "PEQ active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crossover-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossover Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crossover Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-filter-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-filter controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shared-frequency-response-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xover-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Xover active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compressor-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compressor Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compressor Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-function-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transfer-function graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compressor-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Compressor active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked-channel sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delay Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Delay Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-single-edit-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The single edit knob
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-overview-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The overview graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Delay active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-sync_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked-channel sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset-to-factory-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reset to Factory Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routing-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Routing Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removing a Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preset-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preset Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recalling-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recalling a Preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storing-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storing a Preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#offline-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Offline Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switching-modes-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching modes at runtime
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unt-preset-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .unt Preset Files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=".unt Preset Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading-a-unt-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading a .unt File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-a-unt-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving a .unt File
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-linking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Linking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Linking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-read-the-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to read the matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forbidden-actions-are-greyed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forbidden actions are greyed out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Apply behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behind-the-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behind the scenes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#copy-channel-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copy Channel Settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Copy Channel Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channels_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked channels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-tone-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Tone Generator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Tone Generator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sine-frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sine Frequency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#starting-and-stopping-the-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting and stopping the generator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#device-lock-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Lock / PIN
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Device Lock / PIN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-counts-as-a-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What counts as a PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unlock-prompt-entering-a-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unlock prompt — entering a PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-a-new-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting a new PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#offline-mode-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline mode behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-if-you-forget-the-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recovery if you forget the PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#themes-light-dark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes (light / dark)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Themes (light / dark)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-a-theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes-on-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes on Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USB Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#disconnected-status-and-controls-are-greyed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Disconnected" status and controls are greyed out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-crashes-on-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Application crashes on startup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controls-dont-update-the-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls don't update the device
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-controls-are-disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked channel controls are disabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#level-meters-show-no-activity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Level meters show no activity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/minidspqt/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Minidspqt
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_1" id="__nav_5_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Minidspqt
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.app
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/blank_seed/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.blank_seed
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.cli
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/defaults/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.defaults
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/device_thread/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.device_thread
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/theme/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.theme
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/unt_loader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.unt_loader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/unt_writer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.unt_writer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/virtual_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.virtual_dsp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_11" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/minidspqt/views/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_1_11" id="__nav_5_1_11_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Views
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/channel_linking_dialog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.channel_linking_dialog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/channel_strip/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.channel_strip
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/copy_channel_dialog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.copy_channel_dialog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/detail_view/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.detail_view
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/device_pin_dialog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.device_pin_dialog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/home_view/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.home_view
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/main_window/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.main_window
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/preset_picker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.preset_picker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/test_tone_dialog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.test_tone_dialog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_11_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/minidspqt/views/panels/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Panels
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_1_11_10" id="__nav_5_1_11_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_5_1_11_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_11_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Panels
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/_slave_lock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels._slave_lock
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/compressor_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.compressor_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/delay_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.delay_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/gate_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.gate_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/peq_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.peq_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/placeholder_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.placeholder_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/xover_panel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels.xover_panel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_12" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/minidspqt/widgets/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Widgets
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_1_12" id="__nav_5_1_12_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_1_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Widgets
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/compressor_graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.compressor_graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/delay_graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.delay_graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/freq_response_graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.freq_response_graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/gain_indicator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.gain_indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/gate_graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.gate_graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/led_indicator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.led_indicator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/level_meter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.level_meter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/param_knob/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.param_knob
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/peq_graph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.peq_graph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/routing_matrix/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.routing_matrix
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/widgets/toggle_button/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.widgets.toggle_button
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#starting-the-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting the Application
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#home-view-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Home View Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-strips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Strips
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Strips">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gain-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gain Knob
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#level-meter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Level Meter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limiter-indicator-outputs-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limiter Indicator (Outputs Only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toggle-buttons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Buttons
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Toggle Buttons">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gain-indicator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gain indicator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#feature-toggles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feature toggles
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#channel-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked Channels
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-detail-view" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Detail View
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Detail View">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gate-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate Panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#peq-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PEQ Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PEQ Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-band-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-band controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#channel-wide-bypass" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel-wide bypass
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frequency-response-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#peq-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "PEQ active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crossover-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossover Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Crossover Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-filter-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-filter controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shared-frequency-response-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xover-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Xover active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compressor-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compressor Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compressor Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transfer-function-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transfer-function graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compressor-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Compressor active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked-channel sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delay Panel
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Delay Panel">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-single-edit-knob" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The single edit knob
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-overview-graph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The overview graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delay-active-indicator-on-the-output-strip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Delay active" indicator on the output strip
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-sync_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked-channel sync
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset-to-factory-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reset to Factory Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#routing-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Routing Matrix
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Routing Matrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding a Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removing-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removing a Route
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#visual-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#preset-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Preset Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#recalling-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recalling a Preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#storing-a-preset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storing a Preset
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#offline-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Offline Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switching-modes-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switching modes at runtime
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unt-preset-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        .unt Preset Files
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=".unt Preset Files">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loading-a-unt-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading a .unt File
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#saving-a-unt-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving a .unt File
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#menu" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Menu
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#channel-linking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Channel Linking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Channel Linking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-read-the-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to read the matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#forbidden-actions-are-greyed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forbidden actions are greyed out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#apply-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Apply behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#behind-the-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behind the scenes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#copy-channel-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Copy Channel Settings
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Copy Channel Settings">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channels_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked channels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-tone-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Test Tone Generator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Test Tone Generator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#waveform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Waveform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sine-frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sine Frequency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#starting-and-stopping-the-generator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Starting and stopping the generator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#persistence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#device-lock-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device Lock / PIN
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Device Lock / PIN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-counts-as-a-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What counts as a PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unlock-prompt-entering-a-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unlock prompt — entering a PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setting-a-new-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setting a new PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#offline-mode-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Offline mode behaviour
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recovery-if-you-forget-the-pin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recovery if you forget the PIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#themes-light-dark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes (light / dark)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Themes (light / dark)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#choosing-a-theme" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a theme
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes-on-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes on Linux
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USB Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#disconnected-status-and-controls-are-greyed-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Disconnected" status and controls are greyed out
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#application-crashes-on-startup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Application crashes on startup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controls-dont-update-the-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controls don't update the device
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linked-channel-controls-are-disabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked channel controls are disabled
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#level-meters-show-no-activity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Level meters show no activity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keyboard-shortcuts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keyboard Shortcuts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="dsp-4x4-mini-user-guide">DSP 4x4 Mini — User Guide<a class="headerlink" href="#dsp-4x4-mini-user-guide" title="Permanent link">&para;</a></h1>
+<p>Qt graphical interface for the <strong>t.racks DSP 4x4 Mini</strong> audio processor.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<p>See the <a href="../#installation"><strong>Installation</strong></a> section of the README for the two supported install methods — the prebuilt <strong>AppImage</strong> (recommended) or the <strong>pip</strong> release wheel. A t.racks DSP 4x4 Mini connected via USB is required, or use <a href="#offline-mode">offline mode</a> to explore without hardware.</p>
+<p>To run from source for development, see the <a href="../development/">Development Guide</a>.</p>
+<hr />
+<h2 id="starting-the-application">Starting the Application<a class="headerlink" href="#starting-the-application" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>minidspqt<span class="w">              </span><span class="c1"># connect to hardware (default logging)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>minidspqt<span class="w"> </span>-v<span class="w">           </span><span class="c1"># info-level logging</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>minidspqt<span class="w"> </span>-vv<span class="w">          </span><span class="c1"># debug-level logging (USB frame traces)</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>minidspqt<span class="w"> </span>--offline<span class="w">    </span><span class="c1"># virtual DSP, no hardware needed</span>
+</code></pre></div>
+<p>On launch the application attempts to open the DSP via <code>/dev/hidraw*</code>. If the device is found, it reads the full configuration (preset data, channel names, gain, routing, mute/phase state) and populates all controls. Level meters begin updating at ~150 ms intervals.</p>
+<p>If no device is found, the UI shows <strong>Disconnected</strong> and all controls are disabled. The application will auto-retry every 2 seconds.</p>
+<hr />
+<h2 id="home-view-layout">Home View Layout<a class="headerlink" href="#home-view-layout" title="Permanent link">&para;</a></h2>
+<p>The main window is divided into three columns:</p>
+<p><img alt="Home view" src="../img/home-view.png" /></p>
+<ul>
+<li><strong>Left column</strong> — 4 input channel strips (InA through InD)</li>
+<li><strong>Center</strong> — interactive 4x4 routing matrix</li>
+<li><strong>Right column</strong> — 4 output channel strips (Out1 through Out4)</li>
+<li><strong>Bottom bar</strong> — current preset name, Recall and Store buttons</li>
+</ul>
+<hr />
+<h2 id="channel-strips">Channel Strips<a class="headerlink" href="#channel-strips" title="Permanent link">&para;</a></h2>
+<p>Each of the 8 channels (4 inputs, 4 outputs) has an identical strip layout:</p>
+<p><img alt="Input strip" src="../img/channel-strip-in.png" /></p>
+<p><img alt="Output strip" src="../img/channel-strip-out.png" /></p>
+<h3 id="gain-knob">Gain Knob<a class="headerlink" href="#gain-knob" title="Permanent link">&para;</a></h3>
+<p>The rotary dial controls channel gain from <strong>-60 dB</strong> to <strong>+12 dB</strong>. Internally this maps to raw values 0–400 with dual resolution: coarse steps (0.5 dB) below -20 dB and fine steps (0.1 dB) above.</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Click and drag</strong> vertically</td>
+<td>Adjust gain — drag up to increase, down to decrease</td>
+</tr>
+<tr>
+<td><strong>Ctrl + click and drag</strong></td>
+<td>Fast-adjust — each pixel of drag moves ~2 % of the knob's range instead of ±1 raw unit</td>
+</tr>
+<tr>
+<td><strong>Scroll wheel</strong></td>
+<td>Step gain by ±1 raw unit (0.1 dB)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + scroll wheel</strong></td>
+<td>Step by a range-adaptive amount (~2 % of the total range, minimum 3 raw units). Useful for large-range knobs like Delay (0 – 680 ms) where normal scroll is too slow</td>
+</tr>
+<tr>
+<td><strong>Arrow keys</strong> (Up/Right, Down/Left)</td>
+<td>Step gain by ±1 raw unit (0.1 dB)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + arrow keys</strong></td>
+<td>Step by the same range-adaptive amount as Ctrl + scroll</td>
+</tr>
+<tr>
+<td><strong>Click the dB label</strong></td>
+<td>Enter an exact dB value via keyboard. Press Enter to apply. Accepts formats like <code>+3.5</code>, <code>-20</code>, <code>-inf</code></td>
+</tr>
+<tr>
+<td><strong>Double-click</strong> on the knob</td>
+<td>Reset to the default value (e.g., 0 dB for gain)</td>
+</tr>
+</tbody>
+</table>
+<p>The arc fills with blue as gain increases from minimum to maximum. The needle indicator shows the current position.</p>
+<h3 id="level-meter">Level Meter<a class="headerlink" href="#level-meter" title="Permanent link">&para;</a></h3>
+<p>Each channel has a horizontal LED-style level meter with 20 segments:</p>
+<ul>
+<li><strong>Green</strong> (15 segments): -50 dB to 0 dB</li>
+<li><strong>Yellow</strong> (4 segments): 0 dB to +15 dB</li>
+<li><strong>Red</strong> (1 segment): clip indicator (+15 dB)</li>
+</ul>
+<p>A white peak-hold marker tracks the highest recent level and decays slowly (~1.5 s half-life). The numeric readout below the meter shows the peak-held dB value with ~1 s hold before decay.</p>
+<h3 id="limiter-indicator-outputs-only">Limiter Indicator (Outputs Only)<a class="headerlink" href="#limiter-indicator-outputs-only" title="Permanent link">&para;</a></h3>
+<p>Output channel strips display a small red LED labeled <strong>Lim</strong> to the right of the dB readout. This indicator lights up when the compressor/limiter on that output channel is actively limiting the signal. The data comes from the device's <code>limiter_mask</code> bitmask in the level polling response (~150 ms update rate). The LED tracks the displayed channel in both the home view (all four output strips simultaneously) and the channel detail view's header strip.</p>
+<table>
+<thead>
+<tr>
+<th>LED State</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dim (dark red)</td>
+<td>Limiter inactive — signal is below the compressor threshold</td>
+</tr>
+<tr>
+<td>Bright red</td>
+<td>Limiter active — the compressor is attenuating the signal</td>
+</tr>
+</tbody>
+</table>
+<h3 id="toggle-buttons">Toggle Buttons<a class="headerlink" href="#toggle-buttons" title="Permanent link">&para;</a></h3>
+<p>The toggle buttons are arranged in <strong>DSP signal-chain order</strong> — left to right matches the actual processing pipeline inside the device:</p>
+<table>
+<thead>
+<tr>
+<th>Channel type</th>
+<th>Signal chain (left → right)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Input</strong></td>
+<td><strong>Gain</strong> → Gate → Phase → Mute</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td>Xover → PEQ → <strong>Gain</strong> → Comp → Phase → Delay → Mute</td>
+</tr>
+</tbody>
+</table>
+<h4 id="gain-indicator">Gain indicator<a class="headerlink" href="#gain-indicator" title="Permanent link">&para;</a></h4>
+<p>The <strong>Gain</strong> button is a <em>position marker</em>, not a toggle — it shows where the gain knob sits in the signal chain. It has a distinct muted style (solid border, no fill) so you can tell it apart from the real toggles at a glance. Clicking it briefly flashes the gain knob's arc so you can quickly locate the control.</p>
+<h4 id="feature-toggles">Feature toggles<a class="headerlink" href="#feature-toggles" title="Permanent link">&para;</a></h4>
+<p>The remaining buttons are color-coded per feature:</p>
+<table>
+<thead>
+<tr>
+<th>Button</th>
+<th>Accent color</th>
+<th>Input</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gate</strong></td>
+<td>Green</td>
+<td>Yes</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td>Gold</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Mute</strong></td>
+<td>Red</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Xover</strong></td>
+<td>Amber</td>
+<td>—</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>PEQ</strong></td>
+<td>Purple</td>
+<td>—</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Comp</strong></td>
+<td>Teal</td>
+<td>—</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>Delay</strong></td>
+<td>Light blue</td>
+<td>—</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>Click a button to toggle the feature on/off. When <strong>off</strong> the button paints its accent color on the <strong>border and text</strong> (outlined look). When <strong>on</strong> the button fills with the same accent.</p>
+<p>Two of the buttons act as <strong>navigation buttons</strong> rather than stateful toggles — they open the <a href="#channel-detail-view">channel detail view</a> and immediately un-check themselves:</p>
+<ul>
+<li><strong>Gate</strong> (input strips) opens the Gate panel. The button fills green whenever the gate is "armed" (threshold above the noise floor), regardless of whether the detail view is open.</li>
+<li><strong>PEQ</strong> (output strips) opens the PEQ panel. The button fills purple whenever any band has non-zero gain and is not bypassed (and channel-bypass is off).</li>
+<li><strong>Xover</strong> (output strips) opens the Crossover panel. The button fills amber whenever either the hi-pass or lo-pass filter is not bypassed.</li>
+<li><strong>Comp</strong> (output strips) opens the Compressor panel. The button fills teal whenever the compressor's ratio is anything other than 1:1.0.</li>
+<li><strong>Delay</strong> (output strips) opens the Delay panel. The button fills light blue whenever the output's delay is non-zero.</li>
+</ul>
+<h3 id="channel-names">Channel Names<a class="headerlink" href="#channel-names" title="Permanent link">&para;</a></h3>
+<p>Click the channel name button at the top of any strip to rename it. A dialog appears where you can type a new name (up to 8 characters). Press OK to apply — the name is immediately sent to the device.</p>
+<h3 id="linked-channels">Linked Channels<a class="headerlink" href="#linked-channels" title="Permanent link">&para;</a></h3>
+<p>When channels are linked on the device (e.g., stereo pair), both the <strong>master</strong> and <strong>slave</strong> channels display a chain icon (🔗) in the title row:</p>
+<ul>
+<li><strong>Master</strong> — tooltip reads <em>"Master of Out1, Out2"</em></li>
+<li><strong>Slave</strong> — controls (gain knob and toggles) are disabled; tooltip reads <em>"Linked to Out1"</em></li>
+</ul>
+<p>Adjusting the master channel automatically updates all linked slaves.</p>
+<p>To <strong>edit</strong> which channels are linked, open <strong>Menu ≡ → Channel linking…</strong> (see <a href="#channel-linking">Channel Linking</a>).</p>
+<hr />
+<h2 id="channel-detail-view">Channel Detail View<a class="headerlink" href="#channel-detail-view" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>Gate</strong> button on an input strip — or the <strong>PEQ</strong> / <strong>Xover</strong> / <strong>Comp</strong> / <strong>Delay</strong> button on an output strip — in the home view to open the channel detail view:</p>
+<p><img alt="Channel detail view" src="../img/channel-detail-view-xover.png" /></p>
+<p>Layout:</p>
+<ul>
+<li><strong>Header</strong> — back arrow, title (<code>&lt;feature&gt; — &lt;channel name&gt;</code>), connection badge, menu</li>
+<li><strong>Channel navigation</strong> — buttons for all 4 inputs (left) and 4 outputs (right). Switching channels updates the strip and the feature panel without leaving the detail view. The active feature is preserved across channel switches when valid for the new channel type (e.g. moving Out1 → Out2 keeps you on the PEQ panel; moving Out1 → InA falls back to Gate)</li>
+<li><strong>Channel strip</strong> — same widget as on the home view, kept synchronised with all gain / mute / phase / name edits</li>
+<li><strong>Routed meters</strong> — when an input is selected, vertical meters for every output it routes to appear on the right; when an output is selected, meters for every input feeding it appear on the left</li>
+<li><strong>Feature panel</strong> — the <strong>Gate</strong> panel for input channels, the <strong>PEQ</strong>, <strong>Crossover</strong>, <strong>Compressor</strong>, or <strong>Delay</strong> panel for output channels, or a <strong>placeholder</strong> ("This feature is not available for this channel") when the active feature doesn't apply to the selected channel type</li>
+</ul>
+<p>Press <strong>←</strong> in the header to return to the home view.</p>
+<h3 id="gate-panel">Gate Panel<a class="headerlink" href="#gate-panel" title="Permanent link">&para;</a></h3>
+<p>The Gate panel exposes the four parameters of the per-input noise gate. All four are sent to the device atomically every time any one of them changes (the firmware command for the gate is monolithic).</p>
+<table>
+<thead>
+<tr>
+<th>Knob</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Threshold</strong></td>
+<td>-89.5 dB to 0 dB</td>
+<td>Click the value below the knob to type an exact dB value</td>
+</tr>
+<tr>
+<td><strong>Attack</strong></td>
+<td>1 ms to 999 ms</td>
+<td>Time constant for the gate opening</td>
+</tr>
+<tr>
+<td><strong>Hold</strong></td>
+<td>10 ms to 999 ms</td>
+<td>Time the gate stays open after the signal drops below threshold</td>
+</tr>
+<tr>
+<td><strong>Release</strong></td>
+<td>1 ms to 3000 ms</td>
+<td>Time constant for the gate closing</td>
+</tr>
+</tbody>
+</table>
+<p>The transfer-function graph next to the knobs shows input level (x-axis) versus output level (y-axis), with the threshold marker as a vertical dashed line. Below the threshold the gate is closed (signal cut to the noise floor); above it the gate passes the signal at unity gain. Only the threshold parameter affects the static graph — attack, hold, and release are time-domain parameters with no static representation.</p>
+<p>The gate icon on the input channel strip shows green ("armed") whenever the threshold is above the very lowest setting, regardless of whether the detail view is open.</p>
+<h3 id="peq-panel">PEQ Panel<a class="headerlink" href="#peq-panel" title="Permanent link">&para;</a></h3>
+<p>The PEQ panel exposes the 7-band parametric EQ that lives on each output channel. The layout mirrors the t.racks editor: a frequency-response graph at the top showing the summed magnitude across all bands, then 7 columns of per-band controls below.</p>
+<p><img alt="PEQ panel" src="../img/peq-panel.png" /></p>
+<h4 id="per-band-controls">Per-band controls<a class="headerlink" href="#per-band-controls" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Type</strong></td>
+<td>7 filter types</td>
+<td>Peak, Low Shelf, High Shelf, Low Pass, High Pass, AP1 (1st-order allpass), AP2 (2nd-order allpass)</td>
+</tr>
+<tr>
+<td><strong>Freq</strong></td>
+<td>19.7 Hz – 20.16 kHz</td>
+<td>Log-scaled raw 0–300; sub-1 kHz values shown with one decimal (e.g. <code>300.8 Hz</code>) to match the original editor; ≥ 1 kHz shown as kHz with two decimals (<code>5.00 kHz</code>)</td>
+</tr>
+<tr>
+<td><strong>Gain</strong></td>
+<td>−12.0 dB to +12.0 dB</td>
+<td>0.1 dB step; affects Peak / Low Shelf / High Shelf only — for pass and allpass filters the gain knob has no effect on the response</td>
+</tr>
+<tr>
+<td><strong>Q</strong></td>
+<td>0.40 – 128</td>
+<td>Logarithmic scale; <strong>shelves and pass filters are capped at Q = 3.0</strong> (raw 35) per the official editor — switching the type combo to a shelf or pass automatically clamps Q if it was higher; switching back to Peak does <em>not</em> restore the previous higher Q</td>
+</tr>
+<tr>
+<td><strong>Byp</strong></td>
+<td>toggle</td>
+<td>Bypasses <em>that</em> band only — the other 6 keep working</td>
+</tr>
+</tbody>
+</table>
+<p>Each control fires the band's parameters atomically: changing any one of the five widgets sends the full band over USB (protocol command <code>0x33</code>). All seven bands coalesce independently in the device thread, so dragging Q on band 3 doesn't compete with edits to band 1.</p>
+<h4 id="channel-wide-bypass">Channel-wide bypass<a class="headerlink" href="#channel-wide-bypass" title="Permanent link">&para;</a></h4>
+<p>The <strong>Bypass</strong> toggle in the panel header bypasses the entire PEQ block for this output (protocol command <code>0x3C</code>). Per-band edits remain editable while bypass is engaged — flip it off and your settings come back exactly as they were.</p>
+<h4 id="frequency-response-graph">Frequency-response graph<a class="headerlink" href="#frequency-response-graph" title="Permanent link">&para;</a></h4>
+<p>The graph plots the summed magnitude response of all seven bands at 256 log-spaced frequencies between 10 Hz and 25 kHz. Coefficients are computed locally from the raw protocol values using the Audio EQ Cookbook (RBJ) biquad formulas, evaluated at the device's 48 kHz internal sample rate so the displayed curve matches what the hardware actually produces.</p>
+<ul>
+<li><strong>Markers</strong> — small numbered circles at each band's centre frequency (<code>1</code>..<code>7</code>). Active bands are green; band-bypassed or channel-bypassed bands are dim grey.</li>
+<li><strong>Channel-bypass visualisation</strong> — when the channel-wide bypass is engaged the curve renders as a flat 0 dB line at reduced opacity, while the per-band controls remain editable.</li>
+</ul>
+<p>The graph is <em>display-only</em> in this version — drag-to-edit on the markers is not yet supported. Edit values in the controls below.</p>
+<h4 id="peq-active-indicator-on-the-output-strip">"PEQ active" indicator on the output strip<a class="headerlink" href="#peq-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
+<p>The PEQ button on the output channel strip lights up purple whenever the channel's PEQ is shaping the signal, defined as: <strong>at least one band has gain ≠ 0 dB AND is not bypassed AND the channel-wide bypass is off</strong>. The state updates live as you drag knobs and toggle bypasses, on both the home view and the detail view's strip header.</p>
+<h3 id="crossover-panel">Crossover Panel<a class="headerlink" href="#crossover-panel" title="Permanent link">&para;</a></h3>
+<p>The Crossover panel exposes the hi-pass and lo-pass filters on each output channel. Each filter has three controls:</p>
+<p><img alt="Crossover panel" src="../img/crossover-panel.png" /></p>
+<h4 id="per-filter-controls">Per-filter controls<a class="headerlink" href="#per-filter-controls" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Frequency knob</strong></td>
+<td>19.7 Hz – 20.16 kHz</td>
+<td>Log-scaled, same encoding as PEQ frequency</td>
+</tr>
+<tr>
+<td><strong>Slope selector</strong></td>
+<td>9 slope types</td>
+<td>BW 6, BL 6, BW 12, BL 12, LR 12, BW 18, BL 18, BW 24, BL 24, LR 24</td>
+</tr>
+<tr>
+<td><strong>Bypass toggle</strong></td>
+<td>On/Off</td>
+<td>Bypasses that filter independently. When bypassed, the slope selector still shows the last-used slope (or LR-24 by default), so un-bypassing re-activates with the correct setting</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Important:</strong> The device <strong>forgets</strong> the slope value when a filter is bypassed. The application tracks the last-active slope and re-sends it when you un-bypass. If the application is restarted while a filter is bypassed, the slope defaults to <strong>LR-24</strong> (the device default).</p>
+</blockquote>
+<h4 id="shared-frequency-response-graph">Shared frequency-response graph<a class="headerlink" href="#shared-frequency-response-graph" title="Permanent link">&para;</a></h4>
+<p>Both the <strong>Crossover</strong> and <strong>PEQ</strong> panels share a combined frequency-response graph that shows the <strong>summed crossover + PEQ magnitude response</strong>. Editing a crossover filter updates the graph on both panels, and vice versa. The graph uses local biquad coefficient math (Audio EQ Cookbook / RBJ) for both the crossover filters (cascaded 2nd-order Butterworth / Bessel / Linkwitz-Riley sections) and the PEQ bands.</p>
+<ul>
+<li><strong>PEQ band markers</strong> — numbered circles (<code>1</code>..<code>7</code>) at each band's centre frequency</li>
+<li><strong>Crossover markers</strong> — blue triangles labeled <code>HP</code> / <code>LP</code> at the respective cutoff frequencies</li>
+</ul>
+<h4 id="xover-active-indicator-on-the-output-strip">"Xover active" indicator on the output strip<a class="headerlink" href="#xover-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
+<p>The Xover button on the output channel strip lights up amber whenever <strong>either</strong> the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.</p>
+<h3 id="compressor-panel">Compressor Panel<a class="headerlink" href="#compressor-panel" title="Permanent link">&para;</a></h3>
+<p>The Compressor panel exposes the per-output dynamics processor. The hardware sends all five compressor parameters in a single atomic frame (protocol command <code>0x30</code>), so a change to any one knob re-emits the full block — there is no per-parameter coalescing for the compressor.</p>
+<p><img alt="Compressor panel" src="../img/compressor-panel.png" /></p>
+<h4 id="controls">Controls<a class="headerlink" href="#controls" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Threshold</strong></td>
+<td>−90.0 dB to +20.0 dB</td>
+<td>0.5 dB step. Click the value below the knob to type an exact dB value</td>
+</tr>
+<tr>
+<td><strong>Ratio</strong></td>
+<td>16 named ratios</td>
+<td><code>1:1.0</code> (no compression), <code>1:1.1</code>, <code>1:1.3</code>, <code>1:1.5</code>, <code>1:1.7</code>, <code>1:2.0</code>, <code>1:2.5</code>, <code>1:3.0</code>, <code>1:3.5</code>, <code>1:4.0</code>, <code>1:5.0</code>, <code>1:6.0</code>, <code>1:8.0</code>, <code>1:10.0</code>, <code>1:20.0</code>, <code>Limit</code> (hard limiter; clamps output at the threshold). Selected via a drop-down combo for parity with the PEQ / Crossover type selectors</td>
+</tr>
+<tr>
+<td><strong>Knee</strong></td>
+<td>0 – 12 dB</td>
+<td>0 = hard knee (instant break at threshold); higher values smooth the elbow symmetrically around the threshold</td>
+</tr>
+<tr>
+<td><strong>Attack</strong></td>
+<td>1 – 999 ms</td>
+<td>Time constant for engaging compression once the input exceeds the threshold</td>
+</tr>
+<tr>
+<td><strong>Release</strong></td>
+<td>10 – 3000 ms</td>
+<td>Time constant for releasing compression after the input falls back below the threshold</td>
+</tr>
+</tbody>
+</table>
+<h4 id="transfer-function-graph">Transfer-function graph<a class="headerlink" href="#transfer-function-graph" title="Permanent link">&para;</a></h4>
+<p>The graph plots <strong>input level (dB) → output level (dB)</strong> over the full −90..+20 dB range with grid lines and labels every 20 dB. Three reference layers are drawn:</p>
+<ul>
+<li><strong>Dashed 45° diagonal</strong> — the no-compression baseline; the curve sits on this line for inputs below the threshold minus half the knee width</li>
+<li><strong>Solid curve</strong> — the compressor's static transfer function, computed locally from the current threshold / ratio / knee values. Above the threshold + half-knee the slope is <code>1/ratio</code>; inside the knee window the elbow is smoothed quadratically. <code>Limit</code> flattens the curve to a horizontal line at the threshold</li>
+<li><strong>Vertical dashed marker</strong> — the current threshold, labelled with the dB value</li>
+</ul>
+<p>Attack and release are time-domain parameters and have no effect on the static curve — only threshold, ratio, and knee reshape the graph.</p>
+<h4 id="compressor-active-indicator-on-the-output-strip">"Compressor active" indicator on the output strip<a class="headerlink" href="#compressor-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
+<p>The Comp button on the output channel strip lights up teal whenever the ratio is anything other than <strong>1:1.0</strong> (i.e., the device is at least nominally compressing). The indicator hue matches the button's brand colour — only the fill changes, never the colour.</p>
+<h4 id="linked-channel-sync">Linked-channel sync<a class="headerlink" href="#linked-channel-sync" title="Permanent link">&para;</a></h4>
+<p>The hardware copies a master channel's compressor settings to its slaves internally but emits no telemetry for that copy. The application mirrors the master-to-slave fan-out on every live edit: a change to the master's Threshold / Ratio / Knee / Attack / Release re-emits the full block to every linked slave, both in the on-screen model and on the wire. When the detail view shows a slave channel, the Compressor panel locks (all five controls disabled) and a <code>🔗 Linked to &lt;master&gt; — read-only</code> banner appears above the panel.</p>
+<h3 id="delay-panel">Delay Panel<a class="headerlink" href="#delay-panel" title="Permanent link">&para;</a></h3>
+<p>The Delay panel exposes the per-output digital delay (0 – 680 ms, stored on the device as 0 – 32 640 samples @ 48 kHz, protocol command <code>0x38</code>).</p>
+<p>Each output only has a single delay parameter, so a per-channel panel would feel sparse. Instead the panel shows <strong>all four outputs at once</strong> in an overview graph and provides a single edit knob bound to the <strong>currently displayed</strong> output. To edit a different output, navigate to that channel's strip — the same panel re-targets without reloading.</p>
+<p><img alt="Delay panel" src="../img/delay-panel.png" /></p>
+<h4 id="the-single-edit-knob">The single edit knob<a class="headerlink" href="#the-single-edit-knob" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Range</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Delay</strong></td>
+<td>0 – 680 ms (0 – 32 640 samples)</td>
+<td>Sub-millisecond resolution (1 sample ≈ 0.021 ms). Click the value below the knob to type an exact value — <code>"12.5 ms"</code> snaps to the nearest sample, <code>"601 sa"</code> / <code>"601 samples"</code> sets the raw sample count directly. The label above the knob shows which output is currently active (e.g. <code>Out3</code>); navigating to a different output strip retargets the knob to that channel</td>
+</tr>
+</tbody>
+</table>
+<h4 id="the-overview-graph">The overview graph<a class="headerlink" href="#the-overview-graph" title="Permanent link">&para;</a></h4>
+<p>The graph plots <strong>delay in ms</strong> as horizontal bars, one row per output. Bar fill is the same light-blue brand hue as the Delay button on the channel strip; the inactive rows are drawn with a translucent variant so the active row stays visually dominant.</p>
+<p>The <strong>x-axis auto-scales</strong> to keep small delays legible: the upper bound snaps to the next 20 ms above the largest active delay (defaulting to 0 – 20 ms when every output is at 0 ms and clamping at the 680 ms protocol maximum). Tick spacing is 20 ms up to a 100 ms range — fine enough for sub-/satellite alignment work — and switches to 100 ms above to avoid crowded labels at full range.</p>
+<p>The active row is highlighted with a <strong>bold label</strong> and a <strong>dashed outline</strong> so it's clear which bar the knob below drives.</p>
+<h4 id="delay-active-indicator-on-the-output-strip">"Delay active" indicator on the output strip<a class="headerlink" href="#delay-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
+<p>The Delay button on the output channel strip lights up light blue whenever the corresponding output's delay is non-zero. Like the other feature indicators, the fill uses the same hue as the button's <code>:checked</code> colour — only the state changes, never the hue.</p>
+<h4 id="linked-channel-sync_1">Linked-channel sync<a class="headerlink" href="#linked-channel-sync_1" title="Permanent link">&para;</a></h4>
+<p>When two or more outputs are linked, editing the master's delay mirrors the new value to every linked slave in the on-screen model and re-emits a <code>set_delay</code> for each affected channel. The overview graph reflects the mirrored values immediately — even when the user is navigated to a slave's strip — because the graph shows all four outputs regardless of which one is "active". When the displayed channel is a slave, the edit knob is disabled and the standard <code>🔗 Linked to &lt;master&gt; — read-only</code> banner appears above the panel; the graph stays visible so the user can still see the inherited delay.</p>
+<h3 id="reset-to-factory-defaults">Reset to Factory Defaults<a class="headerlink" href="#reset-to-factory-defaults" title="Permanent link">&para;</a></h3>
+<p>Every feature panel (Gate, PEQ, Crossover, Compressor, Delay) has a <strong>Reset</strong> button at the right edge of its header. Clicking it pops a confirmation dialog (<code>Reset &lt;feature&gt; to factory defaults for this channel?</code>); on <strong>Yes</strong>, that feature's parameters on the <strong>currently displayed channel</strong> (and any linked slaves) snap back to the F00 factory preset values for that feature alone — no other channels or other features are touched.</p>
+<p>The defaults are read live from <code>minidsp.defaults.load_factory_defaults()</code> in the protocol library (parsed from the bundled <code>factory_defaults.toml</code>), so the values stay in sync with whatever the firmware considers "blank":</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Reset returns to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gate</strong></td>
+<td>Threshold −90 dB (gate off), Attack 50 ms, Hold 100 ms, Release 500 ms</td>
+</tr>
+<tr>
+<td><strong>PEQ</strong></td>
+<td>All 7 bands: 0 dB gain, Q ≈ 1.0, Peak type, not bypassed, frequencies spread across the audible range; channel bypass off</td>
+</tr>
+<tr>
+<td><strong>Crossover</strong></td>
+<td>Hi-Pass and Lo-Pass both bypassed (slope = Off); freq markers reset to 19.7 Hz / 20.16 kHz</td>
+</tr>
+<tr>
+<td><strong>Compressor</strong></td>
+<td>Ratio 1:1.0 (no compression), Knee 0 dB, Attack 50 ms, Release 500 ms, Threshold +20 dB</td>
+</tr>
+<tr>
+<td><strong>Delay</strong></td>
+<td>0 ms (0 samples) on the displayed output only — the other three rows in the overview graph are untouched</td>
+</tr>
+</tbody>
+</table>
+<p>The Reset button reaches the device through the normal edit path — the same <code>mutate_with_links</code> fan-out, the same atomic protocol frames — so undoing a reset is simply a matter of re-editing the affected knobs. Linked slaves receive the same reset automatically when their master is reset; resetting a feature on a slave is not possible because the Reset button is disabled on slave channels (consistent with every other interactive control: slaves are read-only mirrors of their master).</p>
+<hr />
+<h2 id="routing-matrix">Routing Matrix<a class="headerlink" href="#routing-matrix" title="Permanent link">&para;</a></h2>
+<p>The routing matrix in the center of the home view shows which inputs are routed to which outputs. It's a 4×4 grid where each input (left side) can be connected to one or more outputs (right side).</p>
+<p>Active connections are drawn as blue lines between input and output nodes. A single output can receive a mix of multiple inputs — each output stores a bitmask of its connected inputs.</p>
+<h3 id="adding-a-route">Adding a Route<a class="headerlink" href="#adding-a-route" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Click and hold</strong> on an input node (left side circle)</li>
+<li><strong>Drag</strong> toward the target output node (right side circle)</li>
+<li>A dashed preview line follows your cursor</li>
+<li><strong>Release</strong> on an output node to connect</li>
+</ol>
+<p>The input is OR-ed into the output's routing mask. If the output already had that input routed, nothing changes.</p>
+<h3 id="removing-a-route">Removing a Route<a class="headerlink" href="#removing-a-route" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Double-click</strong> near an existing connection line</li>
+<li>The closest connection is removed</li>
+</ol>
+<p>The hit detection works within ~8 pixels of the line. The cursor changes to a pointing hand when hovering over nodes or connection lines.</p>
+<h3 id="visual-feedback">Visual Feedback<a class="headerlink" href="#visual-feedback" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Appearance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active connection</td>
+<td>Solid blue line</td>
+</tr>
+<tr>
+<td>Drag preview</td>
+<td>Dashed light-blue line</td>
+</tr>
+<tr>
+<td>Hovered node</td>
+<td>Blue highlight glow</td>
+</tr>
+<tr>
+<td>Hovered connection line</td>
+<td>Pointer cursor</td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Routing</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InA → Out1, InB → Out2, InC → Out3, InD → Out4</td>
+<td>Default 1:1 diagonal routing</td>
+</tr>
+<tr>
+<td>InA → Out1 + Out2</td>
+<td>Mono input split to two outputs</td>
+</tr>
+<tr>
+<td>InA + InB → Out1</td>
+<td>Two inputs summed into one output</td>
+</tr>
+<tr>
+<td>(none)</td>
+<td>Output silenced (no input routed)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="preset-management">Preset Management<a class="headerlink" href="#preset-management" title="Permanent link">&para;</a></h2>
+<p>The DSP 4x4 Mini stores 1 factory preset (F00) and 30 user presets (U01–U30). Presets are saved in flash memory and persist across power cycles.</p>
+<h3 id="recalling-a-preset">Recalling a Preset<a class="headerlink" href="#recalling-a-preset" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click <strong>Recall</strong> in the bottom bar</li>
+<li>The preset picker dialog appears listing all available presets</li>
+<li>Factory (F00) is always available; empty user slots are greyed out</li>
+<li>Select a preset and click <strong>Recall</strong></li>
+<li>The device loads the preset and the UI updates to reflect all settings</li>
+</ol>
+<h3 id="storing-a-preset">Storing a Preset<a class="headerlink" href="#storing-a-preset" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click <strong>Store</strong> in the bottom bar</li>
+<li>The preset picker dialog appears in store mode</li>
+<li>Factory (F00) is disabled (cannot overwrite)</li>
+<li>Select a user slot (U01–U30) — you can overwrite existing presets</li>
+<li>Enter a name (up to 14 characters) in the name field</li>
+<li>Click <strong>Store</strong></li>
+<li>A confirmation dialog appears — confirm to write to flash</li>
+</ol>
+<blockquote>
+<p><strong>Warning:</strong> Storing a preset writes to the device's flash memory. This operation takes ~2 seconds during which the device is busy. Existing data in the target slot is overwritten.</p>
+</blockquote>
+<hr />
+<h2 id="offline-mode">Offline Mode<a class="headerlink" href="#offline-mode" title="Permanent link">&para;</a></h2>
+<p>You can enter offline mode in two ways:</p>
+<p><strong>At launch</strong> — pass the <code>--offline</code> flag:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>minidspqt<span class="w"> </span>--offline
+</code></pre></div>
+<p><strong>At runtime</strong> — open the menu (≡), choose <strong>Connection mode → Offline</strong>. The two radio items (<code>Connected (USB)</code> / <code>Offline</code>) are mutually exclusive and reflect the current mode.</p>
+<p>In offline mode:</p>
+<ul>
+<li>An in-RAM virtual DSP simulates the hardware</li>
+<li>All controls (gain, mute, phase, routing) are fully functional</li>
+<li>Level meters are idle (no audio signal)</li>
+<li>The status badge shows <strong>Offline</strong> (amber)</li>
+<li>You can load and save <code>.unt</code> preset files</li>
+</ul>
+<p>This is useful for designing presets on the go, testing configurations, or exploring the UI without a device connected.</p>
+<h3 id="switching-modes-at-runtime">Switching modes at runtime<a class="headerlink" href="#switching-modes-at-runtime" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Connected → Offline</strong> carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to <code>.unt</code> without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP is seeded from the bundled <code>blank.unt</code> template instead.</li>
+<li><strong>Offline → Connected</strong> prompts a confirmation first: switching back discards any unsaved offline edits. Save your <code>.unt</code> file first if you want to keep them. After confirming, the worker re-attaches to the real USB device exactly as if you had relaunched without <code>--offline</code>.</li>
+<li>The mode choice is <strong>session-only</strong> — restarting the app drops you back into connected mode (unless you pass <code>--offline</code> on the command line).</li>
+</ul>
+<hr />
+<h2 id="unt-preset-files">.unt Preset Files<a class="headerlink" href="#unt-preset-files" title="Permanent link">&para;</a></h2>
+<p>The <code>.unt</code> file format is used by the manufacturer's software. This application can read and write these files, preserving byte-identical data for untouched fields.</p>
+<h3 id="loading-a-unt-file">Loading a .unt File<a class="headerlink" href="#loading-a-unt-file" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Click the <strong>menu button</strong> (≡) in the top-right corner</li>
+<li>Select <strong>Load .unt file...</strong></li>
+<li>Choose a <code>.unt</code> file from the file dialog</li>
+</ol>
+<p><strong>In offline mode:</strong> All 30 preset slots from the file are loaded into the virtual DSP. You can browse and edit any slot.</p>
+<p><strong>With hardware connected (online mode):</strong> The file is loaded as a read-only preview. Controls are disabled, but you can inspect the settings. The status bar shows the filename being previewed.</p>
+<h3 id="saving-a-unt-file">Saving a .unt File<a class="headerlink" href="#saving-a-unt-file" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p>Only available in <strong>offline mode</strong>.</p>
+</blockquote>
+<ol>
+<li>Click the <strong>menu button</strong> (≡)</li>
+<li>Select <strong>Save .unt file...</strong></li>
+<li>Choose a location and filename in the file dialog</li>
+<li>The current state of all 30 virtual preset slots is written to disk</li>
+</ol>
+<p>The saved file is byte-identical to the original for any untouched data, making it safe to round-trip existing <code>.unt</code> files.</p>
+<hr />
+<h2 id="menu">Menu<a class="headerlink" href="#menu" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>menu button</strong> (≡) in the top-right corner of the window:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Load .unt file...</strong></td>
+<td>Import a manufacturer preset file</td>
+</tr>
+<tr>
+<td><strong>Save .unt file...</strong></td>
+<td>Export preset data to a <code>.unt</code> file (offline mode only)</td>
+</tr>
+<tr>
+<td><strong>Channel linking...</strong></td>
+<td>Open the channel-linking dialog (see <a href="#channel-linking">Channel Linking</a>)</td>
+</tr>
+<tr>
+<td><strong>Copy channel settings...</strong></td>
+<td>Copy parameters from one channel to others (see <a href="#copy-channel-settings">Copy Channel Settings</a>)</td>
+</tr>
+<tr>
+<td><strong>Test tone...</strong></td>
+<td>Open the test tone generator dialog (see <a href="#test-tone-generator">Test Tone Generator</a>)</td>
+</tr>
+<tr>
+<td><strong>Set device PIN...</strong></td>
+<td>Set a 4-character lock PIN; the device disconnects after applying (see <a href="#device-lock--pin">Device Lock / PIN</a>). Enabled only while connected</td>
+</tr>
+<tr>
+<td><strong>Reconnect</strong></td>
+<td>Manually re-attach to the device after a disconnect (e.g. after cancelling the unlock prompt). Enabled only while disconnected</td>
+</tr>
+<tr>
+<td><strong>Connection mode ▸</strong></td>
+<td>Submenu — toggle between <strong>Connected (USB)</strong> and <strong>Offline</strong> at runtime (see <a href="#offline-mode">Offline Mode</a>)</td>
+</tr>
+<tr>
+<td><strong>Theme ▸</strong></td>
+<td>Submenu — choose <strong>System</strong>, <strong>Light</strong>, or <strong>Dark</strong> (see <a href="#themes-light--dark">Themes</a>)</td>
+</tr>
+<tr>
+<td><strong>About</strong></td>
+<td>Show version, license, and project information</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="channel-linking">Channel Linking<a class="headerlink" href="#channel-linking" title="Permanent link">&para;</a></h2>
+<p>Linking lets you treat multiple channels as a group: gain, mute, phase, and other strip-level edits made on the <strong>master</strong> channel are mirrored on all of its <strong>slaves</strong>.  Only inputs can be linked together, and only outputs can be linked together — there is no cross-group linking.  The hardware permits up to four channels in a single group per side.</p>
+<p>Open the dialog from <strong>Menu ≡ → Channel linking…</strong>.  It shows two triangular radio-button matrices, one for inputs and one for outputs:</p>
+<p><img alt="Channel linking dialog" src="../img/channel-linking-dialog.png" /></p>
+<h3 id="how-to-read-the-matrix">How to read the matrix<a class="headerlink" href="#how-to-read-the-matrix" title="Permanent link">&para;</a></h3>
+<p>Each row is a channel.  The selected radio in that row is the channel it is <strong>linked to</strong>:</p>
+<ul>
+<li><strong>Diagonal selected</strong> (row N, column N) — the channel is <em>standalone</em> (its own master).  When other channels link to it, it automatically becomes their master.</li>
+<li><strong>Non-diagonal selected</strong> (row N, column M with M &lt; N) — channel N is a <em>slave</em> of channel M.  M holds the master role for the whole group.</li>
+</ul>
+<p>The master is always the <strong>lowest-indexed</strong> channel in any group; that is enforced by the triangular layout (a row can only point to columns to its left).</p>
+<p>The labels reflect your <strong>custom channel names</strong> — if you renamed InB to "Mic 2", the matrix will show "Mic 2".  Below each matrix, a one-line summary per channel reads back the resolved state ("InA: master of InA, InB", "InB: linked to InA", "InC: standalone").</p>
+<h3 id="forbidden-actions-are-greyed-out">Forbidden actions are greyed out<a class="headerlink" href="#forbidden-actions-are-greyed-out" title="Permanent link">&para;</a></h3>
+<p>The dialog enforces two invariants by disabling the radios that would violate them:</p>
+<ol>
+<li><strong>No chains.</strong>  A channel that is already a slave cannot be selected as anyone else's target.  If you want to link InC into InA's group, you must select <strong>InC → InA</strong> directly — <em>not</em> InC → InB.</li>
+<li><strong>A master must be released before it can join another group.</strong>  If InC currently has slaves, its row's non-diagonal radios are disabled.  Free the slaves first (click each slave's diagonal to make it standalone), then re-link InC.</li>
+</ol>
+<p>If a radio is disabled, hover it for a tooltip explaining what the click would mean.</p>
+<h3 id="apply-behaviour">Apply behaviour<a class="headerlink" href="#apply-behaviour" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The dialog is <strong>non-modal</strong> — you can leave it open while you adjust other parts of the UI.</li>
+<li>Click <strong>Apply</strong> to send the new linking to the device.  The dialog stays open, then immediately re-reads the device's authoritative state and updates itself; if the device silently rejected one of your choices, the matrix snaps back to what was actually committed.</li>
+<li>Click <strong>Close</strong> (or press Esc) to dismiss without applying.</li>
+</ul>
+<p>In <strong>offline mode</strong>, Apply mutates the in-memory virtual DSP exactly as the real device would, so loading and saving <code>.unt</code> files round-trips your linking just like any other preset data.</p>
+<h3 id="behind-the-scenes">Behind the scenes<a class="headerlink" href="#behind-the-scenes" title="Permanent link">&para;</a></h3>
+<p>For each new master/slave pair the dialog issues <code>OP_PREPARE_LINK</code> (0x2A) before the matching <code>OP_LINK</code> (0x3B) commits the group; unlinking only needs the second command.  Both opcodes are documented in <a href="https://github.com/IMBArator/miniDSP-Linux/blob/main/analysis/protocol.md"><code>analysis/protocol.md</code></a> of the upstream protocol library.</p>
+<hr />
+<h2 id="copy-channel-settings">Copy Channel Settings<a class="headerlink" href="#copy-channel-settings" title="Permanent link">&para;</a></h2>
+<p>The copy dialog lets you duplicate parameter groups from one channel to one or more channels of the same type. This is useful for quickly matching settings across stereo pairs or replicating a tuned EQ curve to another output.</p>
+<p>Open the dialog from <strong>Menu ≡ → Copy channel settings…</strong>.</p>
+<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Copy from</strong> — select the source channel from all 8 channels (InA–InD, Out1–Out4).</li>
+<li><strong>Parameters to copy</strong> — checkboxes appear based on the source channel type. Check the parameter groups you want to copy.</li>
+<li><strong>Apply to</strong> — target channels of the <strong>same type</strong> as the source (input or output) are listed, excluding the source itself. Check one or more targets.</li>
+<li>Click <strong>Apply</strong> to copy. The device receives all selected parameters, then the UI refreshes.</li>
+</ol>
+<h3 id="parameter-groups">Parameter groups<a class="headerlink" href="#parameter-groups" title="Permanent link">&para;</a></h3>
+<p>The available parameter groups depend on whether the source is an input or output channel:</p>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th style="text-align: center;">Input</th>
+<th style="text-align: center;">Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Name</strong></td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Gain</strong></td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Mute</strong></td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Phase</strong></td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Noise Gate</strong></td>
+<td style="text-align: center;">✓</td>
+<td style="text-align: center;">—</td>
+</tr>
+<tr>
+<td><strong>Routing</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Crossover</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>PEQ</strong> (all 7 bands + channel bypass)</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Compressor</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+</tr>
+<tr>
+<td><strong>Delay</strong></td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">✓</td>
+</tr>
+</tbody>
+</table>
+<p>All parameters are copied as raw protocol values — no unit conversion is needed, so values transfer exactly.</p>
+<h3 id="linked-channels_1">Linked channels<a class="headerlink" href="#linked-channels_1" title="Permanent link">&para;</a></h3>
+<p>When a target channel is a <strong>linked slave</strong>, the dialog shows a warning and restricts the available parameters to <strong>Name only</strong>. All other parameter groups are disabled because the slave's settings are controlled by its master. Copying to a <strong>master</strong> channel is unrestricted; the change will propagate to its slaves through the normal link mechanism.</p>
+<h3 id="examples_1">Examples<a class="headerlink" href="#examples_1" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Steps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mirror a tuned PEQ to another output</td>
+<td>Source: Out1, check <strong>PEQ</strong>, targets: Out2 + Out3</td>
+</tr>
+<tr>
+<td>Copy a complete output to another</td>
+<td>Source: Out1, check all groups, target: Out2</td>
+</tr>
+<tr>
+<td>Match input gain and phase across all inputs</td>
+<td>Source: InA, check <strong>Gain</strong> + <strong>Phase</strong>, targets: InB + InC + InD</td>
+</tr>
+<tr>
+<td>Copy only the channel name</td>
+<td>Source: any, check <strong>Name</strong> only, target: any same-type channel</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="test-tone-generator">Test Tone Generator<a class="headerlink" href="#test-tone-generator" title="Permanent link">&para;</a></h2>
+<p>The device has an internal signal generator that feeds all four outputs simultaneously. It is useful for speaker level matching, polarity checks, and frequency sweeps without needing an external source.</p>
+<p>Open the dialog from <strong>Menu ≡ → Test tone…</strong>.</p>
+<p><img alt="Test tone generator" src="../img/test-tone-dialog.png" /></p>
+<h3 id="waveform">Waveform<a class="headerlink" href="#waveform" title="Permanent link">&para;</a></h3>
+<p>Select one of four modes:</p>
+<table>
+<thead>
+<tr>
+<th>Radio</th>
+<th>Signal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Off</strong></td>
+<td>Generator inactive — normal audio pass-through</td>
+</tr>
+<tr>
+<td><strong>Pink noise</strong></td>
+<td>Spectrally shaped random noise (−3 dB/octave)</td>
+</tr>
+<tr>
+<td><strong>White noise</strong></td>
+<td>Flat-spectrum random noise</td>
+</tr>
+<tr>
+<td><strong>Sine</strong></td>
+<td>Discrete-frequency sine wave at the selected frequency</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sine-frequency">Sine Frequency<a class="headerlink" href="#sine-frequency" title="Permanent link">&para;</a></h3>
+<p>When <strong>Sine</strong> is selected, the frequency spin-box becomes active. Step through the 31 ISO 1/3-octave frequencies from 20 Hz to 20 kHz using the up/down arrows or by typing a step number. The current frequency label updates next to the spin-box.</p>
+<table>
+<thead>
+<tr>
+<th>Index</th>
+<th>Frequency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>20 Hz</td>
+</tr>
+<tr>
+<td>1</td>
+<td>25 Hz</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>17</td>
+<td>1 kHz</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>30</td>
+<td>20 kHz</td>
+</tr>
+</tbody>
+</table>
+<p>The last-used sine frequency is stored in the device's config and remembered across mode changes: switching from Sine to Pink and back again restores the frequency you had selected.</p>
+<h3 id="starting-and-stopping-the-generator">Starting and stopping the generator<a class="headerlink" href="#starting-and-stopping-the-generator" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Select a waveform (and frequency for Sine).</li>
+<li>Click <strong>Apply</strong> — the generator starts immediately. The dialog stays open so you can step through frequencies or change waveforms without reopening it.</li>
+<li>To silence the generator, click the red <strong>Disable test tone</strong> button. This is the quickest way to stop the output — no confirmation required.</li>
+</ol>
+<blockquote>
+<p><strong>Note:</strong> The <strong>Disable test tone</strong> button is only active after the generator has been started with Apply. Selecting a waveform radio before clicking Apply does not start the generator.</p>
+</blockquote>
+<p>Click <strong>Close</strong> (or press Esc) to dismiss the dialog. The generator keeps running until explicitly disabled — closing the dialog does <strong>not</strong> stop playback.</p>
+<h3 id="persistence">Persistence<a class="headerlink" href="#persistence" title="Permanent link">&para;</a></h3>
+<p>The generator state (mode and last sine frequency) is part of the device's live configuration. It survives USB reconnects and power cycles. When you reopen the dialog, it reflects what the device is currently doing.</p>
+<blockquote>
+<p><strong>Warning:</strong> The test tone feeds all outputs at a hardware-fixed level that cannot be attenuated via this dialog. Use your monitoring volume control to manage listening level, and remember to disable the generator before leaving it unattended.</p>
+</blockquote>
+<hr />
+<h2 id="device-lock-pin">Device Lock / PIN<a class="headerlink" href="#device-lock-pin" title="Permanent link">&para;</a></h2>
+<p>The DSP 4x4 Mini can be <strong>locked with a 4-character PIN</strong>. Once set, the device refuses to accept any configuration commands until the correct PIN is submitted on the next connection. This is useful for installs where the panel should not be tweaked by end users.</p>
+<blockquote>
+<p><strong>⚠ Critical warning — read this first:</strong> there is no documented factory-reset procedure for the DSP 4x4 Mini. <strong>If you set a PIN and forget it, your device may be permanently bricked for configuration use.</strong> Write the PIN down somewhere safe before applying it. There is also intentionally <strong>no "Remove PIN" action</strong> in this application — the protocol has no such command.</p>
+</blockquote>
+<h3 id="what-counts-as-a-pin">What counts as a PIN<a class="headerlink" href="#what-counts-as-a-pin" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Exactly 4 characters</strong>, any printable ASCII (digits, letters, punctuation). The protocol transmits 4 raw bytes; the firmware does not enforce digits-only despite what some documentation suggests.</li>
+<li>The PIN is <strong>case-sensitive</strong>.</li>
+<li>Characters are masked in the input field for shoulder-surfing protection.</li>
+</ul>
+<h3 id="unlock-prompt-entering-a-pin">Unlock prompt — entering a PIN<a class="headerlink" href="#unlock-prompt-entering-a-pin" title="Permanent link">&para;</a></h3>
+<p>When you start the application against a <strong>locked</strong> device, a modal dialog appears as soon as the worker detects the lock:</p>
+<ul>
+<li>Type the 4-character PIN and press <strong>Unlock</strong> (or hit Enter).</li>
+<li>On a correct PIN: the dialog closes, normal config load proceeds, all controls become live.</li>
+<li>On a wrong PIN: the dialog stays open and shows <code>Wrong PIN — N attempts remaining</code>. The input is cleared so you can try again. You get <strong>three attempts in total</strong> per connection.</li>
+<li>After <strong>three wrong attempts</strong>: the dialog closes, the worker disconnects, and <strong>does not auto-reconnect</strong> — you are not subjected to an endless prompt loop. Use <strong>Menu ≡ → Reconnect</strong> when you want to try again from a fresh batch of attempts.</li>
+<li>Clicking <strong>Cancel</strong> (or pressing Esc) on the unlock prompt also disconnects without auto-reconnecting; same recovery via <strong>Reconnect</strong>.</li>
+</ul>
+<h3 id="setting-a-new-pin">Setting a new PIN<a class="headerlink" href="#setting-a-new-pin" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Connect to an unlocked device (or unlock it first).</li>
+<li>Open <strong>Menu ≡ → Set device PIN…</strong> (this entry is greyed out while disconnected).</li>
+<li>Type the new PIN in the <strong>PIN</strong> field and again in <strong>Confirm</strong> — the <strong>Set PIN</strong> button is enabled only when both fields contain 4 matching characters; otherwise an inline <code>PINs do not match</code> warning is shown.</li>
+<li>Click <strong>Set PIN</strong>.</li>
+<li>The device acknowledges the change, then the application <strong>closes the USB session and stops the worker</strong>. There is no auto-reconnect — setting a PIN is a one-shot admin action, not a normal edit, and you typically want to walk away rather than be immediately re-prompted to unlock with the PIN you just chose.</li>
+<li>To use the device again, either restart the application or use <strong>Menu ≡ → Reconnect</strong> to re-attach. You will then see the unlock prompt described above.</li>
+</ol>
+<h3 id="offline-mode-behaviour">Offline mode behaviour<a class="headerlink" href="#offline-mode-behaviour" title="Permanent link">&para;</a></h3>
+<p>The <code>--offline</code> virtual DSP mirrors the same lock semantics:</p>
+<ul>
+<li><strong>Set device PIN…</strong> locks the virtual device. The worker disconnects and the in-memory device becomes "locked".</li>
+<li>Use <strong>Reconnect</strong> to re-attach; you will then see the unlock prompt.</li>
+<li>The lock state is <strong>in-memory only</strong> — restarting the application resets the virtual device to unlocked. The <code>.unt</code> file format has no field for the lock state, so it does not survive save/load either.</li>
+</ul>
+<p>This makes offline mode a safe playground for trying the PIN feature out before applying it to real hardware.</p>
+<h3 id="recovery-if-you-forget-the-pin">Recovery if you forget the PIN<a class="headerlink" href="#recovery-if-you-forget-the-pin" title="Permanent link">&para;</a></h3>
+<p>There is no known software recovery. If you set a PIN and forget it, you may need to contact the manufacturer for a factory-reset procedure (the steps for this device are not publicly documented at time of writing). <strong>Treat the Set PIN action as semi-permanent and write the PIN down.</strong></p>
+<hr />
+<h2 id="themes-light-dark">Themes (light / dark)<a class="headerlink" href="#themes-light-dark" title="Permanent link">&para;</a></h2>
+<p>The application supports both a <strong>dark</strong> and a <strong>light</strong> theme.  By default it tracks the operating-system color preference: switch your desktop between light and dark mode and the app follows immediately, no restart required.  Live tracking works on Windows, macOS, and most Linux desktops that emit the standard freedesktop color-scheme signal (GNOME, XFCE, GTK-based environments).</p>
+<h3 id="choosing-a-theme">Choosing a theme<a class="headerlink" href="#choosing-a-theme" title="Permanent link">&para;</a></h3>
+<p>Open the menu (≡) → <strong>Theme</strong> and pick one:</p>
+<table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>System</strong> <em>(default)</em></td>
+<td>Mirror the OS appearance setting; flips automatically when you change the system theme</td>
+</tr>
+<tr>
+<td><strong>Light</strong></td>
+<td>Force light mode regardless of OS preference</td>
+</tr>
+<tr>
+<td><strong>Dark</strong></td>
+<td>Force dark mode regardless of OS preference</td>
+</tr>
+</tbody>
+</table>
+<p>Your selection is remembered between sessions (stored via <code>QSettings</code>, typically at <code>~/.config/miniDSP/minidspqt.conf</code> on Linux).  Choosing <strong>System</strong> at any time clears the override and resumes following the OS.</p>
+<h3 id="what-changes">What changes<a class="headerlink" href="#what-changes" title="Permanent link">&para;</a></h3>
+<p>Every part of the UI re-themes:</p>
+<ul>
+<li>Window chrome, panels, channel strips, buttons, sliders (driven by Qt's Fusion style + a custom palette)</li>
+<li>Custom-painted widgets — gain knobs, level meters, the limiter LED, the routing matrix, and all three frequency-response graphs (PEQ, Crossover, Gate)</li>
+</ul>
+<p>Graph backgrounds are intentionally a <strong>soft tinted off-white</strong> in light mode rather than pure white, to keep the curve, grid, and band markers comfortable to read at a glance.</p>
+<h3 id="notes-on-linux">Notes on Linux<a class="headerlink" href="#notes-on-linux" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>GNOME / XFCE / GTK-based environments</strong> — fully supported, including live switching when you toggle the system theme.</li>
+<li><strong>KDE Plasma</strong> — Qt's platform-theme integration is still evolving; the manual override (Light / Dark) always works, but live system tracking may not flip the app until KDE wires up the <code>requestColorScheme()</code> portal call.</li>
+<li>If automatic tracking ever returns "Unknown" on your setup (e.g. headless or unusual desktops), the app falls back to the last preference you chose (defaulting to Dark on the very first launch).</li>
+</ul>
+<hr />
+<h2 id="usb-permissions">USB Permissions<a class="headerlink" href="#usb-permissions" title="Permanent link">&para;</a></h2>
+<p>The application communicates with the DSP via <code>/dev/hidraw*</code> device files. By default, these require root access. To use the application as a regular user, create a udev rule:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/udev/rules.d/99-dspmini.rules<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s">SUBSYSTEM==&quot;hidraw&quot;, ATTRS{idVendor}==&quot;0168&quot;, ATTRS{idProduct}==&quot;0821&quot;, MODE=&quot;0666&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">EOF</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload-rules<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
+</code></pre></div>
+<p>Then disconnect and reconnect the DSP. The device should now be accessible without <code>sudo</code>.</p>
+<hr />
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="disconnected-status-and-controls-are-greyed-out">"Disconnected" status and controls are greyed out<a class="headerlink" href="#disconnected-status-and-controls-are-greyed-out" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Check that the DSP 4x4 Mini is connected via USB</li>
+<li>Verify USB permissions (see <a href="#usb-permissions">USB Permissions</a>)</li>
+<li>Try running with <code>sudo</code> to rule out permission issues</li>
+<li>Check kernel logs: <code>dmesg | tail</code> for USB/HID errors</li>
+</ul>
+<h3 id="application-crashes-on-startup">Application crashes on startup<a class="headerlink" href="#application-crashes-on-startup" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ensure Python 3.11+ is installed: <code>python3 --version</code></li>
+<li>Reinstall dependencies: <code>uv sync --reinstall</code></li>
+<li>Run with debug logging: <code>minidspqt -vv</code></li>
+</ul>
+<h3 id="controls-dont-update-the-device">Controls don't update the device<a class="headerlink" href="#controls-dont-update-the-device" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Check the log output for error messages (<code>-v</code> or <code>-vv</code>)</li>
+<li>The device may be busy (e.g., writing flash after a store operation) — wait a few seconds</li>
+<li>USB communication errors trigger automatic reconnection after 2 seconds</li>
+</ul>
+<h3 id="linked-channel-controls-are-disabled">Linked channel controls are disabled<a class="headerlink" href="#linked-channel-controls-are-disabled" title="Permanent link">&para;</a></h3>
+<p>This is expected behavior. When channels are linked, the slave channel's gain and toggles are controlled by the master. Look for the chain icon (🔗) on the slave strip.</p>
+<h3 id="level-meters-show-no-activity">Level meters show no activity<a class="headerlink" href="#level-meters-show-no-activity" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ensure audio is actually playing through the DSP</li>
+<li>Check that the input source and routing matrix are configured correctly</li>
+<li>In offline mode, meters are always idle (no audio signal is generated)</li>
+</ul>
+<hr />
+<h2 id="keyboard-shortcuts">Keyboard Shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Up / Right arrow</strong></td>
+<td>Increase value (when knob is focused)</td>
+</tr>
+<tr>
+<td><strong>Down / Left arrow</strong></td>
+<td>Decrease value (when knob is focused)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + Up / Right arrow</strong></td>
+<td>Fast-increase (~2 % of range per press)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + Down / Left arrow</strong></td>
+<td>Fast-decrease (~2 % of range per press)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + scroll wheel</strong></td>
+<td>Fast-scroll (~2 % of range per detent)</td>
+</tr>
+<tr>
+<td><strong>Ctrl + drag</strong></td>
+<td>Fast-drag (locked at press — toggling Ctrl mid-drag has no effect)</td>
+</tr>
+<tr>
+<td><strong>Enter</strong></td>
+<td>Apply typed value (when value label is being edited)</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.indexes", "toc.follow", "content.code.copy", "search.suggest", "search.highlight"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
