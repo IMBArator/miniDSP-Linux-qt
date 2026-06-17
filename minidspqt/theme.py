@@ -384,16 +384,26 @@ class ThemeManager(QObject):
             sh.setColorScheme(Qt.ColorScheme.Dark)
 
     def _resolve_scheme(self) -> Qt.ColorScheme:
+        # An explicit light/dark preference is authoritative — we must NOT
+        # re-query ``styleHints().colorScheme()`` for it.  On KDE Plasma the
+        # platform-theme plugin keeps reporting the *system* scheme even after
+        # ``setColorScheme()``, so trusting Qt's value here would bounce the
+        # user's explicit choice straight back to the system colours and the
+        # theme would appear "stuck".  We resolve our own palette/QSS/custom
+        # colours from the preference directly; the ``setColorScheme()`` call
+        # in ``_push_preference_to_qt`` still nudges native widgets.
+        if self._pref == "light":
+            return Qt.ColorScheme.Light
+        if self._pref == "dark":
+            return Qt.ColorScheme.Dark
+        # pref == "system": follow whatever Qt resolves from the OS.
         if self._app is None:
             return Qt.ColorScheme.Dark
         scheme = self._app.styleHints().colorScheme()
         if scheme != Qt.ColorScheme.Unknown:
             return scheme
-        # Some Linux setups (no DBus colour-scheme portal, headless tests) report
-        # Unknown.  Honour an explicit user pref, otherwise keep the historical
-        # dark default.
-        if self._pref == "light":
-            return Qt.ColorScheme.Light
+        # Some Linux setups (no DBus colour-scheme portal, headless tests)
+        # report Unknown for the system scheme; keep the historical dark default.
         return Qt.ColorScheme.Dark
 
     def _reapply(self) -> None:
