@@ -12,6 +12,7 @@ import pytest
 from minidspqt.model import PEQBand
 from minidspqt.views.detail_view import DetailView
 from minidspqt.views.panels import PEQPanel
+from minidspqt.views.panels.peq_panel import _parse_freq
 
 
 @pytest.fixture
@@ -86,6 +87,59 @@ class TestAtomicEmit:
             panel._bypass_toggles[5].setChecked(True)
         assert sig.args[0] == 5
         assert sig.args[5] is True
+
+
+class TestMarkerDrag:
+    """The graph's band_dragged signal feeds the knobs and re-emits once."""
+
+    def test_marker_drag_updates_knobs_and_emits_once(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)
+        with qtbot.waitSignal(panel.peq_band_changed, timeout=500) as sig:
+            panel._on_marker_dragged(2, freq_raw=210, gain_raw=145)
+        # Knobs took the dragged raws...
+        assert panel._freq_knobs[2].value() == 210
+        assert panel._gain_knobs[2].value() == 145
+        # ...and exactly one atomic band emit carried them.
+        band, gain, freq, q, ftype, bypass = sig.args
+        assert (band, freq, gain) == (2, 210, 145)
+        assert q == 16 and ftype == 0 and bypass is False
+
+    def test_marker_drag_blocked_on_slave_channel(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)
+        panel.set_linked_slave(True, "Out 1")
+        with qtbot.assertNotEmitted(panel.peq_band_changed):
+            panel._on_marker_dragged(0, freq_raw=250, gain_raw=200)
+        # Knob value is unchanged from the default.
+        assert panel._freq_knobs[0].value() == 170
+
+
+class TestParseFreqRegression:
+    """_parse_freq now delegates to the shared freq_hz_to_raw helper."""
+
+    @pytest.mark.parametrize(
+        "text, expected",
+        [
+            ("1000 Hz", 170),  # ~1 kHz on the log scale
+            ("1 kHz", 170),
+            ("19.7 Hz", 0),
+            ("20 kHz", 300),
+            ("0 Hz", 0),
+        ],
+    )
+    def test_parse_freq_values(self, text, expected):
+        assert _parse_freq(text) == expected
+
+    def test_parse_freq_matches_protocol_helper(self):
+        from minidsp.protocol import freq_hz_to_raw
+
+        for hz in (50.0, 440.0, 2500.0, 12000.0):
+            assert _parse_freq(f"{hz} Hz") == freq_hz_to_raw(hz)
+
+    def test_parse_freq_roundtrips_knob_range(self):
+        from minidsp.protocol import freq_raw_to_hz
+
+        for raw in (0, 60, 150, 300):
+            assert _parse_freq(f"{freq_raw_to_hz(raw)} Hz") == raw
 
 
 class TestChannelBypass:

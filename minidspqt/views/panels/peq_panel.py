@@ -56,6 +56,7 @@ from minidsp.protocol import (
     PEQ_TYPE_LOW_PASS,
     PEQ_TYPE_LOW_SHELF,
     PEQ_TYPE_PEAK,
+    freq_hz_to_raw,
     freq_raw_to_hz,
     peq_gain_to_raw,
     peq_q_to_raw,
@@ -116,13 +117,7 @@ def _parse_freq(text: str) -> int:
     elif t.endswith("hz"):
         t = t.removesuffix("hz").strip()
     hz = float(t) * mult
-    # Inverse of freq_raw_to_hz: raw = 300 * log(hz / 19.70) / log(20160 / 19.70).
-    import math
-
-    if hz <= 0:
-        return 0
-    raw = round(300.0 * math.log(hz / 19.70) / math.log(20160.0 / 19.70))
-    return max(0, min(300, raw))
+    return freq_hz_to_raw(hz)
 
 
 def _fmt_gain(raw: int) -> str:
@@ -188,6 +183,7 @@ class PEQPanel(QWidget):
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
+        self._graph.band_dragged.connect(self._on_marker_dragged)
         root.addWidget(self._graph, stretch=1)
 
         self._type_combos: list[QComboBox] = []
@@ -351,6 +347,28 @@ class PEQPanel(QWidget):
             band, b.gain_raw, b.freq_raw, b.q_raw, b.filter_type, b.bypass
         )
         self._graph.set_bands(self._all_bands(), self._channel_bypass.isChecked())
+
+    def _on_marker_dragged(self, band: int, freq_raw: int, gain_raw: int) -> None:
+        """Apply a graph-marker drag to band ``band``'s freq/gain knobs.
+
+        The graph emits raw frequency and gain as the user drags a
+        marker; we push them into the knobs silently and then fire a
+        single :meth:`_on_band_changed` so exactly one
+        ``peq_band_changed`` is emitted (and the graph refreshed) per
+        drag step — reusing the normal knob-edit path.
+
+        Args:
+            band: Band index 0–6.
+            freq_raw: New raw frequency (0–300) from the x-axis.
+            gain_raw: New raw gain (0–240); equals the band's current
+                gain for filter types whose marker is pinned at 0 dB.
+        """
+        # Slave channels show the graph read-only; ignore drags there.
+        if not self._freq_knobs[band].isEnabled():
+            return
+        self._freq_knobs[band].setValueSilently(freq_raw)
+        self._gain_knobs[band].setValueSilently(gain_raw)
+        self._on_band_changed(band)
 
     def _on_type_changed(self, band: int) -> None:
         # Refit the Q knob's range first; if the new range clamps the

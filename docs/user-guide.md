@@ -202,7 +202,7 @@ The graph plots the summed magnitude response of all seven bands at 256 log-spac
 - **Markers** — small numbered circles at each band's centre frequency (`1`..`7`). Active bands are green; band-bypassed or channel-bypassed bands are dim grey.
 - **Channel-bypass visualisation** — when the channel-wide bypass is engaged the curve renders as a flat 0 dB line at reduced opacity, while the per-band controls remain editable.
 
-The graph is *display-only* in this version — drag-to-edit on the markers is not yet supported. Edit values in the controls below.
+**Drag to edit** — grab any active band's marker and drag it: horizontal movement sets the band's **frequency**, vertical movement sets its **gain** (gain only for Peak / Low Shelf / High Shelf — Pass and Allpass markers stay pinned at 0 dB and move in frequency only). The Freq/Gain knobs and the curve track the drag live, and the change is sent to the device exactly like a knob edit. Bypassed bands and slave (linked) channels are read-only, so their markers don't drag.
 
 #### "PEQ active" indicator on the output strip
 

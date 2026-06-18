@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from PySide6.QtCore import QPointF, QRectF, Qt
+from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QWidget
 
@@ -28,7 +28,9 @@ from minidsp.protocol import (
     PEQ_TYPE_LOW_PASS,
     PEQ_TYPE_LOW_SHELF,
     PEQ_TYPE_PEAK,
+    freq_hz_to_raw,
     freq_raw_to_hz,
+    peq_gain_to_raw,
     peq_raw_to_gain,
     peq_raw_to_q,
 )
@@ -65,6 +67,21 @@ _FREQ_MARKERS = (20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000)
 
 _CURVE_WIDTH = 2.0
 _NUM_SAMPLES = 256
+
+# Filter types whose marker carries the band's gain on the y-axis. For every
+# other type the static response is gain-independent, so the marker is pinned
+# at 0 dB and dragging only moves it horizontally (frequency).
+_GAIN_BEARING_TYPES = (PEQ_TYPE_PEAK, PEQ_TYPE_LOW_SHELF, PEQ_TYPE_HIGH_SHELF)
+
+# Raw PEQ gain spans ±12 dB (raw 0–240) even though the plot y-axis spans ±18,
+# so a drag must clamp dB to this before encoding or the marker would keep
+# climbing into dead axis space above +12 dB.
+_PEQ_GAIN_DB_LIMIT = 12.0
+
+# PEQ markers are drawn with radius 7; allow a slightly larger grab radius so
+# they are easy to catch (mirrors RoutingMatrix's NODE_RADIUS + 4 generosity).
+_MARKER_RADIUS = 7.0
+_MARKER_HIT_RADIUS = 11.0
 
 # Bessel Q values per order (per-section Q for cascaded 2nd-order stages).
 # Bessel poles are not Butterworth-equivalent; the Q values come from
@@ -213,7 +230,21 @@ class FreqResponseGraph(QWidget):
 
     PEQ bands appear as numbered circular markers; crossover corner
     frequencies appear as triangular markers.
+
+    When built with ``feature="peq"`` the PEQ markers are draggable:
+    grabbing one and moving it emits :attr:`band_dragged` with the new
+    raw frequency (and gain, for gain-bearing filter types). The host
+    panel owns the canonical band state, so it applies the change to
+    its knobs and feeds the updated bands back via :meth:`set_bands`.
+
+    Signals:
+        band_dragged (int, int, int): ``(band_index, freq_raw,
+            gain_raw)`` emitted continuously while a marker is dragged.
+            For non-gain-bearing filter types ``gain_raw`` is the band's
+            unchanged current value.
     """
+
+    band_dragged = Signal(int, int, int)
 
     def __init__(self, parent: QWidget | None = None, *, feature: str = "peq") -> None:
         """Build an empty graph with the given feature accent.
@@ -221,15 +252,19 @@ class FreqResponseGraph(QWidget):
         Args:
             parent: Qt parent widget.
             feature: ``"peq"`` or ``"xover"`` — picks the curve
-                colour palette so the two host panels read as
-                distinct views of the same response.
+                palette and gates marker dragging (only ``"peq"``
+                graphs are interactive).
         """
         super().__init__(parent)
         self._feature = feature
         self._bands: list[PEQBand] = []
         self._channel_bypass: bool = False
         self._crossover: CrossoverData = CrossoverData()
+        self._drag_band: int = -1  # index of the marker being dragged, or -1
         self.setMinimumHeight(160)
+        # Hover-cursor feedback needs move events even when no button is held.
+        if feature == "peq":
+            self.setMouseTracking(True)
         theme_manager.themeChanged.connect(self.update)
 
     def set_bands(self, bands: list[PEQBand], channel_bypass: bool) -> None:
@@ -286,6 +321,32 @@ class FreqResponseGraph(QWidget):
         r = self._plot_rect()
         frac = (db - _DB_MIN) / _DB_RANGE
         return r.bottom() - frac * r.height()
+
+    def _x_to_hz(self, x: float) -> float:
+        """Inverse of :meth:`_hz_to_x`; clamps ``x`` to the plot rect."""
+        r = self._plot_rect()
+        x = max(r.left(), min(r.right(), x))
+        frac = (x - r.left()) / r.width() if r.width() else 0.0
+        return 10.0 ** (_LOG_F_MIN + frac * _LOG_F_RANGE)
+
+    def _y_to_db(self, y: float) -> float:
+        """Inverse of :meth:`_db_to_y`; clamps ``y`` to the plot rect."""
+        r = self._plot_rect()
+        y = max(r.top(), min(r.bottom(), y))
+        frac = (r.bottom() - y) / r.height() if r.height() else 0.0
+        return _DB_MIN + frac * _DB_RANGE
+
+    @staticmethod
+    def _marker_y_db(band: PEQBand) -> float:
+        """dB position of ``band``'s marker on the y-axis.
+
+        Gain-bearing types sit at their (axis-clamped) gain; every other
+        type sits at 0 dB. Single source of truth shared by the painter
+        and the hit-test so they never disagree.
+        """
+        if band.filter_type in _GAIN_BEARING_TYPES:
+            return max(_DB_MIN, min(_DB_MAX, peq_raw_to_gain(band.gain_raw)))
+        return 0.0
 
     def _curve_color(self, theme) -> tuple[QColor, QColor]:
         """Return (active, bypassed) curve colours for the graph's feature."""
@@ -466,16 +527,7 @@ class FreqResponseGraph(QWidget):
             x = self._hz_to_x(f_hz)
             if not (rect.left() - 1 <= x <= rect.right() + 1):
                 continue
-            if band.filter_type in (
-                PEQ_TYPE_PEAK,
-                PEQ_TYPE_LOW_SHELF,
-                PEQ_TYPE_HIGH_SHELF,
-            ):
-                gain_db = peq_raw_to_gain(band.gain_raw)
-                y_db = max(_DB_MIN, min(_DB_MAX, gain_db))
-            else:
-                y_db = 0.0
-            y = self._db_to_y(y_db)
+            y = self._db_to_y(self._marker_y_db(band))
 
             color = (
                 theme.graph_marker_bypassed
@@ -484,7 +536,7 @@ class FreqResponseGraph(QWidget):
             )
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)
-            p.drawEllipse(QPointF(x, y), 7.0, 7.0)
+            p.drawEllipse(QPointF(x, y), _MARKER_RADIUS, _MARKER_RADIUS)
 
             p.setPen(QPen(theme.graph_marker_text))
             p.drawText(
@@ -492,6 +544,115 @@ class FreqResponseGraph(QWidget):
                 Qt.AlignmentFlag.AlignCenter,
                 str(idx + 1),
             )
+
+    # ------------------------------------------------------------------ #
+    # PEQ marker dragging (feature == "peq" only)
+    # ------------------------------------------------------------------ #
+
+    def _hit_band(self, pos: QPointF) -> int:
+        """Return the index of the draggable marker nearest ``pos``.
+
+        Only active (non-bypassed) PEQ markers are considered, and only
+        when this graph hosts the PEQ feature. When markers overlap the
+        nearest centre wins; ties resolve to the higher index, which is
+        the one drawn on top. Returns ``-1`` when nothing is in reach.
+
+        Args:
+            pos: Cursor position in widget coordinates.
+
+        Returns:
+            Band index in range ``0..len(bands)-1`` or ``-1``.
+        """
+        if self._feature != "peq":
+            return -1
+        rect = self._plot_rect()
+        best = -1
+        best_dist = _MARKER_HIT_RADIUS
+        for idx, band in enumerate(self._bands):
+            if band.bypass or self._channel_bypass:
+                continue
+            f_hz = freq_raw_to_hz(band.freq_raw)
+            if f_hz <= 0:
+                continue
+            x = self._hz_to_x(f_hz)
+            if not (rect.left() - 1 <= x <= rect.right() + 1):
+                continue
+            y = self._db_to_y(self._marker_y_db(band))
+            dist = QLineF(pos, QPointF(x, y)).length()
+            if dist <= best_dist:  # "<=" so later (topmost) markers win ties
+                best_dist = dist
+                best = idx
+        return best
+
+    def mousePressEvent(self, event) -> None:
+        if self._feature != "peq" or event.button() != Qt.MouseButton.LeftButton:
+            super().mousePressEvent(event)
+            return
+        hit = self._hit_band(QPointF(event.position()))
+        if hit >= 0:
+            self._drag_band = hit
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._feature != "peq":
+            super().mouseMoveEvent(event)
+            return
+        pos = QPointF(event.position())
+        if self._drag_band >= 0:
+            self._apply_drag(self._drag_band, pos)
+            event.accept()
+            return
+        # Not dragging: offer a grab cursor when hovering a draggable marker.
+        over = self._hit_band(pos) >= 0
+        self.setCursor(
+            Qt.CursorShape.OpenHandCursor if over else Qt.CursorShape.ArrowCursor
+        )
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if self._drag_band >= 0 and event.button() == Qt.MouseButton.LeftButton:
+            self._drag_band = -1
+            over = self._hit_band(QPointF(event.position())) >= 0
+            self.setCursor(
+                Qt.CursorShape.OpenHandCursor if over else Qt.CursorShape.ArrowCursor
+            )
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+    def leaveEvent(self, event) -> None:
+        if self._drag_band < 0:
+            self.unsetCursor()
+        super().leaveEvent(event)
+
+    def _apply_drag(self, idx: int, pos: QPointF) -> None:
+        """Map ``pos`` to raw freq/gain for band ``idx`` and emit the change.
+
+        The band's local copy is updated for instant visual feedback; the
+        host panel re-feeds canonical state via :meth:`set_bands` when it
+        handles the emitted :attr:`band_dragged`.
+        """
+        band = self._bands[idx]
+        freq_raw = freq_hz_to_raw(self._x_to_hz(pos.x()))
+        if band.filter_type in _GAIN_BEARING_TYPES:
+            db = max(
+                -_PEQ_GAIN_DB_LIMIT, min(_PEQ_GAIN_DB_LIMIT, self._y_to_db(pos.y()))
+            )
+            gain_raw = peq_gain_to_raw(db)
+        else:
+            gain_raw = band.gain_raw  # pinned at 0 dB; preserve existing gain
+        self._bands[idx] = PEQBand(
+            gain_raw=gain_raw,
+            freq_raw=freq_raw,
+            q_raw=band.q_raw,
+            filter_type=band.filter_type,
+            bypass=band.bypass,
+        )
+        self.update()
+        self.band_dragged.emit(idx, freq_raw, gain_raw)
 
 
 def _biquad_coeffs_from_band(band: PEQBand) -> tuple[float, ...]:
