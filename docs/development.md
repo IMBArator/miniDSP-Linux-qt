@@ -21,16 +21,29 @@ uv sync --extra dev  # also installs pytest for development
 
 ### Developing against a local protocol library
 
-By default `minidsp-linux` is pulled from the upstream `v1.0.0` git tag. When
-hacking on the protocol library in a sibling checkout, reinstall on top of the
-synced env from your local source tree:
+By default `minidsp-linux` is pulled from the pinned upstream release wheel.
+When hacking on the protocol library in a sibling checkout, reinstall it on top
+of the synced env from your local source tree:
 
 ```bash
-uv pip install --reinstall ../miniDSP-Linux/
+uv pip install --reinstall --no-cache ../miniDSP-Linux/
 ```
 
-The override is reverted by the next `uv sync` / `uv lock`. Re-run the command
-whenever you want to test fresh local changes.
+`--no-cache` matters: the local version string doesn't change between edits, so
+without it `uv` rebuilds from its wheel cache and your fresh changes are
+silently ignored.
+
+> **Important — run tests with `--no-sync`.** A plain `uv run pytest` (and the
+> `make test` target) first resyncs the env to the lockfile, which reverts the
+> override back to the pinned release wheel. While testing against local protocol
+> changes, run with sync disabled so your reinstall sticks:
+>
+> ```bash
+> QT_QPA_PLATFORM=offscreen uv run --no-sync pytest
+> ```
+
+The override is reverted by the next `uv sync` / `uv lock` (or any plain
+`uv run`). Re-run the reinstall whenever you want to test fresh local changes.
 
 ## Running tests
 
