@@ -19,6 +19,15 @@ if not hasattr(_pyside6, "__version__"):
     from PySide6.QtCore import __version__ as _qt_version
     _pyside6.__version__ = _qt_version
 
+# Isolate QSettings (and every other standard path) from the real user
+# environment. Without this, tests that exercise the theme manager call
+# set_user_preference(), which writes QSettings(_QSETTINGS_ORG, _QSETTINGS_APP)
+# to ~/.config/miniDSP/minidspqt.conf — clobbering the developer's actual theme
+# choice on every `make test`. Test mode redirects these to a throwaway
+# `qttest` location instead. Must run before any QApplication / QSettings use.
+from PySide6.QtCore import QStandardPaths  # noqa: E402
+QStandardPaths.setTestModeEnabled(True)
+
 import threading
 
 import pytest
