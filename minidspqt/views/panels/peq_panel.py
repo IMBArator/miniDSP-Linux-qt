@@ -184,6 +184,8 @@ class PEQPanel(QWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
         self._graph.band_dragged.connect(self._on_marker_dragged)
+        self._graph.band_q_changed.connect(self._on_marker_q_changed)
+        self._graph.band_bypass_toggled.connect(self._on_marker_bypass_toggled)
         root.addWidget(self._graph, stretch=1)
 
         self._type_combos: list[QComboBox] = []
@@ -369,6 +371,39 @@ class PEQPanel(QWidget):
         self._freq_knobs[band].setValueSilently(freq_raw)
         self._gain_knobs[band].setValueSilently(gain_raw)
         self._on_band_changed(band)
+
+    def _on_marker_q_changed(self, band: int, delta_raw: int) -> None:
+        """Apply a wheel-over-marker Q change to band ``band``.
+
+        The graph emits a signed raw-Q delta per wheel notch; we add it
+        to the band's Q knob. ``setValue`` clamps to the knob's current
+        per-filter-type range and its ``valueChanged`` drives
+        :meth:`_on_band_changed`, so exactly one ``peq_band_changed`` is
+        emitted (and the curve refreshed) per notch.
+
+        Args:
+            band: Band index 0–6.
+            delta_raw: Signed change to add to the raw Q value.
+        """
+        knob = self._q_knobs[band]
+        if not knob.isEnabled():  # slave-locked / read-only
+            return
+        knob.setValue(knob.value() + delta_raw)
+
+    def _on_marker_bypass_toggled(self, band: int) -> None:
+        """Flip band ``band``'s per-band bypass from a marker double-click.
+
+        Toggling the bypass button fires its ``toggled`` signal, which is
+        already wired to :meth:`_on_band_changed` for the atomic emit and
+        graph refresh.
+
+        Args:
+            band: Band index 0–6.
+        """
+        toggle = self._bypass_toggles[band]
+        if not toggle.isEnabled():  # slave-locked / read-only
+            return
+        toggle.setChecked(not toggle.isChecked())
 
     def _on_type_changed(self, band: int) -> None:
         # Refit the Q knob's range first; if the new range clamps the

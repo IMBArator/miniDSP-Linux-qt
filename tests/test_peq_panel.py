@@ -113,6 +113,52 @@ class TestMarkerDrag:
         assert panel._freq_knobs[0].value() == 170
 
 
+class TestMarkerWheelQ:
+    def test_wheel_delta_raises_q_and_emits_once(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)  # q_raw 16, Peak
+        with qtbot.waitSignal(panel.peq_band_changed, timeout=500) as sig:
+            panel._on_marker_q_changed(4, +5)
+        assert panel._q_knobs[4].value() == 21
+        band, gain, freq, q, ftype, bypass = sig.args
+        assert (band, q) == (4, 21)
+
+    def test_wheel_delta_clamps_to_per_type_max(self, panel):
+        # Switch band 0 to High Shelf (Q capped at raw 35), seed Q near the cap.
+        panel.set_band_silently(0, 120, 170, 34, 2, False)  # type 2 = high shelf
+        panel._on_marker_q_changed(0, +20)
+        assert panel._q_knobs[0].value() == 35  # clamped, not 54
+
+    def test_wheel_q_blocked_on_slave_channel(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)
+        panel.set_linked_slave(True, "Out 1")
+        with qtbot.assertNotEmitted(panel.peq_band_changed):
+            panel._on_marker_q_changed(2, +5)
+        assert panel._q_knobs[2].value() == 16
+
+
+class TestMarkerDoubleClickBypass:
+    def test_double_click_toggles_band_bypass(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)
+        with qtbot.waitSignal(panel.peq_band_changed, timeout=500) as sig:
+            panel._on_marker_bypass_toggled(3)
+        assert sig.args[0] == 3
+        assert sig.args[5] is True  # now bypassed
+        assert panel._bypass_toggles[3].isChecked() is True
+
+    def test_double_click_twice_restores(self, panel):
+        panel.set_bands_silently(_default_bands(), False)
+        panel._on_marker_bypass_toggled(3)
+        panel._on_marker_bypass_toggled(3)
+        assert panel._bypass_toggles[3].isChecked() is False
+
+    def test_bypass_toggle_blocked_on_slave_channel(self, panel, qtbot):
+        panel.set_bands_silently(_default_bands(), False)
+        panel.set_linked_slave(True, "Out 1")
+        with qtbot.assertNotEmitted(panel.peq_band_changed):
+            panel._on_marker_bypass_toggled(0)
+        assert panel._bypass_toggles[0].isChecked() is False
+
+
 class TestParseFreqRegression:
     """_parse_freq now delegates to the shared freq_hz_to_raw helper."""
 

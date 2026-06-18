@@ -83,6 +83,10 @@ _PEQ_GAIN_DB_LIMIT = 12.0
 _MARKER_RADIUS = 7.0
 _MARKER_HIT_RADIUS = 11.0
 
+# Raw-Q change per wheel notch over a marker; Ctrl gives a coarser step.
+_Q_WHEEL_STEP = 1
+_Q_WHEEL_STEP_CTRL = 5
+
 # Bessel Q values per order (per-section Q for cascaded 2nd-order stages).
 # Bessel poles are not Butterworth-equivalent; the Q values come from
 # the Bessel polynomial coefficients normalised for each stage.
@@ -242,9 +246,17 @@ class FreqResponseGraph(QWidget):
             gain_raw)`` emitted continuously while a marker is dragged.
             For non-gain-bearing filter types ``gain_raw`` is the band's
             unchanged current value.
+        band_q_changed (int, int): ``(band_index, delta_raw)`` emitted
+            when the wheel is scrolled over an active marker; the host
+            applies the signed raw-Q delta to the band's Q control.
+        band_bypass_toggled (int): ``(band_index)`` emitted on a
+            double-click of a marker (incl. bypassed ones) so the host
+            flips that band's per-band bypass.
     """
 
     band_dragged = Signal(int, int, int)
+    band_q_changed = Signal(int, int)  # (band_index, delta_raw) — wheel over marker
+    band_bypass_toggled = Signal(int)  # (band_index) — double-click marker
 
     def __init__(self, parent: QWidget | None = None, *, feature: str = "peq") -> None:
         """Build an empty graph with the given feature accent.
@@ -549,27 +561,32 @@ class FreqResponseGraph(QWidget):
     # PEQ marker dragging (feature == "peq" only)
     # ------------------------------------------------------------------ #
 
-    def _hit_band(self, pos: QPointF) -> int:
-        """Return the index of the draggable marker nearest ``pos``.
+    def _hit_band(self, pos: QPointF, *, include_bypassed: bool = False) -> int:
+        """Return the index of the PEQ marker nearest ``pos``.
 
-        Only active (non-bypassed) PEQ markers are considered, and only
-        when this graph hosts the PEQ feature. When markers overlap the
-        nearest centre wins; ties resolve to the higher index, which is
-        the one drawn on top. Returns ``-1`` when nothing is in reach.
+        Considers PEQ markers only when this graph hosts the PEQ
+        feature. When markers overlap the nearest centre wins; ties
+        resolve to the higher index, which is the one drawn on top.
+        Returns ``-1`` when nothing is in reach.
 
         Args:
             pos: Cursor position in widget coordinates.
+            include_bypassed: When True, per-band bypassed markers are
+                also hittable (used by double-click-to-toggle so a dim
+                marker can be re-enabled). Channel-wide bypass always
+                blocks. Drag/wheel pass False, so they tune active
+                markers only.
 
         Returns:
             Band index in range ``0..len(bands)-1`` or ``-1``.
         """
-        if self._feature != "peq":
+        if self._feature != "peq" or self._channel_bypass:
             return -1
         rect = self._plot_rect()
         best = -1
         best_dist = _MARKER_HIT_RADIUS
         for idx, band in enumerate(self._bands):
-            if band.bypass or self._channel_bypass:
+            if band.bypass and not include_bypassed:
                 continue
             f_hz = freq_raw_to_hz(band.freq_raw)
             if f_hz <= 0:
@@ -627,6 +644,36 @@ class FreqResponseGraph(QWidget):
         if self._drag_band < 0:
             self.unsetCursor()
         super().leaveEvent(event)
+
+    def wheelEvent(self, event) -> None:
+        if self._feature != "peq":
+            super().wheelEvent(event)
+            return
+        notches = event.angleDelta().y() // 120
+        if not notches:
+            super().wheelEvent(event)
+            return
+        idx = self._hit_band(QPointF(event.position()))
+        if idx < 0:
+            # Not over an active marker — leave the event for anyone above us.
+            super().wheelEvent(event)
+            return
+        fast = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
+        delta = notches * (_Q_WHEEL_STEP_CTRL if fast else _Q_WHEEL_STEP)
+        self.band_q_changed.emit(idx, delta)
+        event.accept()
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if self._feature != "peq" or event.button() != Qt.MouseButton.LeftButton:
+            super().mouseDoubleClickEvent(event)
+            return
+        # include_bypassed so a dim (bypassed) marker can be re-enabled.
+        idx = self._hit_band(QPointF(event.position()), include_bypassed=True)
+        if idx >= 0:
+            self.band_bypass_toggled.emit(idx)
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def _apply_drag(self, idx: int, pos: QPointF) -> None:
         """Map ``pos`` to raw freq/gain for band ``idx`` and emit the change.

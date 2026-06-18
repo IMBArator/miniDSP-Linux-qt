@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from PySide6.QtCore import QPointF, Qt
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QMouseEvent, QWheelEvent
 
 from minidsp.protocol import (
     PEQ_TYPE_HIGH_PASS,
@@ -59,7 +59,37 @@ def _release(pos: QPointF) -> QMouseEvent:
     )
 
 
-def _band(filter_type=PEQ_TYPE_PEAK, gain_raw=120, freq_raw=150, bypass=False) -> PEQBand:
+def _double_click(pos: QPointF) -> QMouseEvent:
+    return QMouseEvent(
+        QMouseEvent.Type.MouseButtonDblClick,
+        pos,
+        pos,
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+
+
+def _wheel(pos: QPointF, notches: int = 1, ctrl: bool = False) -> QWheelEvent:
+    mod = (
+        Qt.KeyboardModifier.ControlModifier if ctrl else Qt.KeyboardModifier.NoModifier
+    )
+    delta = QPoint(0, 120 * notches)
+    return QWheelEvent(
+        pos,
+        pos,
+        delta,
+        delta,
+        Qt.MouseButton.NoButton,
+        mod,
+        Qt.ScrollPhase.ScrollUpdate,
+        False,
+    )
+
+
+def _band(
+    filter_type=PEQ_TYPE_PEAK, gain_raw=120, freq_raw=150, bypass=False
+) -> PEQBand:
     return PEQBand(
         gain_raw=gain_raw,
         freq_raw=freq_raw,
@@ -198,6 +228,65 @@ class TestDragMapping:
         assert graph._drag_band == -1
 
 
+class TestWheelQ:
+    def test_wheel_up_over_marker_emits_positive_delta(self, graph, qtbot):
+        b = _band()
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.waitSignal(graph.band_q_changed, timeout=1000) as sig:
+            graph.wheelEvent(_wheel(_marker_pos(graph, b), notches=1))
+        assert sig.args == [0, 1]
+
+    def test_wheel_down_emits_negative_delta(self, graph, qtbot):
+        b = _band()
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.waitSignal(graph.band_q_changed, timeout=1000) as sig:
+            graph.wheelEvent(_wheel(_marker_pos(graph, b), notches=-1))
+        assert sig.args == [0, -1]
+
+    def test_ctrl_wheel_uses_coarse_step(self, graph, qtbot):
+        b = _band()
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.waitSignal(graph.band_q_changed, timeout=1000) as sig:
+            graph.wheelEvent(_wheel(_marker_pos(graph, b), notches=1, ctrl=True))
+        assert sig.args == [0, 5]
+
+    def test_wheel_off_marker_is_ignored_and_silent(self, graph, qtbot):
+        graph.set_bands([_band()], channel_bypass=False)
+        ev = _wheel(QPointF(5, 5), notches=1)
+        with qtbot.assertNotEmitted(graph.band_q_changed):
+            graph.wheelEvent(ev)
+        # Left unaccepted so it can propagate to a parent.
+        assert not ev.isAccepted()
+
+    def test_wheel_over_bypassed_marker_silent(self, graph, qtbot):
+        b = _band(bypass=True)
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.assertNotEmitted(graph.band_q_changed):
+            graph.wheelEvent(_wheel(_marker_pos(graph, b), notches=1))
+
+
+class TestDoubleClickBypass:
+    def test_double_click_active_marker_toggles(self, graph, qtbot):
+        b = _band(bypass=False)
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.waitSignal(graph.band_bypass_toggled, timeout=1000) as sig:
+            graph.mouseDoubleClickEvent(_double_click(_marker_pos(graph, b)))
+        assert sig.args == [0]
+
+    def test_double_click_bypassed_marker_toggles(self, graph, qtbot):
+        # A dim/bypassed marker must still be reachable so it can be re-enabled.
+        b = _band(bypass=True)
+        graph.set_bands([b], channel_bypass=False)
+        with qtbot.waitSignal(graph.band_bypass_toggled, timeout=1000) as sig:
+            graph.mouseDoubleClickEvent(_double_click(_marker_pos(graph, b)))
+        assert sig.args == [0]
+
+    def test_double_click_empty_area_silent(self, graph, qtbot):
+        graph.set_bands([_band()], channel_bypass=False)
+        with qtbot.assertNotEmitted(graph.band_bypass_toggled):
+            graph.mouseDoubleClickEvent(_double_click(QPointF(5, 5)))
+
+
 class TestCrossoverIsInert:
     def test_xover_graph_emits_nothing_on_drag(self, qtbot):
         g = FreqResponseGraph(feature="xover")
@@ -214,3 +303,18 @@ class TestCrossoverIsInert:
             g.mousePressEvent(_press(start))
             g.mouseMoveEvent(_move(QPointF(start.x() + 50, start.y())))
         assert g._drag_band == -1
+
+    def test_xover_graph_ignores_wheel_and_double_click(self, qtbot):
+        g = FreqResponseGraph(feature="xover")
+        qtbot.addWidget(g)
+        g.resize(600, 320)
+        g.show()
+        qtbot.waitExposed(g)
+        b = _band()
+        g.set_bands([b], channel_bypass=False)
+        start = _marker_pos(g, b)
+
+        with qtbot.assertNotEmitted(g.band_q_changed):
+            with qtbot.assertNotEmitted(g.band_bypass_toggled):
+                g.wheelEvent(_wheel(start, notches=1))
+                g.mouseDoubleClickEvent(_double_click(start))
