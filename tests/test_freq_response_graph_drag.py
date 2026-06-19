@@ -380,9 +380,10 @@ class TestXoverHitTesting:
                 lopass_slope=SLOPE_BW24,
             )
         )
-        hp_pos = _xover_marker_pos(g, "hp")
+        hp_pos = _xover_marker_pos(g, "hp")  # exactly on the HP triangle (dist 0)
         assert g._hit_xover(hp_pos) is None
-        # Closer to LP than to HP, so the active half still wins by distance.
+        # With include_bypassed=True the probe lands squarely on the dim HP
+        # marker, so it wins despite LP being active.
         assert g._hit_xover(hp_pos, include_bypassed=True) == "hp"
 
 
