@@ -6,7 +6,7 @@ Setup, testing, packaging, and release workflow for contributors.
 
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) — manages the virtual environment and dependencies
-- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed automatically from the upstream `v1.0.0` tag)
+- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed automatically from the pinned upstream release wheel)
 - Linux with kernel HID driver — communicates via `/dev/hidraw*`
 - Read/write access to `/dev/hidraw*` (see [Permissions](https://github.com/IMBArator/miniDSP-Linux-qt#permissions))
 
