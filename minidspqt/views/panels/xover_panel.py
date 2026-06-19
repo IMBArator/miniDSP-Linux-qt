@@ -119,6 +119,12 @@ class XoverPanel(QWidget):
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
         )
+        # Direct-manipulation gestures on the graph drive the row widgets
+        # through these slots; each slot forwards to ``_on_param_changed``
+        # so a gesture emits exactly one ``xover_changed`` (atomic).
+        self._graph.xover_freq_dragged.connect(self._on_marker_dragged)
+        self._graph.xover_slope_stepped.connect(self._on_marker_slope_stepped)
+        self._graph.xover_bypass_toggled.connect(self._on_marker_bypass_toggled)
         root.addWidget(self._graph, stretch=1)
 
         factory_defaults = default_crossover_state()
@@ -200,6 +206,52 @@ class XoverPanel(QWidget):
         self.xover_changed.emit(
             xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
         )
+
+    def _on_marker_dragged(self, which: str, freq_raw: int) -> None:
+        """Apply a graph drag to the matching freq knob and re-emit once.
+
+        Args:
+            which: ``"hp"`` or ``"lp"`` — selects ``_hp_freq`` /
+                ``_lp_freq``.
+            freq_raw: New raw cutoff frequency from the graph's
+                coordinate inverse.
+        """
+        knob = getattr(self, f"_{which}_freq")
+        if not knob.isEnabled():  # slave-locked / read-only
+            return
+        knob.setValueSilently(freq_raw)
+        self._on_param_changed()  # one atomic xover_changed + graph refresh
+
+    def _on_marker_slope_stepped(self, which: str, delta: int) -> None:
+        """Apply a wheel notch delta to the matching slope combo.
+
+        ``currentIndexChanged`` drives ``_on_param_changed`` for the
+        atomic emit; when the clamp leaves the index unchanged the
+        panel stays silent.
+
+        Args:
+            which: ``"hp"`` or ``"lp"``.
+            delta: Signed wheel-notches (typically ±1) to apply.
+        """
+        combo = getattr(self, f"_{which}_slope")
+        if not combo.isEnabled():
+            return
+        idx = max(0, min(combo.count() - 1, combo.currentIndex() + delta))
+        if idx != combo.currentIndex():
+            combo.setCurrentIndex(idx)  # currentIndexChanged → _on_param_changed
+
+    def _on_marker_bypass_toggled(self, which: str) -> None:
+        """Flip the matching bypass toggle from a graph double-click.
+
+        ``toggled`` drives ``_on_param_changed`` for the atomic emit.
+
+        Args:
+            which: ``"hp"`` or ``"lp"``.
+        """
+        btn = getattr(self, f"_{which}_bypass")
+        if not btn.isEnabled():
+            return
+        btn.setChecked(not btn.isChecked())  # toggled → _on_param_changed
 
     def is_xover_active(self) -> bool:
         """True if either hi-pass or lo-pass has a non-zero slope (not bypassed)."""

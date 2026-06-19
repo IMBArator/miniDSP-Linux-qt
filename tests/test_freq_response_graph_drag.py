@@ -1,10 +1,12 @@
-"""Draggable PEQ markers on FreqResponseGraph.
+"""Draggable markers on FreqResponseGraph — PEQ bands + crossover halves.
 
 Covers the coordinate inverses, marker hit-testing (incl. overlap
 tie-break and bypassed/locked exclusion), and the drag → ``band_dragged``
 mapping for both gain-bearing (peak/shelf) and gain-pinned (pass/allpass)
-filter types, plus clamping at the plot edges. The crossover variant of
-the same widget must stay non-interactive.
+PEQ filter types, plus clamping at the plot edges. The crossover variant
+of the same widget mirrors the gestures: drag → ``xover_freq_dragged``,
+wheel → ``xover_slope_stepped``, double-click → ``xover_bypass_toggled``;
+its tests live in the second half of the file.
 """
 
 from __future__ import annotations
@@ -17,13 +19,14 @@ from PySide6.QtGui import QMouseEvent, QWheelEvent
 from minidsp.protocol import (
     PEQ_TYPE_HIGH_PASS,
     PEQ_TYPE_PEAK,
+    SLOPE_BW24,
     freq_hz_to_raw,
     freq_raw_to_hz,
     peq_gain_to_raw,
 )
 
 from minidspqt.model import PEQBand
-from minidspqt.widgets.freq_response_graph import FreqResponseGraph
+from minidspqt.widgets.freq_response_graph import CrossoverData, FreqResponseGraph
 
 
 def _press(pos: QPointF) -> QMouseEvent:
@@ -105,6 +108,13 @@ def _marker_pos(graph: FreqResponseGraph, band: PEQBand) -> QPointF:
     return QPointF(x, y)
 
 
+def _xover_marker_pos(graph: FreqResponseGraph, which: str) -> QPointF:
+    """Centre of the HP/LP triangle for the graph's current crossover."""
+    xo = graph._crossover
+    freq_raw = xo.hipass_freq if which == "hp" else xo.lopass_freq
+    return QPointF(graph._hz_to_x(freq_raw_to_hz(freq_raw)), graph._db_to_y(0.0))
+
+
 @pytest.fixture
 def graph(qtbot) -> FreqResponseGraph:
     g = FreqResponseGraph(feature="peq")
@@ -112,6 +122,25 @@ def graph(qtbot) -> FreqResponseGraph:
     g.resize(600, 320)
     g.show()
     qtbot.waitExposed(g)
+    return g
+
+
+@pytest.fixture
+def xover_graph(qtbot) -> FreqResponseGraph:
+    """Feature="xover" graph with active HP and LP halves."""
+    g = FreqResponseGraph(feature="xover")
+    qtbot.addWidget(g)
+    g.resize(600, 320)
+    g.show()
+    qtbot.waitExposed(g)
+    g.set_crossover(
+        CrossoverData(
+            hipass_freq=100,
+            hipass_slope=SLOPE_BW24,
+            lopass_freq=200,
+            lopass_slope=SLOPE_BW24,
+        )
+    )
     return g
 
 
@@ -318,3 +347,179 @@ class TestCrossoverIsInert:
             with qtbot.assertNotEmitted(g.band_bypass_toggled):
                 g.wheelEvent(_wheel(start, notches=1))
                 g.mouseDoubleClickEvent(_double_click(start))
+
+
+# ------------------------------------------------------------------ #
+# Crossover marker dragging (feature == "xover")
+# ------------------------------------------------------------------ #
+
+
+class TestXoverHitTesting:
+    def test_hits_hp_marker(self, xover_graph):
+        assert xover_graph._hit_xover(_xover_marker_pos(xover_graph, "hp")) == "hp"
+
+    def test_hits_lp_marker(self, xover_graph):
+        assert xover_graph._hit_xover(_xover_marker_pos(xover_graph, "lp")) == "lp"
+
+    def test_miss_returns_none(self, xover_graph):
+        assert xover_graph._hit_xover(QPointF(5, 5)) is None
+
+    def test_bypassed_half_not_hittable_unless_flagged(self, qtbot):
+        # HP bypassed (slope=0), LP active. Drag/wheel must not pick the HP
+        # half; double-click may, via include_bypassed=True.
+        g = FreqResponseGraph(feature="xover")
+        qtbot.addWidget(g)
+        g.resize(600, 320)
+        g.show()
+        qtbot.waitExposed(g)
+        g.set_crossover(
+            CrossoverData(
+                hipass_freq=100,
+                hipass_slope=0,
+                lopass_freq=200,
+                lopass_slope=SLOPE_BW24,
+            )
+        )
+        hp_pos = _xover_marker_pos(g, "hp")
+        assert g._hit_xover(hp_pos) is None
+        # Closer to LP than to HP, so the active half still wins by distance.
+        assert g._hit_xover(hp_pos, include_bypassed=True) == "hp"
+
+
+class TestXoverDragMapping:
+    def test_drag_hp_emits_freq(self, xover_graph, qtbot):
+        start = _xover_marker_pos(xover_graph, "hp")
+        target = QPointF(start.x() + 80, start.y() - 30)  # vertical ignored
+
+        xover_graph.mousePressEvent(_press(start))
+        with qtbot.waitSignal(xover_graph.xover_freq_dragged, timeout=1000) as sig:
+            xover_graph.mouseMoveEvent(_move(target))
+
+        which, freq_raw = sig.args
+        assert which == "hp"
+        assert freq_raw == freq_hz_to_raw(xover_graph._x_to_hz(target.x()))
+        # Local crossover is rebuilt for instant feedback.
+        assert xover_graph._crossover.hipass_freq == freq_raw
+        assert freq_raw > 100  # moved right → higher cutoff
+
+    def test_drag_lp_emits_freq(self, xover_graph, qtbot):
+        start = _xover_marker_pos(xover_graph, "lp")
+        target = QPointF(start.x() - 80, start.y())
+
+        xover_graph.mousePressEvent(_press(start))
+        with qtbot.waitSignal(xover_graph.xover_freq_dragged, timeout=1000) as sig:
+            xover_graph.mouseMoveEvent(_move(target))
+
+        which, freq_raw = sig.args
+        assert which == "lp"
+        assert freq_raw == freq_hz_to_raw(xover_graph._x_to_hz(target.x()))
+        assert xover_graph._crossover.lopass_freq == freq_raw
+        assert freq_raw < 200  # moved left → lower cutoff
+
+    def test_freq_clamps_at_edges(self, xover_graph, qtbot):
+        start = _xover_marker_pos(xover_graph, "hp")
+
+        xover_graph.mousePressEvent(_press(start))
+        with qtbot.waitSignal(xover_graph.xover_freq_dragged) as sig_left:
+            xover_graph.mouseMoveEvent(_move(QPointF(-100, start.y())))
+        assert sig_left.args == ["hp", 0]
+
+        with qtbot.waitSignal(xover_graph.xover_freq_dragged) as sig_right:
+            xover_graph.mouseMoveEvent(_move(QPointF(5000, start.y())))
+        assert sig_right.args == ["hp", 300]
+
+    def test_release_ends_drag(self, xover_graph):
+        start = _xover_marker_pos(xover_graph, "hp")
+        xover_graph.mousePressEvent(_press(start))
+        assert xover_graph._drag_xover == "hp"
+        xover_graph.mouseReleaseEvent(_release(start))
+        assert xover_graph._drag_xover is None
+
+
+class TestXoverWheelSlope:
+    def test_wheel_up_over_hp_emits_positive(self, xover_graph, qtbot):
+        with qtbot.waitSignal(xover_graph.xover_slope_stepped, timeout=1000) as sig:
+            xover_graph.wheelEvent(_wheel(_xover_marker_pos(xover_graph, "hp"), 1))
+        assert sig.args == ["hp", 1]
+
+    def test_wheel_down_over_lp_emits_negative(self, xover_graph, qtbot):
+        with qtbot.waitSignal(xover_graph.xover_slope_stepped, timeout=1000) as sig:
+            xover_graph.wheelEvent(_wheel(_xover_marker_pos(xover_graph, "lp"), -1))
+        assert sig.args == ["lp", -1]
+
+    def test_wheel_off_marker_is_ignored_and_silent(self, xover_graph, qtbot):
+        ev = _wheel(QPointF(5, 5), notches=1)
+        with qtbot.assertNotEmitted(xover_graph.xover_slope_stepped):
+            xover_graph.wheelEvent(ev)
+        assert not ev.isAccepted()
+
+    def test_wheel_over_bypassed_marker_silent(self, qtbot):
+        g = FreqResponseGraph(feature="xover")
+        qtbot.addWidget(g)
+        g.resize(600, 320)
+        g.show()
+        qtbot.waitExposed(g)
+        g.set_crossover(
+            CrossoverData(
+                hipass_freq=100,
+                hipass_slope=0,
+                lopass_freq=200,
+                lopass_slope=SLOPE_BW24,
+            )
+        )
+        with qtbot.assertNotEmitted(g.xover_slope_stepped):
+            g.wheelEvent(_wheel(_xover_marker_pos(g, "hp"), notches=1))
+
+
+class TestXoverDoubleClickBypass:
+    def test_double_click_active_hp_marker_toggles(self, xover_graph, qtbot):
+        with qtbot.waitSignal(xover_graph.xover_bypass_toggled, timeout=1000) as sig:
+            xover_graph.mouseDoubleClickEvent(
+                _double_click(_xover_marker_pos(xover_graph, "hp"))
+            )
+        assert sig.args == ["hp"]
+
+    def test_double_click_bypassed_marker_toggles(self, qtbot):
+        # A dim/bypassed marker must still be reachable so it can be re-enabled.
+        g = FreqResponseGraph(feature="xover")
+        qtbot.addWidget(g)
+        g.resize(600, 320)
+        g.show()
+        qtbot.waitExposed(g)
+        g.set_crossover(
+            CrossoverData(
+                hipass_freq=100,
+                hipass_slope=0,
+                lopass_freq=200,
+                lopass_slope=SLOPE_BW24,
+            )
+        )
+        with qtbot.waitSignal(g.xover_bypass_toggled, timeout=1000) as sig:
+            g.mouseDoubleClickEvent(_double_click(_xover_marker_pos(g, "hp")))
+        assert sig.args == ["hp"]
+
+    def test_double_click_empty_area_silent(self, xover_graph, qtbot):
+        with qtbot.assertNotEmitted(xover_graph.xover_bypass_toggled):
+            xover_graph.mouseDoubleClickEvent(_double_click(QPointF(5, 5)))
+
+
+class TestPeqGraphEmitsNoXoverSignals:
+    """The xover_* signals must stay silent on a feature='peq' graph."""
+
+    def test_peq_graph_emits_no_xover_signals(self, graph, qtbot):
+        # The PEQ-graph fixture has feature='peq' and no crossover data, so
+        # none of the xover gestures can find a marker; but they must also
+        # not emit even if crossover data is somehow fed in.
+        graph.set_crossover(
+            CrossoverData(hipass_freq=100, hipass_slope=SLOPE_BW24, lopass_freq=200, lopass_slope=SLOPE_BW24)
+        )
+        pos = _xover_marker_pos(graph, "hp")
+        with qtbot.assertNotEmitted(graph.xover_freq_dragged):
+            with qtbot.assertNotEmitted(graph.xover_slope_stepped):
+                with qtbot.assertNotEmitted(graph.xover_bypass_toggled):
+                    graph.mousePressEvent(_press(pos))
+                    graph.mouseMoveEvent(_move(QPointF(pos.x() + 50, pos.y())))
+                    graph.mouseReleaseEvent(_release(pos))
+                    graph.wheelEvent(_wheel(pos, notches=1))
+                    graph.mouseDoubleClickEvent(_double_click(pos))
+        assert graph._drag_xover is None

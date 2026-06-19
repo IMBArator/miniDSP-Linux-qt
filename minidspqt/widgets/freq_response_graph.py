@@ -241,6 +241,14 @@ class FreqResponseGraph(QWidget):
     panel owns the canonical band state, so it applies the change to
     its knobs and feeds the updated bands back via :meth:`set_bands`.
 
+    When built with ``feature="xover"`` the crossover markers (HP/LP
+    triangles) are draggable the same way: dragging one horizontally
+    sets that filter's cutoff frequency, scrolling the wheel over it
+    steps the slope one notch, and double-clicking toggles bypass
+    (which works on dim bypassed markers too, so they can be
+    re-enabled). The host panel owns the canonical state and applies
+    each gesture via :meth:`set_crossover` / its own control setters.
+
     Signals:
         band_dragged (int, int, int): ``(band_index, freq_raw,
             gain_raw)`` emitted continuously while a marker is dragged.
@@ -252,11 +260,26 @@ class FreqResponseGraph(QWidget):
         band_bypass_toggled (int): ``(band_index)`` emitted on a
             double-click of a marker (incl. bypassed ones) so the host
             flips that band's per-band bypass.
+        xover_freq_dragged (str, int): ``(which, freq_raw)`` emitted
+            continuously while an HP/LP marker is dragged. ``which`` is
+            ``"hp"`` or ``"lp"``. The host applies the new cutoff to the
+            matching freq knob.
+        xover_slope_stepped (str, int): ``(which, delta_notches)``
+            emitted when the wheel is scrolled over an active marker.
+            The host applies the signed delta to the matching slope
+            combo, clamped to its range.
+        xover_bypass_toggled (str): ``(which)`` emitted on a
+            double-click of a marker (incl. dim bypassed ones) so the
+            host flips that filter's bypass toggle.
     """
 
     band_dragged = Signal(int, int, int)
     band_q_changed = Signal(int, int)  # (band_index, delta_raw) — wheel over marker
     band_bypass_toggled = Signal(int)  # (band_index) — double-click marker
+
+    xover_freq_dragged = Signal(str, int)  # (which, freq_raw) — drag marker
+    xover_slope_stepped = Signal(str, int)  # (which, delta_notches) — wheel over marker
+    xover_bypass_toggled = Signal(str)  # (which) — double-click marker
 
     def __init__(self, parent: QWidget | None = None, *, feature: str = "peq") -> None:
         """Build an empty graph with the given feature accent.
@@ -264,8 +287,9 @@ class FreqResponseGraph(QWidget):
         Args:
             parent: Qt parent widget.
             feature: ``"peq"`` or ``"xover"`` — picks the curve
-                palette and gates marker dragging (only ``"peq"``
-                graphs are interactive).
+                palette and gates marker dragging. PEQ graphs respond
+                to the numbered PEQ markers; xover graphs respond to
+                the HP/LP triangles.
         """
         super().__init__(parent)
         self._feature = feature
@@ -273,9 +297,10 @@ class FreqResponseGraph(QWidget):
         self._channel_bypass: bool = False
         self._crossover: CrossoverData = CrossoverData()
         self._drag_band: int = -1  # index of the marker being dragged, or -1
+        self._drag_xover: str | None = None  # "hp"/"lp" being dragged, or None
         self.setMinimumHeight(160)
         # Hover-cursor feedback needs move events even when no button is held.
-        if feature == "peq":
+        if feature in ("peq", "xover"):
             self.setMouseTracking(True)
         theme_manager.themeChanged.connect(self.update)
 
@@ -496,8 +521,6 @@ class FreqResponseGraph(QWidget):
             (xo.hipass_freq, xo.hipass_slope, "HP"),
             (xo.lopass_freq, xo.lopass_slope, "LP"),
         ]:
-            if slope == 0:
-                continue
             f_hz = freq_raw_to_hz(freq_raw)
             if f_hz <= 0:
                 continue
@@ -506,8 +529,15 @@ class FreqResponseGraph(QWidget):
                 continue
             y = self._db_to_y(0.0)
 
+            # ``slope == 0`` means bypassed (no curve contribution), but the
+            # cutoff frequency is still retained by the device — draw a dim
+            # marker so the user can see / re-grab it (e.g. double-click to
+            # re-enable). Active halves keep the bright xover accent.
+            tri_color = (
+                theme.graph_marker_bypassed if slope == 0 else theme.graph_curve_xover
+            )
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(theme.graph_curve_xover)
+            p.setBrush(tri_color)
             tri = QPolygonF()
             tri.append(QPointF(x, y - 8))
             tri.append(QPointF(x - 6, y + 4))
@@ -601,78 +631,178 @@ class FreqResponseGraph(QWidget):
                 best = idx
         return best
 
+    def _hit_xover(
+        self, pos: QPointF, *, include_bypassed: bool = False
+    ) -> str | None:
+        """Return the HP/LP marker nearest ``pos``, or None.
+
+        Crossover markers are considered only when this graph hosts the
+        xover feature. The HP and LP triangles share a single 0 dB
+        y-coordinate, so ties resolve to whichever half was checked
+        later in the loop (LP) — in practice they sit at different
+        frequencies and never overlap.
+
+        Args:
+            pos: Cursor position in widget coordinates.
+            include_bypassed: When True, dim bypassed markers
+                (``slope == 0``) are also hittable — used by
+                double-click-to-toggle so a bypassed filter can be
+                re-enabled. Drag/wheel pass False so they tune active
+                halves only.
+
+        Returns:
+            ``"hp"`` / ``"lp"`` or ``None``.
+        """
+        if self._feature != "xover":
+            return None
+        rect = self._plot_rect()
+        xo = self._crossover
+        best: str | None = None
+        best_dist = _MARKER_HIT_RADIUS
+        for which, freq_raw, slope in (
+            ("hp", xo.hipass_freq, xo.hipass_slope),
+            ("lp", xo.lopass_freq, xo.lopass_slope),
+        ):
+            if slope == 0 and not include_bypassed:
+                continue
+            f_hz = freq_raw_to_hz(freq_raw)
+            if f_hz <= 0:
+                continue
+            x = self._hz_to_x(f_hz)
+            if not (rect.left() - 1 <= x <= rect.right() + 1):
+                continue
+            y = self._db_to_y(0.0)
+            dist = QLineF(pos, QPointF(x, y)).length()
+            if dist <= best_dist:  # "<=" so LP wins a tie (matches draw order)
+                best_dist = dist
+                best = which
+        return best
+
     def mousePressEvent(self, event) -> None:
-        if self._feature != "peq" or event.button() != Qt.MouseButton.LeftButton:
+        if event.button() != Qt.MouseButton.LeftButton:
             super().mousePressEvent(event)
             return
-        hit = self._hit_band(QPointF(event.position()))
-        if hit >= 0:
-            self._drag_band = hit
-            self.setCursor(Qt.CursorShape.ClosedHandCursor)
-            event.accept()
-            return
+        if self._feature == "peq":
+            hit = self._hit_band(QPointF(event.position()))
+            if hit >= 0:
+                self._drag_band = hit
+                self.setCursor(Qt.CursorShape.ClosedHandCursor)
+                event.accept()
+                return
+        elif self._feature == "xover":
+            which = self._hit_xover(QPointF(event.position()))
+            if which is not None:
+                self._drag_xover = which
+                self.setCursor(Qt.CursorShape.ClosedHandCursor)
+                event.accept()
+                return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event) -> None:
-        if self._feature != "peq":
-            super().mouseMoveEvent(event)
-            return
         pos = QPointF(event.position())
-        if self._drag_band >= 0:
-            self._apply_drag(self._drag_band, pos)
-            event.accept()
-            return
-        # Not dragging: offer a grab cursor when hovering a draggable marker.
-        over = self._hit_band(pos) >= 0
-        self.setCursor(
-            Qt.CursorShape.OpenHandCursor if over else Qt.CursorShape.ArrowCursor
-        )
-        super().mouseMoveEvent(event)
-
-    def mouseReleaseEvent(self, event) -> None:
-        if self._drag_band >= 0 and event.button() == Qt.MouseButton.LeftButton:
-            self._drag_band = -1
-            over = self._hit_band(QPointF(event.position())) >= 0
+        if self._feature == "peq":
+            if self._drag_band >= 0:
+                self._apply_drag(self._drag_band, pos)
+                event.accept()
+                return
+            # Not dragging: offer a grab cursor when hovering a draggable marker.
+            over = self._hit_band(pos) >= 0
             self.setCursor(
                 Qt.CursorShape.OpenHandCursor if over else Qt.CursorShape.ArrowCursor
             )
-            event.accept()
+            super().mouseMoveEvent(event)
             return
+        if self._feature == "xover":
+            if self._drag_xover is not None:
+                self._apply_xover_drag(self._drag_xover, pos)
+                event.accept()
+                return
+            over = self._hit_xover(pos) is not None
+            self.setCursor(
+                Qt.CursorShape.OpenHandCursor if over else Qt.CursorShape.ArrowCursor
+            )
+            super().mouseMoveEvent(event)
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            if self._drag_band >= 0:
+                self._drag_band = -1
+                over = self._hit_band(QPointF(event.position())) >= 0
+                self.setCursor(
+                    Qt.CursorShape.OpenHandCursor
+                    if over
+                    else Qt.CursorShape.ArrowCursor
+                )
+                event.accept()
+                return
+            if self._drag_xover is not None:
+                self._drag_xover = None
+                over = self._hit_xover(QPointF(event.position())) is not None
+                self.setCursor(
+                    Qt.CursorShape.OpenHandCursor
+                    if over
+                    else Qt.CursorShape.ArrowCursor
+                )
+                event.accept()
+                return
         super().mouseReleaseEvent(event)
 
     def leaveEvent(self, event) -> None:
-        if self._drag_band < 0:
+        if self._drag_band < 0 and self._drag_xover is None:
             self.unsetCursor()
         super().leaveEvent(event)
 
     def wheelEvent(self, event) -> None:
-        if self._feature != "peq":
-            super().wheelEvent(event)
-            return
-        notches = event.angleDelta().y() // 120
-        if not notches:
-            super().wheelEvent(event)
-            return
-        idx = self._hit_band(QPointF(event.position()))
-        if idx < 0:
-            # Not over an active marker — leave the event for anyone above us.
-            super().wheelEvent(event)
-            return
-        fast = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
-        delta = notches * (_Q_WHEEL_STEP_CTRL if fast else _Q_WHEEL_STEP)
-        self.band_q_changed.emit(idx, delta)
-        event.accept()
-
-    def mouseDoubleClickEvent(self, event) -> None:
-        if self._feature != "peq" or event.button() != Qt.MouseButton.LeftButton:
-            super().mouseDoubleClickEvent(event)
-            return
-        # include_bypassed so a dim (bypassed) marker can be re-enabled.
-        idx = self._hit_band(QPointF(event.position()), include_bypassed=True)
-        if idx >= 0:
-            self.band_bypass_toggled.emit(idx)
+        if self._feature == "peq":
+            notches = event.angleDelta().y() // 120
+            if not notches:
+                super().wheelEvent(event)
+                return
+            idx = self._hit_band(QPointF(event.position()))
+            if idx < 0:
+                # Not over an active marker — leave the event for anyone above us.
+                super().wheelEvent(event)
+                return
+            fast = bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
+            delta = notches * (_Q_WHEEL_STEP_CTRL if fast else _Q_WHEEL_STEP)
+            self.band_q_changed.emit(idx, delta)
             event.accept()
             return
+        if self._feature == "xover":
+            notches = event.angleDelta().y() // 120
+            if not notches:
+                super().wheelEvent(event)
+                return
+            which = self._hit_xover(QPointF(event.position()))
+            if which is None:
+                # Not over an active marker — leave the event for anyone above us.
+                super().wheelEvent(event)
+                return
+            self.xover_slope_stepped.emit(which, notches)
+            event.accept()
+            return
+        super().wheelEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() != Qt.MouseButton.LeftButton:
+            super().mouseDoubleClickEvent(event)
+            return
+        if self._feature == "peq":
+            # include_bypassed so a dim (bypassed) marker can be re-enabled.
+            idx = self._hit_band(QPointF(event.position()), include_bypassed=True)
+            if idx >= 0:
+                self.band_bypass_toggled.emit(idx)
+                event.accept()
+                return
+        elif self._feature == "xover":
+            # include_bypassed so a dim (bypassed) marker can be re-enabled.
+            which = self._hit_xover(QPointF(event.position()), include_bypassed=True)
+            if which is not None:
+                self.xover_bypass_toggled.emit(which)
+                event.accept()
+                return
         super().mouseDoubleClickEvent(event)
 
     def _apply_drag(self, idx: int, pos: QPointF) -> None:
@@ -700,6 +830,41 @@ class FreqResponseGraph(QWidget):
         )
         self.update()
         self.band_dragged.emit(idx, freq_raw, gain_raw)
+
+    def _apply_xover_drag(self, which: str, pos: QPointF) -> None:
+        """Map ``pos.x()`` to a raw cutoff for half ``which`` and emit the change.
+
+        Crossover markers sit at 0 dB, so only the horizontal position
+        is mapped — vertical movement is ignored. The local
+        ``_crossover`` copy is rebuilt with the new cutoff for instant
+        visual feedback; the host panel re-feeds canonical state via
+        :meth:`set_crossover` when it handles the emitted
+        :attr:`xover_freq_dragged`.
+
+        Args:
+            which: ``"hp"`` or ``"lp"`` — which filter's cutoff to set.
+            pos: Cursor position in widget coordinates; ``pos.x()`` is
+                inverse-mapped through :meth:`_x_to_hz` and clamped to
+                the plot rect.
+        """
+        freq = freq_hz_to_raw(self._x_to_hz(pos.x()))
+        xo = self._crossover
+        if which == "hp":
+            self._crossover = CrossoverData(
+                hipass_freq=freq,
+                hipass_slope=xo.hipass_slope,
+                lopass_freq=xo.lopass_freq,
+                lopass_slope=xo.lopass_slope,
+            )
+        else:
+            self._crossover = CrossoverData(
+                hipass_freq=xo.hipass_freq,
+                hipass_slope=xo.hipass_slope,
+                lopass_freq=freq,
+                lopass_slope=xo.lopass_slope,
+            )
+        self.update()
+        self.xover_freq_dragged.emit(which, freq)
 
 
 def _biquad_coeffs_from_band(band: PEQBand) -> tuple[float, ...]:

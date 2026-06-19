@@ -235,7 +235,15 @@ The Crossover panel exposes the hi-pass and lo-pass filters on each output chann
 Both the **Crossover** and **PEQ** panels share a combined frequency-response graph that shows the **summed crossover + PEQ magnitude response**. Editing a crossover filter updates the graph on both panels, and vice versa. The graph uses local biquad coefficient math (Audio EQ Cookbook / RBJ) for both the crossover filters (cascaded 2nd-order Butterworth / Bessel / Linkwitz-Riley sections) and the PEQ bands.
 
 - **PEQ band markers** — numbered circles (`1`..`7`) at each band's centre frequency
-- **Crossover markers** — blue triangles labeled `HP` / `LP` at the respective cutoff frequencies
+- **Crossover markers** — blue triangles labeled `HP` / `LP` at the respective cutoff frequencies. A bypassed filter's triangle dims to grey but stays visible at its last cutoff so you can see and re-grab it.
+
+**Direct manipulation on the graph** — the HP / LP triangles are interactive, and every gesture updates the controls below, the curve, and the device live (exactly like a knob edit):
+
+- **Drag** — grab an active marker and move it horizontally to set that filter's **cutoff frequency** (vertical movement is ignored; the markers always sit at 0 dB).
+- **Scroll wheel over a marker** — steps the filter's **slope** one position up or down through the slope list (BW 6 → BL 6 → … → LR 24).
+- **Double-click a marker** — toggles that filter's **bypass**. This works on dim (already-bypassed) markers too, so a double-click re-enables them at their previous slope.
+
+Drag and wheel act on **active** markers only; double-click works on any marker (active or dim). Slave (linked) channels leave the graph read-only.
 
 #### "Xover active" indicator on the output strip
 

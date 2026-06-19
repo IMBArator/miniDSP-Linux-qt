@@ -1,5 +1,10 @@
 """XoverPanel — silent setters, signal emission, bypass behaviour, and
 crossover-related model state / strip indicator tests.
+
+Includes coverage of the direct-manipulation graph slots
+(``_on_marker_dragged`` / ``_on_marker_slope_stepped`` /
+``_on_marker_bypass_toggled``) that bridge marker gestures on the shared
+:class:`FreqResponseGraph` to the panel's row widgets.
 """
 
 from __future__ import annotations
@@ -8,7 +13,7 @@ import math
 
 import pytest
 
-from minidsp.protocol import SLOPE_BW24
+from minidsp.protocol import SLOPE_BW24, SLOPE_BW6, SLOPE_LR24
 from minidspqt.model import CrossoverState, OutputChannelState
 from minidspqt.views.panels import XoverPanel
 from minidspqt.widgets.freq_response_graph import (
@@ -279,3 +284,111 @@ class TestFreqResponseGraph:
         assert len(g._bands) == 1
         assert g._channel_bypass is True
         assert g._crossover.lopass_freq == 200
+
+
+# ------------------------------------------------------------------ #
+# Graph-driven slots (_on_marker_*)
+# ------------------------------------------------------------------ #
+
+
+class TestMarkerDraggedSlot:
+    def test_hp_drag_sets_knob_and_emits_once(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_dragged("hp", 150)
+        assert panel._hp_freq.value() == 150
+        hp_freq, hp_slope, lp_freq, lp_slope = sig.args
+        assert hp_freq == 150
+        assert hp_slope == SLOPE_BW24  # slope untouched
+        assert lp_freq == 200
+        assert lp_slope == SLOPE_BW24
+
+    def test_lp_drag_sets_knob_and_emits_once(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_dragged("lp", 180)
+        assert panel._lp_freq.value() == 180
+        hp_freq, hp_slope, lp_freq, lp_slope = sig.args
+        assert lp_freq == 180
+        assert hp_freq == 100
+
+    def test_drag_syncs_graph(self, panel):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        panel._on_marker_dragged("hp", 175)
+        assert panel._graph._crossover.hipass_freq == 175
+
+
+class TestMarkerSlopeSteppedSlot:
+    def test_hp_slope_up_advances_combo_and_emit(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        # BW24 = slope 8 → combo index 7; +1 → index 8 = BL24 = slope 9.
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_slope_stepped("hp", +1)
+        assert panel._hp_slope.currentIndex() == 8
+        assert sig.args[1] == 9
+
+    def test_lp_slope_down_advances_combo_and_emit(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        # BW24 = index 7; -1 → index 6 = BL18 = slope 7.
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_slope_stepped("lp", -1)
+        assert panel._lp_slope.currentIndex() == 6
+        assert sig.args[3] == 7
+
+    def test_clamp_at_index_zero_with_minus_one(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW6, 200, SLOPE_BW6)
+        # BW6 = index 0; -1 clamps to 0 → no change → no emit.
+        with qtbot.assertNotEmitted(panel.xover_changed):
+            panel._on_marker_slope_stepped("hp", -1)
+        assert panel._hp_slope.currentIndex() == 0
+
+    def test_clamp_at_top_index_with_plus_one(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_LR24, 200, SLOPE_LR24)
+        # LR24 = index 9 (top); +1 clamps to 9 → no change → no emit.
+        with qtbot.assertNotEmitted(panel.xover_changed):
+            panel._on_marker_slope_stepped("hp", +1)
+        assert panel._hp_slope.currentIndex() == 9
+
+
+class TestMarkerBypassToggledSlot:
+    def test_first_call_bypasses(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_bypass_toggled("hp")
+        assert panel._hp_bypass.isChecked() is True
+        assert sig.args[1] == 0  # hp_slope now bypassed
+
+    def test_second_call_restores_slope(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        panel._on_marker_bypass_toggled("hp")  # bypass
+        with qtbot.waitSignal(panel.xover_changed, timeout=500) as sig:
+            panel._on_marker_bypass_toggled("hp")  # re-enable
+        assert panel._hp_bypass.isChecked() is False
+        # Combo kept its position while bypassed → BW24 restored.
+        assert sig.args[1] == SLOPE_BW24
+
+
+class TestMarkerSlotsSlaveLocked:
+    """Slots must be no-ops on a linked-slave channel (read-only guard)."""
+
+    def test_dragged_slot_noop_on_slave(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        panel.set_linked_slave(True, "Out 1")
+        assert panel._hp_freq.isEnabled() is False
+        with qtbot.assertNotEmitted(panel.xover_changed):
+            panel._on_marker_dragged("hp", 250)
+        assert panel._hp_freq.value() == 100  # unchanged
+
+    def test_slope_stepped_slot_noop_on_slave(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        panel.set_linked_slave(True, "Out 1")
+        with qtbot.assertNotEmitted(panel.xover_changed):
+            panel._on_marker_slope_stepped("hp", +1)
+        assert panel._hp_slope.currentIndex() == SLOPE_BW24 - 1  # unchanged
+
+    def test_bypass_toggled_slot_noop_on_slave(self, panel, qtbot):
+        panel.set_params_silently(100, SLOPE_BW24, 200, SLOPE_BW24)
+        panel.set_linked_slave(True, "Out 1")
+        with qtbot.assertNotEmitted(panel.xover_changed):
+            panel._on_marker_bypass_toggled("hp")
+        assert panel._hp_bypass.isChecked() is False  # unchanged
