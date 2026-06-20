@@ -186,15 +186,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 
 | Feature | Library API | What's missing |
 |---------|-------------|----------------|
-| Refactor linking indicator: right from header pill with text | — | — |
-| Detail View: mark with underline the currently edited feature | — | — |
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
-
-### Needed?
-
-| Feature | Library API | What's missing |
-|---------|-------------|----------------|
-| PEQ extras | — | Copy-band / paste-band, A/B compare |
 
 ## Related projects
 
