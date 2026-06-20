@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-20
+
+### Added
+
+- Drag PEQ graph markers to set frequency & gain ([`be68b24`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/be68b24f8a42963bef0ca5066a6fb291fe238dd7))
+- Wheel-to-Q and double-click-to-bypass on PEQ markers ([`1ec14da`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/1ec14dab0d47158c20be95392ed1b5b44fedaec5))
+- Interactive crossover markers — drag freq, wheel slope, double-click bypass ([`5e73e15`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/5e73e151057b63ecab91af7891d6b7e257e699a5))
+- Overlay other output curves on the PEQ and Xover graphs ([`edd5538`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/edd553897bc347c9610558a4e3ffe100b71fb65a))
+- Show device model/firmware and app version in the About dialog ([`558c433`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/558c43379b04b58057fa6450aae5dfb4a86f9c61))
+
+### Documentation
+
+- Dedupe user-guide USB permissions against the README ([`0246dc0`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/0246dc0f167b21f48dce3fb7ae5f6afa4f62e160))
+- Note --no-sync/--no-cache for local protocol lib ([`2a4e854`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/2a4e85419591bfef74564492c1e7aedc41a13c42))
+- Prune stale roadmap and wishlist entries ([`4080c15`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/4080c1552201f2a8a9250c287fbaee7f865af4a1))
+
+### Fixed
+
+- Honour explicit light/dark choice on KDE Plasma ([`2770558`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/27705588ddc3340f7cc7e7be45f99b0c08743dde))
+
 ## [1.0.0] - 2026-05-26
 
 First public release of the Qt graphical interface for the **t.racks DSP

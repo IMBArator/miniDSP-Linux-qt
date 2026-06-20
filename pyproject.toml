@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "minidsp-linux-qt"
-version = "1.0.0"
+version = "1.1.0"
 description = "Graphical interface for the t.racks DSP 4x4 Mini"
 requires-python = ">=3.11"
 dependencies = [
