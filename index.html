@@ -680,6 +680,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#about-device-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About / device info
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#knob-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -703,23 +714,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Roadmap">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Needed?
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1629,6 +1623,8 @@
       
         
       
+        
+      
     
     
     
@@ -1680,6 +1676,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/minidspqt/views/panels/_overlay_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels._overlay_controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2594,6 +2618,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#about-device-info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        About / device info
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#knob-interaction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2617,23 +2652,6 @@
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Roadmap">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#needed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Needed?
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2775,8 +2793,8 @@
 <li>Quick navigation buttons for all 4 inputs and 4 outputs; the active feature is preserved across channel switches when valid for the new channel type</li>
 <li>A feature panel area:</li>
 <li><strong>Gate</strong> (inputs) — Threshold, Attack, Hold, Release knobs plus a live transfer-function graph; all four parameters are sent atomically (<code>cmd_gate</code>)</li>
-<li><strong>PEQ</strong> (outputs) — 7 bands of (Type / Freq / Gain / Q / Bypass) below a summed frequency-response graph, plus a channel-bypass toggle in the panel header. Per-band atomic emit. Shelves and pass filters cap Q at 3.0 to match the official editor; Peak and the two allpass forms keep the full Q range (<code>cmd_peq_band</code>, <code>cmd_peq_channel_bypass</code>)</li>
-<li><strong>Crossover</strong> (outputs) — Hi-Pass and Lo-Pass rows, each with frequency knob, slope selector (BW 6 / BL 6 / BW 12 / BL 12 / LR 12 / BW 18 / BL 18 / BW 24 / BL 24 / LR 24), and bypass toggle. Bypass is independent of the slope selector (matching the manufacturer software). Both the Xover and PEQ panels share a combined frequency-response graph that shows the summed crossover + PEQ curve (<code>cmd_hipass</code>, <code>cmd_lopass</code>)</li>
+<li><strong>PEQ</strong> (outputs) — 7 bands of (Type / Freq / Gain / Q / Bypass) below a summed frequency-response graph, plus a channel-bypass toggle in the panel header. Per-band atomic emit. Each band's numbered marker on the graph is <strong>interactive</strong> — drag horizontally to set frequency and vertically to set gain (gain only for Peak/Shelf types; Pass/Allpass markers move in frequency only), scroll the mouse wheel over a marker to adjust its Q (Ctrl for coarse steps), and double-click a marker to bypass or re-enable that band. Shelves and pass filters cap Q at 3.0 to match the official editor; Peak and the two allpass forms keep the full Q range (<code>cmd_peq_band</code>, <code>cmd_peq_channel_bypass</code>)</li>
+<li><strong>Crossover</strong> (outputs) — Hi-Pass and Lo-Pass rows, each with frequency knob, slope selector (BW 6 / BL 6 / BW 12 / BL 12 / LR 12 / BW 18 / BL 18 / BW 24 / BL 24 / LR 24), and bypass toggle. Bypass is independent of the slope selector (matching the manufacturer software). Both the Xover and PEQ panels share a combined frequency-response graph that shows the summed crossover + PEQ curve; the HP/LP <strong>triangle markers are interactive</strong> — drag horizontally to set cutoff frequency, scroll the mouse wheel over a marker to step the slope one position, and double-click to toggle that filter's bypass (works on dim/bypassed markers too so they can be re-enabled) (<code>cmd_hipass</code>, <code>cmd_lopass</code>)</li>
 <li><strong>Compressor</strong> (outputs) — Threshold (−90 to +20 dB) and Knee (0 – 12 dB) knobs, a Ratio combo (16 named ratios from 1:1.0 to Limit), and Attack (1–999 ms) / Release (10–3000 ms) knobs. All five parameters are sent atomically and visualised on a live input-vs-output transfer-function graph that renders the soft/hard knee elbow and the Limit clamp (<code>cmd_compressor</code>)</li>
 <li><strong>Delay</strong> (outputs) — Single edit knob (0 – 680 ms, 3-decimal ms display, typed input accepts <code>"12.5 ms"</code> or <code>"601 sa"</code>) targeting the displayed output, plus an overview bar graph showing every output's delay on a shared auto-scaling axis (snaps to the next 20 ms above the largest active delay; clamps at 680 ms). The graph re-targets to whichever output the strip nav buttons select, so a single panel covers all four outputs without per-channel duplication (<code>cmd_delay</code>)</li>
 <li>A <strong>placeholder panel</strong> is shown when the active feature does not apply to the selected channel (e.g. Gate on an output)</li>
@@ -2784,7 +2802,8 @@
 <li>Routed-channel level meters — outputs to the right of an input, inputs to the left of an output, driven by the routing matrix</li>
 <li>Strip-level "active" indicators: the input Gate button fills green when the gate threshold is above the noise floor; the output PEQ button fills purple when at least one band has non-zero gain and is not bypassed; the output Xover button fills amber when either hi-pass or lo-pass is not bypassed; the output Comp button fills teal when the ratio is anything other than 1:1.0; the output Delay button fills light blue when the delay is non-zero</li>
 <li>Master → slave parameter fan-out: editing any compressor / delay (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests (internal logic using <code>decode_link_groups</code>)</li>
-<li><strong>EQ curve visualisation</strong> — QPainter log-frequency/dB graphs driven by local biquad coefficient math (Audio EQ Cookbook / RBJ), shared between PEQ and Crossover panels; crossover markers (triangles) and PEQ band markers (numbered circles) overlay the summed magnitude response</li>
+<li><strong>EQ curve visualisation</strong> — QPainter log-frequency/dB graphs driven by local biquad coefficient math (Audio EQ Cookbook / RBJ), shared between PEQ and Crossover panels; crossover markers (triangles) and PEQ band markers (numbered circles) overlay the summed magnitude response. In the PEQ panel the numbered markers are draggable (set frequency / gain), the wheel adjusts Q, and double-click toggles bypass; in the Crossover panel the HP/LP triangles mirror the same gestures (drag = cutoff frequency, wheel = slope, double-click = bypass)</li>
+<li><strong>Overlay other outputs</strong> — both the PEQ and Crossover panel headers carry a colour-coded checkbox per <em>other</em> output channel; tick one to overlay that output's full response (PEQ + crossover) on the graph for comparison. Each output keeps a stable colour, overlays track live edits, and the selection clears when you switch channels (works on linked-slave channels too)</li>
 </ul>
 <h3 id="preset-management">Preset management<a class="headerlink" href="#preset-management" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2825,6 +2844,10 @@
 <li>No "Remove PIN" action is exposed because the protocol has no such command; offline mode mirrors the same semantics against the in-memory virtual DSP for safe experimentation</li>
 <li>See <a href="user-guide/#device-lock--pin">Device Lock / PIN in the user guide</a> for the full UX walkthrough and the <strong>⚠ no known factory reset</strong> warning</li>
 </ul>
+<h3 id="about-device-info">About / device info<a class="headerlink" href="#about-device-info" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Menu → About</strong> shows the application version plus, when a device is connected, its model and firmware version read from the <code>0x13</code> firmware query (<code>4x4MINI</code> / <code>V010</code>). Offline or before connecting, it shows the app version and a status line instead (<code>cmd_firmware</code>, <code>parse_firmware</code>)</li>
+</ul>
 <h3 id="knob-interaction">Knob interaction<a class="headerlink" href="#knob-interaction" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Click and drag</strong> vertically, <strong>scroll wheel</strong>, or <strong>arrow keys</strong> for ±1 raw unit steps</li>
@@ -2846,51 +2869,9 @@
 </thead>
 <tbody>
 <tr>
-<td>Refactor linking indicator: right from header pill with text</td>
-<td>—</td>
-<td>—</td>
-</tr>
-<tr>
-<td>Detail View: mark with underline the currently edited feature</td>
-<td>—</td>
-<td>—</td>
-</tr>
-<tr>
 <td>Delay display unit (ms/m/ft)</td>
 <td><code>cmd_set_delay_unit</code></td>
 <td>Dropdown in delay view</td>
-</tr>
-<tr>
-<td>Firmware string display</td>
-<td><code>cmd_firmware</code> response</td>
-<td>Surface in About dialog</td>
-</tr>
-<tr>
-<td>Show-all-EQ overlay</td>
-<td>—</td>
-<td>Checkbox to overlay 4 output curves</td>
-</tr>
-<tr>
-<td>PEQ extras</td>
-<td>—</td>
-<td>draggable graph markers</td>
-</tr>
-</tbody>
-</table>
-<h3 id="needed">Needed?<a class="headerlink" href="#needed" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Feature</th>
-<th>Library API</th>
-<th>What's missing</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>PEQ extras</td>
-<td>—</td>
-<td>Copy-band / paste-band, A/B compare</td>
 </tr>
 </tbody>
 </table>

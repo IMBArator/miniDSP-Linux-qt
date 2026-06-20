@@ -487,6 +487,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#usb-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USB Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#starting-the-application" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -681,6 +692,17 @@
     <span class="md-ellipsis">
       
         Frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#overlaying-other-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overlaying other outputs
       
     </span>
   </a>
@@ -1371,17 +1393,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usb-permissions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        USB Permissions
-      
-    </span>
-  </a>
   
 </li>
       
@@ -2314,6 +2325,8 @@
       
         
       
+        
+      
     
     
     
@@ -2365,6 +2378,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/_overlay_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels._overlay_controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -3057,6 +3098,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#usb-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USB Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#starting-the-application" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3251,6 +3303,17 @@
     <span class="md-ellipsis">
       
         Frequency-response graph
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#overlaying-other-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overlaying other outputs
       
     </span>
   </a>
@@ -3945,17 +4008,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usb-permissions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        USB Permissions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#troubleshooting" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4060,6 +4112,9 @@
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>See the <a href="../#installation"><strong>Installation</strong></a> section of the README for the two supported install methods — the prebuilt <strong>AppImage</strong> (recommended) or the <strong>pip</strong> release wheel. A t.racks DSP 4x4 Mini connected via USB is required, or use <a href="#offline-mode">offline mode</a> to explore without hardware.</p>
 <p>To run from source for development, see the <a href="../development/">Development Guide</a>.</p>
+<hr />
+<h2 id="usb-permissions">USB Permissions<a class="headerlink" href="#usb-permissions" title="Permanent link">&para;</a></h2>
+<p>The application talks to the DSP via <code>/dev/hidraw*</code>, which requires root by default. To use it as a regular user, add the udev rule documented in the <a href="../#permissions"><strong>Permissions</strong></a> section of the README, then disconnect and reconnect the device.</p>
 <hr />
 <h2 id="starting-the-application">Starting the Application<a class="headerlink" href="#starting-the-application" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>minidspqt<span class="w">              </span><span class="c1"># connect to hardware (default logging)</span>
@@ -4351,7 +4406,15 @@
 <li><strong>Markers</strong> — small numbered circles at each band's centre frequency (<code>1</code>..<code>7</code>). Active bands are green; band-bypassed or channel-bypassed bands are dim grey.</li>
 <li><strong>Channel-bypass visualisation</strong> — when the channel-wide bypass is engaged the curve renders as a flat 0 dB line at reduced opacity, while the per-band controls remain editable.</li>
 </ul>
-<p>The graph is <em>display-only</em> in this version — drag-to-edit on the markers is not yet supported. Edit values in the controls below.</p>
+<p><strong>Direct manipulation on the graph</strong> — the numbered markers are interactive, and every gesture updates the controls below, the curve, and the device live (exactly like a knob edit):</p>
+<ul>
+<li><strong>Drag</strong> — grab an active band's marker: horizontal movement sets <strong>frequency</strong>, vertical movement sets <strong>gain</strong> (gain only for Peak / Low Shelf / High Shelf — Pass and Allpass markers stay pinned at 0 dB and move in frequency only).</li>
+<li><strong>Scroll wheel over a marker</strong> — adjusts that band's <strong>Q</strong> (scroll up for higher Q / narrower; hold <strong>Ctrl</strong> for coarser steps). Q is clamped to the type's allowed range, so shelves and pass filters still cap at 3.0.</li>
+<li><strong>Double-click a marker</strong> — toggles that band's <strong>bypass</strong>. This works on dim (already-bypassed) markers too, so a double-click re-enables them.</li>
+</ul>
+<p>Drag and wheel act on <strong>active</strong> markers only; double-click works on any marker. Slave (linked) channels and channel-wide bypass leave the graph read-only.</p>
+<h4 id="overlaying-other-outputs">Overlaying other outputs<a class="headerlink" href="#overlaying-other-outputs" title="Permanent link">&para;</a></h4>
+<p>The panel header has a colour-coded <strong>Overlay</strong> checkbox for each of the <em>other</em> three output channels (the displayed output's own box is hidden). Tick one to draw that output's full response — its PEQ bands <strong>and</strong> crossover — faintly behind the active curve, so you can line up two outputs (e.g. a crossover split between a woofer and a tweeter) without flipping back and forth. Each output keeps a stable colour, the overlay tracks live edits to that channel, and the checkboxes clear automatically when you switch to a different channel. Overlays are view-only, so they stay available even on linked-slave channels where the controls are locked.</p>
 <h4 id="peq-active-indicator-on-the-output-strip">"PEQ active" indicator on the output strip<a class="headerlink" href="#peq-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
 <p>The PEQ button on the output channel strip lights up purple whenever the channel's PEQ is shaping the signal, defined as: <strong>at least one band has gain ≠ 0 dB AND is not bypassed AND the channel-wide bypass is off</strong>. The state updates live as you drag knobs and toggle bypasses, on both the home view and the detail view's strip header.</p>
 <h3 id="crossover-panel">Crossover Panel<a class="headerlink" href="#crossover-panel" title="Permanent link">&para;</a></h3>
@@ -4391,8 +4454,16 @@
 <p>Both the <strong>Crossover</strong> and <strong>PEQ</strong> panels share a combined frequency-response graph that shows the <strong>summed crossover + PEQ magnitude response</strong>. Editing a crossover filter updates the graph on both panels, and vice versa. The graph uses local biquad coefficient math (Audio EQ Cookbook / RBJ) for both the crossover filters (cascaded 2nd-order Butterworth / Bessel / Linkwitz-Riley sections) and the PEQ bands.</p>
 <ul>
 <li><strong>PEQ band markers</strong> — numbered circles (<code>1</code>..<code>7</code>) at each band's centre frequency</li>
-<li><strong>Crossover markers</strong> — blue triangles labeled <code>HP</code> / <code>LP</code> at the respective cutoff frequencies</li>
+<li><strong>Crossover markers</strong> — blue triangles labeled <code>HP</code> / <code>LP</code> at the respective cutoff frequencies. A bypassed filter's triangle dims to grey but stays visible at its last cutoff so you can see and re-grab it.</li>
 </ul>
+<p><strong>Direct manipulation on the graph</strong> — the HP / LP triangles are interactive, and every gesture updates the controls below, the curve, and the device live (exactly like a knob edit):</p>
+<ul>
+<li><strong>Drag</strong> — grab an active marker and move it horizontally to set that filter's <strong>cutoff frequency</strong> (vertical movement is ignored; the markers always sit at 0 dB).</li>
+<li><strong>Scroll wheel over a marker</strong> — steps the filter's <strong>slope</strong> one position up or down through the slope list (BW 6 → BL 6 → … → LR 24).</li>
+<li><strong>Double-click a marker</strong> — toggles that filter's <strong>bypass</strong>. This works on dim (already-bypassed) markers too, so a double-click re-enables them at their previous slope.</li>
+</ul>
+<p>Drag and wheel act on <strong>active</strong> markers only; double-click works on any marker (active or dim). Slave (linked) channels leave the graph read-only.</p>
+<p>The header also carries the same colour-coded <strong>Overlay</strong> checkboxes as the PEQ panel — tick one to overlay another output's full response (PEQ + crossover) on this graph for comparison. See <a href="#overlaying-other-outputs">Overlaying other outputs</a> under the PEQ panel for the details.</p>
 <h4 id="xover-active-indicator-on-the-output-strip">"Xover active" indicator on the output strip<a class="headerlink" href="#xover-active-indicator-on-the-output-strip" title="Permanent link">&para;</a></h4>
 <p>The Xover button on the output channel strip lights up amber whenever <strong>either</strong> the hi-pass or lo-pass filter is not bypassed (i.e., has a non-zero slope). The state updates live when you toggle bypass or change the slope selector.</p>
 <h3 id="compressor-panel">Compressor Panel<a class="headerlink" href="#compressor-panel" title="Permanent link">&para;</a></h3>
@@ -4699,7 +4770,7 @@
 </tr>
 <tr>
 <td><strong>About</strong></td>
-<td>Show version, license, and project information</td>
+<td>Show the application version, license, and project links. When a device is connected it also lists the device <strong>model</strong> and <strong>firmware</strong> (e.g. <code>4x4MINI</code> / <code>V010</code>) read from the firmware query; offline or before connecting it shows a status line instead</td>
 </tr>
 </tbody>
 </table>
@@ -5002,15 +5073,6 @@
 <li><strong>KDE Plasma</strong> — Qt's platform-theme integration is still evolving; the manual override (Light / Dark) always works, but live system tracking may not flip the app until KDE wires up the <code>requestColorScheme()</code> portal call.</li>
 <li>If automatic tracking ever returns "Unknown" on your setup (e.g. headless or unusual desktops), the app falls back to the last preference you chose (defaulting to Dark on the very first launch).</li>
 </ul>
-<hr />
-<h2 id="usb-permissions">USB Permissions<a class="headerlink" href="#usb-permissions" title="Permanent link">&para;</a></h2>
-<p>The application communicates with the DSP via <code>/dev/hidraw*</code> device files. By default, these require root access. To use the application as a regular user, create a udev rule:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/udev/rules.d/99-dspmini.rules<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s">SUBSYSTEM==&quot;hidraw&quot;, ATTRS{idVendor}==&quot;0168&quot;, ATTRS{idProduct}==&quot;0821&quot;, MODE=&quot;0666&quot;</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">EOF</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload-rules<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>udevadm<span class="w"> </span>trigger
-</code></pre></div>
-<p>Then disconnect and reconnect the DSP. The device should now be accessible without <code>sudo</code>.</p>
 <hr />
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="disconnected-status-and-controls-are-greyed-out">"Disconnected" status and controls are greyed out<a class="headerlink" href="#disconnected-status-and-controls-are-greyed-out" title="Permanent link">&para;</a></h3>

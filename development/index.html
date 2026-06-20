@@ -1421,6 +1421,8 @@
       
         
       
+        
+      
     
     
     
@@ -1472,6 +1474,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/minidspqt/views/panels/_overlay_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    minidspqt.views.panels._overlay_controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2275,7 +2305,7 @@
 <ul>
 <li>Python 3.11+</li>
 <li><a href="https://docs.astral.sh/uv/">uv</a> — manages the virtual environment and dependencies</li>
-<li><a href="https://github.com/IMBArator/miniDSP-Linux">miniDSP-Linux</a> — protocol library (installed automatically from the upstream <code>v1.0.0</code> tag)</li>
+<li><a href="https://github.com/IMBArator/miniDSP-Linux">miniDSP-Linux</a> — protocol library (installed automatically from the pinned upstream release wheel)</li>
 <li>Linux with kernel HID driver — communicates via <code>/dev/hidraw*</code></li>
 <li>Read/write access to <code>/dev/hidraw*</code> (see <a href="https://github.com/IMBArator/miniDSP-Linux-qt#permissions">Permissions</a>)</li>
 </ul>
@@ -2286,145 +2316,161 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev<span class="w">  </span><span class="c1"># also installs pytest for development</span>
 </code></pre></div>
 <h3 id="developing-against-a-local-protocol-library">Developing against a local protocol library<a class="headerlink" href="#developing-against-a-local-protocol-library" title="Permanent link">&para;</a></h3>
-<p>By default <code>minidsp-linux</code> is pulled from the upstream <code>v1.0.0</code> git tag. When
-hacking on the protocol library in a sibling checkout, reinstall on top of the
-synced env from your local source tree:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>../miniDSP-Linux/
+<p>By default <code>minidsp-linux</code> is pulled from the pinned upstream release wheel.
+When hacking on the protocol library in a sibling checkout, reinstall it on top
+of the synced env from your local source tree:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--reinstall<span class="w"> </span>--no-cache<span class="w"> </span>../miniDSP-Linux/
 </code></pre></div>
-<p>The override is reverted by the next <code>uv sync</code> / <code>uv lock</code>. Re-run the command
-whenever you want to test fresh local changes.</p>
+<p><code>--no-cache</code> matters: the local version string doesn't change between edits, so
+without it <code>uv</code> rebuilds from its wheel cache and your fresh changes are
+silently ignored.</p>
+<blockquote>
+<p><strong>Important — run tests with <code>--no-sync</code>.</strong> A plain <code>uv run pytest</code> (and the
+<code>make test</code> target) first resyncs the env to the lockfile, which reverts the
+override back to the pinned release wheel. While testing against local protocol
+changes, run with sync disabled so your reinstall sticks:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">QT_QPA_PLATFORM</span><span class="o">=</span>offscreen<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>--no-sync<span class="w"> </span>pytest
+</code></pre></div>
+</blockquote>
+<p>The override is reverted by the next <code>uv sync</code> / <code>uv lock</code> (or any plain
+<code>uv run</code>). Re-run the reinstall whenever you want to test fresh local changes.</p>
 <h2 id="running-tests">Running tests<a class="headerlink" href="#running-tests" title="Permanent link">&para;</a></h2>
 <p>The suite uses <code>pytest</code> and <code>pytest-qt</code>, which ship in the <code>dev</code>
 optional-dependency group. Install them once with:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>make<span class="w"> </span>sync<span class="w">            </span><span class="c1"># runs `uv sync --extra dev`</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>sync<span class="w">            </span><span class="c1"># runs `uv sync --extra dev`</span>
 </code></pre></div>
 <p>Then run the tests:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span><span class="nb">test</span><span class="w">            </span><span class="c1"># QT_QPA_PLATFORM=offscreen uv run pytest -v</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span><span class="nb">test</span><span class="w">            </span><span class="c1"># QT_QPA_PLATFORM=offscreen uv run pytest -v</span>
 </code></pre></div>
 <p><code>make test</code> sets <code>QT_QPA_PLATFORM=offscreen</code> so the Qt widgets run headless —
 no display server required, which also makes it safe for CI.</p>
-<p>374 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.</p>
+<p>480 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, the About dialog, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.</p>
 <h2 id="building-the-appimage">Building the AppImage<a class="headerlink" href="#building-the-appimage" title="Permanent link">&para;</a></h2>
 <p>A self-contained AppImage — a single executable file bundling its own CPython 3.11 and PySide6 — can be built locally. End users only need to download the resulting <code>.AppImage</code>, make it executable, and run it. No Python, no <code>uv</code>, no virtualenv on the user's machine.</p>
 <p>Two steps: build the project wheel on the host with <code>uv</code> (fast, uses your dev venv), then build the AppImage in a container which downloads pyenv's <code>python-build</code>, compiles CPython from source into an <code>AppDir</code>, installs that wheel, and runs <code>linuxdeploy</code> + <code>appimagetool</code>.</p>
 <p><strong>Step 1 — build the wheel on the host:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>make<span class="w"> </span>build<span class="w">      </span><span class="c1"># produces dist/minidsp_linux_qt-&lt;version&gt;-py3-none-any.whl via uv</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>make<span class="w"> </span>build<span class="w">      </span><span class="c1"># produces dist/minidsp_linux_qt-&lt;version&gt;-py3-none-any.whl via uv</span>
 </code></pre></div>
 <p><strong>Step 2a — Docker/Podman build</strong> (recommended for releases — Ubuntu 20.04, glibc 2.31):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="s2">&quot;bash packaging/appimage/init_environment.sh &amp;&amp; make appimage&quot;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># AppImage lands in ./dist/ on the host.</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="s2">&quot;bash packaging/appimage/init_environment.sh &amp;&amp; make appimage&quot;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="c1"># AppImage lands in ./dist/ on the host.</span>
 </code></pre></div>
 <p>Replace <code>podman</code> with <code>docker</code> if that's what you have. With rootless Podman, add <code>--userns=keep-id</code> so <code>dist/</code> ends up owned by your host user.</p>
 <p>For an interactive session (faster iteration, keeps the apt/pyenv install warm):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="c1"># inside the container, once:</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>bash<span class="w"> </span>packaging/appimage/init_environment.sh
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># then, every time you want to (re)build (after `make build` on the host):</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>make<span class="w"> </span>appimage
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="nb">exit</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># inside the container, once:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>bash<span class="w"> </span>packaging/appimage/init_environment.sh
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># then, every time you want to (re)build (after `make build` on the host):</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>make<span class="w"> </span>appimage
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nb">exit</span>
 </code></pre></div>
 <p><strong>Step 2b — native build</strong> (without a container, whatever your host glibc is — fine for development):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>bash<span class="w"> </span>packaging/appimage/init_environment.sh<span class="w">   </span><span class="c1"># one-time, may prompt for sudo</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>make<span class="w"> </span>appimage<span class="w">                                  </span><span class="c1"># produces dist/minidspqt-&lt;version&gt;-x86_64.AppImage</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>bash<span class="w"> </span>packaging/appimage/init_environment.sh<span class="w">   </span><span class="c1"># one-time, may prompt for sudo</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>make<span class="w"> </span>appimage<span class="w">                                  </span><span class="c1"># produces dist/minidspqt-&lt;version&gt;-x86_64.AppImage</span>
 </code></pre></div>
 <p>The resulting AppImage only runs on systems with a glibc at least as new as your build host.</p>
 <p><code>make appimage-clean</code> removes only the AppDir, the Python build tree, and <code>dist/*.AppImage</code>, leaving the <code>python-build</code> and <code>linuxdeploy</code> downloads cached under <code>build/cache/</code> so subsequent rebuilds are fast.</p>
 <h3 id="delta-updates-optional">Delta updates (optional)<a class="headerlink" href="#delta-updates-optional" title="Permanent link">&para;</a></h3>
 <p>Set <code>APPIMAGE_UPDATE_INFO</code> before <code>make appimage</code> to embed update metadata into the AppImage and emit a sibling <code>.zsync</code> file. AppImageUpdate-aware clients can then download only the chunks that changed between versions instead of the full ~160 MB.</p>
 <p>For a GitHub-Releases-hosted artifact, run a native build with:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nv">APPIMAGE_UPDATE_INFO</span><span class="o">=</span><span class="s2">&quot;gh-releases-zsync|&lt;owner&gt;|&lt;repo&gt;|latest|minidspqt-*-x86_64.AppImage.zsync&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span>make<span class="w"> </span>appimage
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># dist/ now also contains minidspqt-&lt;version&gt;-x86_64.AppImage.zsync</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nv">APPIMAGE_UPDATE_INFO</span><span class="o">=</span><span class="s2">&quot;gh-releases-zsync|&lt;owner&gt;|&lt;repo&gt;|latest|minidspqt-*-x86_64.AppImage.zsync&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>make<span class="w"> </span>appimage
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># dist/ now also contains minidspqt-&lt;version&gt;-x86_64.AppImage.zsync</span>
 </code></pre></div>
 <p>…or, inside the Podman/Docker container, pass the value via <code>-e</code> <strong>without</strong> adding inner double quotes (the single quotes around the whole <code>-e</code> argument already protect the <code>|</code> and <code>*</code> from the host shell — extra inner quotes end up <em>inside</em> the env var and <code>appimagetool</code> rejects the result as "unknown format"):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span>-e<span class="w"> </span><span class="s1">&#39;APPIMAGE_UPDATE_INFO=gh-releases-zsync|&lt;owner&gt;|&lt;repo&gt;|latest|minidspqt-*-x86_64.AppImage.zsync&#39;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">    </span><span class="s2">&quot;bash packaging/appimage/init_environment.sh &amp;&amp; make appimage&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>podman<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">    </span>-e<span class="w"> </span><span class="s1">&#39;APPIMAGE_UPDATE_INFO=gh-releases-zsync|&lt;owner&gt;|&lt;repo&gt;|latest|minidspqt-*-x86_64.AppImage.zsync&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">    </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/src<span class="w"> </span>-w<span class="w"> </span>/src<span class="w"> </span>docker.io/library/ubuntu:20.04<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="s2">&quot;bash packaging/appimage/init_environment.sh &amp;&amp; make appimage&quot;</span>
 </code></pre></div>
 <p>Upload both files (<code>.AppImage</code> and <code>.AppImage.zsync</code>) as release assets. Without <code>APPIMAGE_UPDATE_INFO</code>, no <code>.zsync</code> is produced and the AppImage carries no update info — that's the right choice for one-off local builds.</p>
 <h2 id="releasing">Releasing<a class="headerlink" href="#releasing" title="Permanent link">&para;</a></h2>
 <p>The release flow uses two helper scripts under <a href="https://github.com/IMBArator/miniDSP-Linux-qt/tree/main/scripts"><code>scripts/</code></a>, wired into the Makefile:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># 1. Bump version in pyproject.toml, regenerate CHANGELOG.md (git-cliff),</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="c1">#    commit `chore(release): vX.Y.Z`, tag vX.Y.Z, optionally push.</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>make<span class="w"> </span>version<span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span>X.Y.Z
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># 2. Push the commit + tag if you skipped the prompt above.</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>git<span class="w"> </span>push<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># 3. Build the artifacts that publish.sh will attach.</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>make<span class="w"> </span>build<span class="w">           </span><span class="c1"># wheel + sdist</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>make<span class="w"> </span>appimage<span class="w">        </span><span class="c1"># AppImage (requires Ubuntu 20.04 build env or container)</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="c1"># 4. Create the GitHub Release, upload wheel + sdist + AppImage (+ .zsync</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1">#    if present), and deploy docs to GitHub Pages. Needs GITHUB_TOKEN</span>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="c1">#    (PAT with `repo` scope) in the environment.</span>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="nb">export</span><span class="w"> </span><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_xxxxxxxxxxxxxxxxxxxx
-<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>make<span class="w"> </span>publish<span class="w">         </span><span class="c1"># or: make publish VERSION=X.Y.Z</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># 1. Bump version in pyproject.toml, regenerate CHANGELOG.md (git-cliff),</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="c1">#    commit `chore(release): vX.Y.Z`, tag vX.Y.Z, optionally push.</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>make<span class="w"> </span>version<span class="w"> </span><span class="nv">VERSION</span><span class="o">=</span>X.Y.Z
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="c1"># 2. Push the commit + tag if you skipped the prompt above.</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>git<span class="w"> </span>push<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>vX.Y.Z
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="c1"># 3. Build the artifacts that publish.sh will attach.</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>make<span class="w"> </span>build<span class="w">           </span><span class="c1"># wheel + sdist</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>make<span class="w"> </span>appimage<span class="w">        </span><span class="c1"># AppImage (requires Ubuntu 20.04 build env or container)</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="c1"># 4. Create the GitHub Release, upload wheel + sdist + AppImage (+ .zsync</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="c1">#    if present), and deploy docs to GitHub Pages. Needs GITHUB_TOKEN</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="c1">#    (PAT with `repo` scope) in the environment.</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="nb">export</span><span class="w"> </span><span class="nv">GITHUB_TOKEN</span><span class="o">=</span>ghp_xxxxxxxxxxxxxxxxxxxx
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>make<span class="w"> </span>publish<span class="w">         </span><span class="c1"># or: make publish VERSION=X.Y.Z</span>
 </code></pre></div>
 <p>Release notes are extracted from the <code>## [X.Y.Z]</code> section of the <a href="../changelog/">Changelog</a>, which <code>make version</code> regenerates from Conventional Commits via <a href="https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/cliff.toml"><code>cliff.toml</code></a>. Tags matching <code>-rc</code>, <code>-beta</code>, or <code>-alpha</code> are auto-flagged as prereleases.</p>
 <h2 id="repository-structure">Repository structure<a class="headerlink" href="#repository-structure" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>minidspqt/                     Main package
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>  cli.py                       Entry point: -v/--offline flags
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>  app.py                       QApplication setup, theme manager binding, offline seeding
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>  theme.py                     Theme registry (DARK_THEME / LIGHT_THEME) and ThemeManager singleton
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>  model.py                     Typed device state (DeviceState dataclass)
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>  device_thread.py             QThread: poll loop, command coalescing, preset queue
-<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>  virtual_dsp.py               In-RAM DSP implementing DSPmini interface
-<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>  blank_seed.py                Bundled blank.unt seed helper (shared by app + runtime mode switch)
-<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>  unt_loader.py                Parse .unt files (single-slot and all-slots)
-<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>  unt_writer.py                Write .unt files with field-level overwrites
-<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>  views/
-<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>    main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
-<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>    home_view.py               8 channel strips + routing matrix + level meters
-<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>    preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
-<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>    device_pin_dialog.py       UnlockPinDialog + SetPinDialog for the device-lock feature
-<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>    channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
-<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>    channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
-<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>    detail_view.py             Per-channel detail view with feature panels and routed meters
-<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>    panels/
-<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a>      gate_panel.py            Gate parameters (threshold, attack, hold, release) + transfer graph
-<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>      peq_panel.py             7 bands × (Type / Freq / Gain / Q / Byp) + channel bypass + summed-response graph
-<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a>      xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
-<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>      compressor_panel.py      Threshold / Ratio (combo) / Knee / Attack / Release + transfer-function graph
-<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a>      delay_panel.py           Single edit knob for the displayed output + overview graph of all four delays
-<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a>      _slave_lock.py           Shared &quot;Linked to &lt;master&gt; — read-only&quot; banner used by every feature panel
-<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>      placeholder_panel.py     Shown when the active feature is N/A for the selected channel
-<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>  widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
-<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>  resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
-<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a>
-<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>tests/                         pytest suite (364 tests)
-<a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a>  conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
-<a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a>  test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
-<a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a>  test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
-<a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a>  test_virtual_dsp.py          State persistence, load/store round-trip
-<a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a>  test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
-<a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>  test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
-<a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a>  test_param_knob.py           Construction, value API, clamping, wheel/keyboard/drag interaction, highlight, text input
-<a id="__codelineno-11-38" name="__codelineno-11-38" href="#__codelineno-11-38"></a>  test_peq_panel.py            Atomic emit, silent setters, peq_active state, per-type Q clamping
-<a id="__codelineno-11-39" name="__codelineno-11-39" href="#__codelineno-11-39"></a>  test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
-<a id="__codelineno-11-40" name="__codelineno-11-40" href="#__codelineno-11-40"></a>  test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
-<a id="__codelineno-11-41" name="__codelineno-11-41" href="#__codelineno-11-41"></a>  test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
-<a id="__codelineno-11-42" name="__codelineno-11-42" href="#__codelineno-11-42"></a>  test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock
-<a id="__codelineno-11-43" name="__codelineno-11-43" href="#__codelineno-11-43"></a>  test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
-<a id="__codelineno-11-44" name="__codelineno-11-44" href="#__codelineno-11-44"></a>  test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
-<a id="__codelineno-11-45" name="__codelineno-11-45" href="#__codelineno-11-45"></a>  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
-<a id="__codelineno-11-46" name="__codelineno-11-46" href="#__codelineno-11-46"></a>  test_unt_loader.py           .unt parsing and validation
-<a id="__codelineno-11-47" name="__codelineno-11-47" href="#__codelineno-11-47"></a>  test_unt_writer.py           Byte-identical round-trip, field-level edits
-<a id="__codelineno-11-48" name="__codelineno-11-48" href="#__codelineno-11-48"></a>  test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
-<a id="__codelineno-11-49" name="__codelineno-11-49" href="#__codelineno-11-49"></a>  test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
-<a id="__codelineno-11-50" name="__codelineno-11-50" href="#__codelineno-11-50"></a>
-<a id="__codelineno-11-51" name="__codelineno-11-51" href="#__codelineno-11-51"></a>docs/                          MkDocs Material site source
-<a id="__codelineno-11-52" name="__codelineno-11-52" href="#__codelineno-11-52"></a>  index.md                     Transcludes README at the site root
-<a id="__codelineno-11-53" name="__codelineno-11-53" href="#__codelineno-11-53"></a>  user-guide.md                End-user documentation
-<a id="__codelineno-11-54" name="__codelineno-11-54" href="#__codelineno-11-54"></a>  development.md               This page — contributor setup, testing, packaging, release
-<a id="__codelineno-11-55" name="__codelineno-11-55" href="#__codelineno-11-55"></a>  changelog.md                 Transcludes CHANGELOG.md
-<a id="__codelineno-11-56" name="__codelineno-11-56" href="#__codelineno-11-56"></a>  concepts.md                  UI concepts page (references concept-art/)
-<a id="__codelineno-11-57" name="__codelineno-11-57" href="#__codelineno-11-57"></a>  concept-art/                 UI mockups (.excalidraw + .png)
-<a id="__codelineno-11-58" name="__codelineno-11-58" href="#__codelineno-11-58"></a>  img/                         Screenshots and recordings
-<a id="__codelineno-11-59" name="__codelineno-11-59" href="#__codelineno-11-59"></a>  gen_ref_pages.py             Builds the mkdocstrings API reference
-<a id="__codelineno-11-60" name="__codelineno-11-60" href="#__codelineno-11-60"></a>  hooks.py                     Post-processes the transcluded README
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>minidspqt/                     Main package
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>  cli.py                       Entry point: -v/--offline flags
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>  app.py                       QApplication setup, theme manager binding, offline seeding
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>  theme.py                     Theme registry (DARK_THEME / LIGHT_THEME) and ThemeManager singleton
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>  model.py                     Typed device state (DeviceState dataclass)
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>  device_thread.py             QThread: poll loop, command coalescing, preset queue
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>  virtual_dsp.py               In-RAM DSP implementing DSPmini interface
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>  blank_seed.py                Bundled blank.unt seed helper (shared by app + runtime mode switch)
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>  unt_loader.py                Parse .unt files (single-slot and all-slots)
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>  unt_writer.py                Write .unt files with field-level overwrites
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>  views/
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    home_view.py               8 channel strips + routing matrix + level meters
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>    preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>    device_pin_dialog.py       UnlockPinDialog + SetPinDialog for the device-lock feature
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>    channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    detail_view.py             Per-channel detail view with feature panels and routed meters
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>    panels/
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>      gate_panel.py            Gate parameters (threshold, attack, hold, release) + transfer graph
+<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>      peq_panel.py             7 bands × (Type / Freq / Gain / Q / Byp) + channel bypass + summed-response graph
+<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a>      xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
+<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>      compressor_panel.py      Threshold / Ratio (combo) / Knee / Attack / Release + transfer-function graph
+<a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>      delay_panel.py           Single edit knob for the displayed output + overview graph of all four delays
+<a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>      _slave_lock.py           Shared &quot;Linked to &lt;master&gt; — read-only&quot; banner used by every feature panel
+<a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a>      _overlay_controls.py     Shared &quot;show other outputs&quot; overlay checkboxes for the PEQ + Xover graphs
+<a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>      placeholder_panel.py     Shown when the active feature is N/A for the selected channel
+<a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>  widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
+<a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>  resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
+<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>
+<a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>tests/                         pytest suite (480 tests)
+<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>  conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
+<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a>  test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
+<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a>  test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
+<a id="__codelineno-12-35" name="__codelineno-12-35" href="#__codelineno-12-35"></a>  test_virtual_dsp.py          State persistence, load/store round-trip
+<a id="__codelineno-12-36" name="__codelineno-12-36" href="#__codelineno-12-36"></a>  test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
+<a id="__codelineno-12-37" name="__codelineno-12-37" href="#__codelineno-12-37"></a>  test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
+<a id="__codelineno-12-38" name="__codelineno-12-38" href="#__codelineno-12-38"></a>  test_param_knob.py           Construction, value API, clamping, wheel/keyboard/drag interaction, highlight, text input
+<a id="__codelineno-12-39" name="__codelineno-12-39" href="#__codelineno-12-39"></a>  test_peq_panel.py            Atomic emit, silent setters, peq_active state, per-type Q clamping
+<a id="__codelineno-12-40" name="__codelineno-12-40" href="#__codelineno-12-40"></a>  test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
+<a id="__codelineno-12-41" name="__codelineno-12-41" href="#__codelineno-12-41"></a>  test_overlay_controls.py     &quot;Show other outputs&quot; overlay checkboxes: reset-on-switch, graph push, always-enabled
+<a id="__codelineno-12-42" name="__codelineno-12-42" href="#__codelineno-12-42"></a>  test_freq_response_graph_overlay.py  Overlay storage + shared response-polyline helper (flat vs active)
+<a id="__codelineno-12-43" name="__codelineno-12-43" href="#__codelineno-12-43"></a>  test_detail_view_overlay.py  Sibling-output overlay sources pushed to both output graphs
+<a id="__codelineno-12-44" name="__codelineno-12-44" href="#__codelineno-12-44"></a>  test_about_dialog.py         About HTML: app version always, device model/firmware when connected
+<a id="__codelineno-12-45" name="__codelineno-12-45" href="#__codelineno-12-45"></a>  test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
+<a id="__codelineno-12-46" name="__codelineno-12-46" href="#__codelineno-12-46"></a>  test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
+<a id="__codelineno-12-47" name="__codelineno-12-47" href="#__codelineno-12-47"></a>  test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock
+<a id="__codelineno-12-48" name="__codelineno-12-48" href="#__codelineno-12-48"></a>  test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
+<a id="__codelineno-12-49" name="__codelineno-12-49" href="#__codelineno-12-49"></a>  test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
+<a id="__codelineno-12-50" name="__codelineno-12-50" href="#__codelineno-12-50"></a>  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
+<a id="__codelineno-12-51" name="__codelineno-12-51" href="#__codelineno-12-51"></a>  test_unt_loader.py           .unt parsing and validation
+<a id="__codelineno-12-52" name="__codelineno-12-52" href="#__codelineno-12-52"></a>  test_unt_writer.py           Byte-identical round-trip, field-level edits
+<a id="__codelineno-12-53" name="__codelineno-12-53" href="#__codelineno-12-53"></a>  test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
+<a id="__codelineno-12-54" name="__codelineno-12-54" href="#__codelineno-12-54"></a>  test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
+<a id="__codelineno-12-55" name="__codelineno-12-55" href="#__codelineno-12-55"></a>
+<a id="__codelineno-12-56" name="__codelineno-12-56" href="#__codelineno-12-56"></a>docs/                          MkDocs Material site source
+<a id="__codelineno-12-57" name="__codelineno-12-57" href="#__codelineno-12-57"></a>  index.md                     Transcludes README at the site root
+<a id="__codelineno-12-58" name="__codelineno-12-58" href="#__codelineno-12-58"></a>  user-guide.md                End-user documentation
+<a id="__codelineno-12-59" name="__codelineno-12-59" href="#__codelineno-12-59"></a>  development.md               This page — contributor setup, testing, packaging, release
+<a id="__codelineno-12-60" name="__codelineno-12-60" href="#__codelineno-12-60"></a>  changelog.md                 Transcludes CHANGELOG.md
+<a id="__codelineno-12-61" name="__codelineno-12-61" href="#__codelineno-12-61"></a>  concepts.md                  UI concepts page (references concept-art/)
+<a id="__codelineno-12-62" name="__codelineno-12-62" href="#__codelineno-12-62"></a>  concept-art/                 UI mockups (.excalidraw + .png)
+<a id="__codelineno-12-63" name="__codelineno-12-63" href="#__codelineno-12-63"></a>  img/                         Screenshots and recordings
+<a id="__codelineno-12-64" name="__codelineno-12-64" href="#__codelineno-12-64"></a>  gen_ref_pages.py             Builds the mkdocstrings API reference
+<a id="__codelineno-12-65" name="__codelineno-12-65" href="#__codelineno-12-65"></a>  hooks.py                     Post-processes the transcluded README
 </code></pre></div>
 
 
