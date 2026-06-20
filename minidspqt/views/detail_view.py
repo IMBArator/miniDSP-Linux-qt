@@ -453,6 +453,7 @@ class DetailView(QWidget):
                 )
             )
             self._xover_panel.set_bands(ch_state.peqs, ch_state.peq_channel_bypass)
+            self._push_overlay_sources(state, ch - 4)
             c = ch_state.compressor
             self._compressor_panel.set_params_silently(
                 c.ratio,
@@ -464,6 +465,38 @@ class DetailView(QWidget):
             self._push_delay_state(state)
 
         self._apply_slave_lock(is_slave, master_name)
+
+    def _push_overlay_sources(self, state: DeviceState, active_idx: int) -> None:
+        """Feed the other outputs' response data to the PEQ + Xover overlays.
+
+        Builds one overlay source per output *other* than ``active_idx`` and
+        hands the same list to both panels' graphs, so the user can overlay any
+        sibling output's full response (PEQ + crossover) for comparison. Runs
+        on every channel render, so a checked overlay tracks live edits to its
+        sibling.
+
+        Args:
+            state: The current device state (holds all four outputs).
+            active_idx: Output index (0–3) currently displayed.
+        """
+        sources = []
+        for i, o in enumerate(state.outputs[:4]):
+            if i == active_idx:
+                continue
+            xo = o.crossover
+            sources.append(
+                (
+                    i,
+                    o.peqs,
+                    o.peq_channel_bypass,
+                    CrossoverData(
+                        xo.hipass_freq, xo.hipass_slope, xo.lopass_freq, xo.lopass_slope
+                    ),
+                    o.name or CHANNEL_NAMES[4 + i],
+                )
+            )
+        self._peq_panel.set_overlay_sources(active_idx, sources)
+        self._xover_panel.set_overlay_sources(active_idx, sources)
 
     def _push_delay_state(self, state: DeviceState) -> None:
         """Populate the Delay panel's overview graph + active row.

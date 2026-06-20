@@ -3,7 +3,9 @@
 Draws a single summed magnitude response from optional crossover
 hi-pass / lo-pass filters and up to 7 parametric EQ bands, plus
 numbered markers for each PEQ band and triangular markers for
-active crossover cutoff frequencies.
+active crossover cutoff frequencies. Optional faint "overlay" curves
+(see :meth:`FreqResponseGraph.set_overlays`) show other output
+channels' responses behind the active curve for comparison.
 
 Biquad coefficients are computed locally from the raw protocol values
 via the standard Audio EQ Cookbook (RBJ).  Crossover filters use
@@ -296,6 +298,10 @@ class FreqResponseGraph(QWidget):
         self._bands: list[PEQBand] = []
         self._channel_bypass: bool = False
         self._crossover: CrossoverData = CrossoverData()
+        # "Show other outputs" overlays: each entry is
+        # (output_index, bands, channel_bypass, crossover). Drawn behind the
+        # active curve in the per-output ``theme.graph_overlay`` colour.
+        self._overlays: list[tuple[int, list[PEQBand], bool, CrossoverData]] = []
         self._drag_band: int = -1  # index of the marker being dragged, or -1
         self._drag_xover: str | None = None  # "hp"/"lp" being dragged, or None
         self.setMinimumHeight(160)
@@ -339,6 +345,29 @@ class FreqResponseGraph(QWidget):
         self._bands = list(bands)
         self._channel_bypass = bool(channel_bypass)
         self._crossover = xo
+        self.update()
+
+    def set_overlays(
+        self,
+        overlays: list[tuple[int, list[PEQBand], bool, CrossoverData]],
+    ) -> None:
+        """Replace the set of "other output" overlay curves and repaint.
+
+        These are sibling output channels shown faintly behind the active
+        curve for comparison; they carry no markers and never affect the
+        active curve. Pass an empty list to clear all overlays.
+
+        Args:
+            overlays: One entry per curve to draw, each a tuple of
+                ``(output_index, bands, channel_bypass, crossover)``. The
+                ``output_index`` (0–3) selects the overlay colour from
+                ``theme.graph_overlay`` so a given output keeps a stable
+                colour regardless of which channel is displayed. ``bands``,
+                ``channel_bypass`` and ``crossover`` are that output's PEQ
+                and crossover state, rendered with the same math as the
+                active curve.
+        """
+        self._overlays = list(overlays)
         self.update()
 
     def _plot_rect(self) -> QRectF:
@@ -405,6 +434,7 @@ class FreqResponseGraph(QWidget):
             self._draw_grid(p, rect)
             self._draw_axis_labels(p, rect)
             self._draw_zero_line(p, rect)
+            self._draw_overlays(p, rect)
             self._draw_curve(p, rect)
             self._draw_xover_markers(p, rect)
             self._draw_peq_markers(p, rect)
@@ -459,29 +489,108 @@ class FreqResponseGraph(QWidget):
                 label,
             )
 
+    @staticmethod
+    def _response_coeffs(
+        bands: list[PEQBand],
+        channel_bypass: bool,
+        crossover: CrossoverData,
+    ) -> list[tuple[float, ...]]:
+        """Collect the cascaded biquad sections for one channel's response.
+
+        Mirrors how the active curve is built: each non-bypassed PEQ band
+        contributes a section (unless the whole channel is bypassed), plus
+        the crossover hi-/lo-pass sections.
+
+        Args:
+            bands: The channel's PEQ bands.
+            channel_bypass: When True the PEQ bands are skipped entirely.
+            crossover: The channel's crossover state.
+
+        Returns:
+            A list of biquad coefficient tuples (possibly empty).
+        """
+        coeffs: list[tuple[float, ...]] = []
+        if not channel_bypass:
+            for b in bands:
+                if not b.bypass:
+                    coeffs.append(_biquad_coeffs_from_band(b))
+        coeffs.extend(_crossover_biquads(crossover))
+        return coeffs
+
+    def _response_polyline(
+        self,
+        bands: list[PEQBand],
+        channel_bypass: bool,
+        crossover: CrossoverData,
+        rect: QRectF,
+    ) -> QPolygonF | None:
+        """Sample one channel's magnitude response into a screen-space polyline.
+
+        Shared by the active curve and the overlay curves so they stay
+        pixel-identical. Returns ``None`` when the channel has no active
+        sections (fully bypassed / flat), letting the caller decide how to
+        render — the active curve draws a flat reference line, overlays skip.
+
+        Args:
+            bands: The channel's PEQ bands.
+            channel_bypass: Channel-wide PEQ bypass flag.
+            crossover: The channel's crossover state.
+            rect: The plot rectangle to map samples into.
+
+        Returns:
+            A :class:`QPolygonF` of ``_NUM_SAMPLES`` points, or ``None`` if
+            the response is flat (no sections).
+        """
+        coeffs = self._response_coeffs(bands, channel_bypass, crossover)
+        if not coeffs:
+            return None
+        poly = QPolygonF()
+        for i in range(_NUM_SAMPLES):
+            frac = i / (_NUM_SAMPLES - 1)
+            db = 0.0
+            omega = (
+                2.0 * math.pi * (10.0 ** (_LOG_F_MIN + frac * _LOG_F_RANGE)) / _FS_HZ
+            )
+            for c in coeffs:
+                db += _biquad_magnitude_db(c, omega)
+            x = rect.left() + frac * rect.width()
+            y = self._db_to_y(db)
+            poly.append(QPointF(x, y))
+        return poly
+
+    def _draw_overlays(self, p: QPainter, rect: QRectF) -> None:
+        """Draw the "other output" overlay curves behind the active curve.
+
+        Each overlay is rendered in its per-output ``theme.graph_overlay``
+        colour. Flat (fully bypassed) overlays are skipped so they don't
+        clutter the plot with a redundant 0 dB line.
+        """
+        if not self._overlays:
+            return
+        theme = theme_manager.current
+        p.save()
+        p.setClipRect(rect)
+        for output_index, bands, channel_bypass, crossover in self._overlays:
+            poly = self._response_polyline(bands, channel_bypass, crossover, rect)
+            if poly is None:
+                continue
+            pen = QPen(theme.graph_overlay[output_index % 4], _CURVE_WIDTH)
+            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+            pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+            p.setPen(pen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawPolyline(poly)
+        p.restore()
+
     def _draw_curve(self, p: QPainter, rect: QRectF) -> None:
         theme = theme_manager.current
         curve_color, bypassed_color = self._curve_color(theme)
-        if (
-            self._channel_bypass
-            and self._crossover.hipass_slope == 0
-            and self._crossover.lopass_slope == 0
-        ):
-            pen = QPen(bypassed_color, _CURVE_WIDTH)
-            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-            p.setPen(pen)
-            y = self._db_to_y(0.0)
-            p.drawLine(int(rect.left()), int(y), int(rect.right()), int(y))
-            return
-
-        all_coeffs: list[tuple[float, ...]] = []
-        if not self._channel_bypass:
-            for b in self._bands:
-                if not b.bypass:
-                    all_coeffs.append(_biquad_coeffs_from_band(b))
-        all_coeffs.extend(_crossover_biquads(self._crossover))
-
-        if not all_coeffs:
+        poly = self._response_polyline(
+            self._bands, self._channel_bypass, self._crossover, rect
+        )
+        if poly is None:
+            # No active sections — draw a flat 0 dB reference in the
+            # bypassed colour so the user still sees the (flat) response.
             pen = QPen(bypassed_color, _CURVE_WIDTH)
             pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
@@ -491,27 +600,12 @@ class FreqResponseGraph(QWidget):
 
         p.save()
         p.setClipRect(rect)
-
-        poly = QPolygonF()
-        for i in range(_NUM_SAMPLES):
-            frac = i / (_NUM_SAMPLES - 1)
-            db = 0.0
-            omega = (
-                2.0 * math.pi * (10.0 ** (_LOG_F_MIN + frac * _LOG_F_RANGE)) / _FS_HZ
-            )
-            for c in all_coeffs:
-                db += _biquad_magnitude_db(c, omega)
-            x = rect.left() + frac * rect.width()
-            y = self._db_to_y(db)
-            poly.append(QPointF(x, y))
-
         pen = QPen(curve_color, _CURVE_WIDTH)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
         p.setPen(pen)
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawPolyline(poly)
-
         p.restore()
 
     def _draw_xover_markers(self, p: QPainter, rect: QRectF) -> None:

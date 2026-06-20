@@ -67,6 +67,7 @@ from minidsp.protocol import (
 from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
+from ._overlay_controls import OverlaySource, install_overlay_controls
 from ._slave_lock import apply_link_state, install_link_banner
 from ...defaults import default_peq_bands, default_peq_channel_bypass
 
@@ -177,8 +178,8 @@ class PEQPanel(QWidget):
 
         self._link_banner = install_link_banner(root)
 
-        root.addLayout(self._build_header())
-
+        # Build the graph before the header so the header's overlay controls
+        # can bind to it; layout order is still header-then-graph below.
         self._graph = FreqResponseGraph(feature="peq")
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
@@ -186,6 +187,8 @@ class PEQPanel(QWidget):
         self._graph.band_dragged.connect(self._on_marker_dragged)
         self._graph.band_q_changed.connect(self._on_marker_q_changed)
         self._graph.band_bypass_toggled.connect(self._on_marker_bypass_toggled)
+
+        root.addLayout(self._build_header())
         root.addWidget(self._graph, stretch=1)
 
         self._type_combos: list[QComboBox] = []
@@ -210,6 +213,8 @@ class PEQPanel(QWidget):
         row.addWidget(title)
 
         row.addStretch(1)
+
+        self._overlay = install_overlay_controls(row, self._graph)
 
         self._channel_bypass = ToggleButton()
         self._channel_bypass.setText("Bypass")
@@ -546,6 +551,20 @@ class PEQPanel(QWidget):
     def set_crossover(self, xo: CrossoverData) -> None:
         """Forward the channel's crossover state into the shared graph."""
         self._graph.set_crossover(xo)
+
+    def set_overlay_sources(
+        self, active_idx: int, sources: list[OverlaySource]
+    ) -> None:
+        """Update the "other outputs" overlay options for the graph.
+
+        Forwards to the shared :class:`OverlayControls`; see
+        :meth:`OverlayControls.set_sources`.
+
+        Args:
+            active_idx: Output index (0–3) currently displayed.
+            sources: One entry per other output to offer as an overlay.
+        """
+        self._overlay.set_sources(active_idx, sources)
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         """Lock the panel when displaying a slave channel's PEQ.

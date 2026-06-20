@@ -392,3 +392,36 @@ class TestMarkerSlotsSlaveLocked:
         with qtbot.assertNotEmitted(panel.xover_changed):
             panel._on_marker_bypass_toggled("hp")
         assert panel._hp_bypass.isChecked() is False  # unchanged
+
+
+class TestOverlaySources:
+    """The Xover panel forwards overlay sources to its shared OverlayControls."""
+
+    def _sources(self, active_idx):
+        from minidspqt.model import PEQBand
+
+        names = ["Out1", "Out2", "Out3", "Out4"]
+        bands = [PEQBand(gain_raw=120, freq_raw=170, q_raw=16, filter_type=0)]
+        return [
+            (i, bands, False, CrossoverData(), names[i])
+            for i in range(4)
+            if i != active_idx
+        ]
+
+    def test_set_overlay_sources_forwards(self, panel):
+        panel.set_overlay_sources(1, self._sources(1))
+        assert panel._overlay._active_idx == 1
+        assert panel._overlay._checks[1].isHidden()
+        assert panel._overlay._checks[0].text() == "Out1"
+
+    def test_checking_overlay_updates_graph(self, panel):
+        panel.set_overlay_sources(1, self._sources(1))
+        panel._overlay._checks[0].setChecked(True)
+        assert len(panel._graph._overlays) == 1
+        assert panel._graph._overlays[0][0] == 0
+
+    def test_overlay_boxes_stay_enabled_on_slave(self, panel):
+        panel.set_overlay_sources(0, self._sources(0))
+        panel.set_linked_slave(True, "Out2")
+        assert panel._hp_freq.isEnabled() is False
+        assert all(cb.isEnabled() for cb in panel._overlay._checks)

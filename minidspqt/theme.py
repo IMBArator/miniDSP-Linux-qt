@@ -93,6 +93,11 @@ class Theme:
     graph_curve_comp: QColor
     graph_curve_comp_bypassed: QColor
 
+    # --- "Show other outputs" overlay curves, keyed by output index 0–3.
+    # Drawn dimmer than the active curve (the active curve paints on top), so
+    # the displayed channel stays dominant while siblings sit behind it. ---
+    graph_overlay: tuple[QColor, QColor, QColor, QColor]
+
     # --- Gate-only ---
     gate_closed_fill: QColor
     gate_open_fill: QColor
@@ -177,6 +182,12 @@ DARK_THEME = Theme(
     graph_curve_xover_bypassed=QColor(232, 114, 35, 70),
     graph_curve_comp=QColor(47, 168, 155),
     graph_curve_comp_bypassed=QColor(47, 168, 155, 70),
+    graph_overlay=(
+        QColor(70, 150, 235, 150),  # Out 1 — blue
+        QColor(235, 160, 40, 150),  # Out 2 — amber
+        QColor(60, 200, 150, 150),  # Out 3 — teal
+        QColor(230, 90, 170, 150),  # Out 4 — pink
+    ),
     gate_closed_fill=QColor(200, 50, 50, 40),
     gate_open_fill=QColor(50, 180, 80, 25),
     gate_threshold_line=QColor(255, 200, 50, 140),
@@ -240,6 +251,12 @@ LIGHT_THEME = Theme(
     graph_curve_xover_bypassed=QColor(168, 80, 17, 80),
     graph_curve_comp=QColor(30, 133, 122),
     graph_curve_comp_bypassed=QColor(30, 133, 122, 80),
+    graph_overlay=(
+        QColor(40, 110, 200, 150),  # Out 1 — blue
+        QColor(190, 120, 20, 150),  # Out 2 — amber
+        QColor(30, 150, 110, 150),  # Out 3 — teal
+        QColor(190, 50, 130, 150),  # Out 4 — pink
+    ),
     gate_closed_fill=QColor(200, 50, 50, 50),
     gate_open_fill=QColor(50, 160, 80, 35),
     gate_threshold_line=QColor(200, 140, 30, 200),

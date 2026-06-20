@@ -472,3 +472,36 @@ class TestMainWindowIntegration:
             window._detail_view._content_stack.currentWidget()
             is window._detail_view.gate_panel
         )
+
+
+class TestOverlaySources:
+    """The PEQ panel forwards overlay sources to its shared OverlayControls."""
+
+    def _sources(self, active_idx):
+        from minidspqt.widgets.freq_response_graph import CrossoverData
+
+        names = ["Out1", "Out2", "Out3", "Out4"]
+        return [
+            (i, _default_bands(), False, CrossoverData(), names[i])
+            for i in range(4)
+            if i != active_idx
+        ]
+
+    def test_set_overlay_sources_forwards(self, panel):
+        panel.set_overlay_sources(0, self._sources(0))
+        assert panel._overlay._active_idx == 0
+        assert panel._overlay._checks[0].isHidden()
+        assert panel._overlay._checks[1].text() == "Out2"
+
+    def test_checking_overlay_updates_graph(self, panel):
+        panel.set_overlay_sources(0, self._sources(0))
+        panel._overlay._checks[2].setChecked(True)
+        assert len(panel._graph._overlays) == 1
+        assert panel._graph._overlays[0][0] == 2
+
+    def test_overlay_boxes_stay_enabled_on_slave(self, panel):
+        panel.set_overlay_sources(0, self._sources(0))
+        panel.set_linked_slave(True, "Out2")
+        # Device-param widgets disable, overlay checkboxes do not.
+        assert panel._freq_knobs[0].isEnabled() is False
+        assert all(cb.isEnabled() for cb in panel._overlay._checks)

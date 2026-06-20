@@ -128,6 +128,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - Strip-level "active" indicators: the input Gate button fills green when the gate threshold is above the noise floor; the output PEQ button fills purple when at least one band has non-zero gain and is not bypassed; the output Xover button fills amber when either hi-pass or lo-pass is not bypassed; the output Comp button fills teal when the ratio is anything other than 1:1.0; the output Delay button fills light blue when the delay is non-zero
 - Master → slave parameter fan-out: editing any compressor / delay (or gate / PEQ / crossover) parameter on a master channel mirrors the change to every linked slave in both the on-screen model and the device requests (internal logic using `decode_link_groups`)
 - **EQ curve visualisation** — QPainter log-frequency/dB graphs driven by local biquad coefficient math (Audio EQ Cookbook / RBJ), shared between PEQ and Crossover panels; crossover markers (triangles) and PEQ band markers (numbered circles) overlay the summed magnitude response. In the PEQ panel the numbered markers are draggable (set frequency / gain), the wheel adjusts Q, and double-click toggles bypass; in the Crossover panel the HP/LP triangles mirror the same gestures (drag = cutoff frequency, wheel = slope, double-click = bypass)
+- **Overlay other outputs** — both the PEQ and Crossover panel headers carry a colour-coded checkbox per *other* output channel; tick one to overlay that output's full response (PEQ + crossover) on the graph for comparison. Each output keeps a stable colour, overlays track live edits, and the selection clears when you switch channels (works on linked-slave channels too)
 
 ### Preset management
 
@@ -185,7 +186,6 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 | Detail View: mark with underline the currently edited feature | — | — |
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
 | Firmware string display | `cmd_firmware` response | Surface in About dialog |
-| Show-all-EQ overlay | — | Checkbox to overlay 4 output curves |
 
 ### Needed?
 

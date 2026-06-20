@@ -210,6 +210,10 @@ The graph plots the summed magnitude response of all seven bands at 256 log-spac
 
 Drag and wheel act on **active** markers only; double-click works on any marker. Slave (linked) channels and channel-wide bypass leave the graph read-only.
 
+#### Overlaying other outputs
+
+The panel header has a colour-coded **Overlay** checkbox for each of the *other* three output channels (the displayed output's own box is hidden). Tick one to draw that output's full response — its PEQ bands **and** crossover — faintly behind the active curve, so you can line up two outputs (e.g. a crossover split between a woofer and a tweeter) without flipping back and forth. Each output keeps a stable colour, the overlay tracks live edits to that channel, and the checkboxes clear automatically when you switch to a different channel. Overlays are view-only, so they stay available even on linked-slave channels where the controls are locked.
+
 #### "PEQ active" indicator on the output strip
 
 The PEQ button on the output channel strip lights up purple whenever the channel's PEQ is shaping the signal, defined as: **at least one band has gain ≠ 0 dB AND is not bypassed AND the channel-wide bypass is off**. The state updates live as you drag knobs and toggle bypasses, on both the home view and the detail view's strip header.
@@ -244,6 +248,8 @@ Both the **Crossover** and **PEQ** panels share a combined frequency-response gr
 - **Double-click a marker** — toggles that filter's **bypass**. This works on dim (already-bypassed) markers too, so a double-click re-enables them at their previous slope.
 
 Drag and wheel act on **active** markers only; double-click works on any marker (active or dim). Slave (linked) channels leave the graph read-only.
+
+The header also carries the same colour-coded **Overlay** checkboxes as the PEQ panel — tick one to overlay another output's full response (PEQ + crossover) on this graph for comparison. See [Overlaying other outputs](#overlaying-other-outputs) under the PEQ panel for the details.
 
 #### "Xover active" indicator on the output strip
 

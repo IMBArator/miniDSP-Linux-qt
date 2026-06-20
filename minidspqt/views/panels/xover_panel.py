@@ -36,6 +36,7 @@ from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
 from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
+from ._overlay_controls import OverlaySource, install_overlay_controls
 from ._slave_lock import apply_link_state, install_link_banner
 from ...defaults import default_crossover_state
 
@@ -103,18 +104,8 @@ class XoverPanel(QWidget):
 
         self._link_banner = install_link_banner(root)
 
-        header = QHBoxLayout()
-        title = QLabel("Xover Settings")
-        title.setObjectName("panelTitle")
-        title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        header.addWidget(title)
-        header.addStretch()
-        self._reset_btn = QPushButton("Reset")
-        self._reset_btn.setObjectName("resetButton")
-        self._reset_btn.clicked.connect(self._on_reset_clicked)
-        header.addWidget(self._reset_btn)
-        root.addLayout(header)
-
+        # Build the graph before the header so the header's overlay controls
+        # can bind to it; layout order is still header-then-graph below.
         self._graph = FreqResponseGraph(feature="xover")
         self._graph.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
@@ -125,6 +116,20 @@ class XoverPanel(QWidget):
         self._graph.xover_freq_dragged.connect(self._on_marker_dragged)
         self._graph.xover_slope_stepped.connect(self._on_marker_slope_stepped)
         self._graph.xover_bypass_toggled.connect(self._on_marker_bypass_toggled)
+
+        header = QHBoxLayout()
+        title = QLabel("Xover Settings")
+        title.setObjectName("panelTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        header.addWidget(title)
+        header.addStretch()
+        self._overlay = install_overlay_controls(header, self._graph)
+        self._reset_btn = QPushButton("Reset")
+        self._reset_btn.setObjectName("resetButton")
+        self._reset_btn.clicked.connect(self._on_reset_clicked)
+        header.addWidget(self._reset_btn)
+        root.addLayout(header)
+
         root.addWidget(self._graph, stretch=1)
 
         factory_defaults = default_crossover_state()
@@ -318,6 +323,20 @@ class XoverPanel(QWidget):
             channel_bypass: Channel-wide PEQ bypass flag.
         """
         self._graph.set_bands(bands, channel_bypass)
+
+    def set_overlay_sources(
+        self, active_idx: int, sources: list[OverlaySource]
+    ) -> None:
+        """Update the "other outputs" overlay options for the graph.
+
+        Forwards to the shared :class:`OverlayControls`; see
+        :meth:`OverlayControls.set_sources`.
+
+        Args:
+            active_idx: Output index (0–3) currently displayed.
+            sources: One entry per other output to offer as an overlay.
+        """
+        self._overlay.set_sources(active_idx, sources)
 
     def set_linked_slave(self, is_slave: bool, master_name: str = "") -> None:
         """Lock the panel when displaying a slave channel's crossover.
