@@ -169,6 +169,10 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - No "Remove PIN" action is exposed because the protocol has no such command; offline mode mirrors the same semantics against the in-memory virtual DSP for safe experimentation
 - See [Device Lock / PIN in the user guide](docs/user-guide.md#device-lock--pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
 
+### About / device info
+
+- **Menu → About** shows the application version plus, when a device is connected, its model and firmware version read from the `0x13` firmware query (`4x4MINI` / `V010`). Offline or before connecting, it shows the app version and a status line instead (`cmd_firmware`, `parse_firmware`)
+
 ### Knob interaction
 
 - **Click and drag** vertically, **scroll wheel**, or **arrow keys** for ±1 raw unit steps
@@ -185,7 +189,6 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 | Refactor linking indicator: right from header pill with text | — | — |
 | Detail View: mark with underline the currently edited feature | — | — |
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
-| Firmware string display | `cmd_firmware` response | Surface in About dialog |
 
 ### Needed?
 

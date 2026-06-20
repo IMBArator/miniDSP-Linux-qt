@@ -477,7 +477,7 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Reconnect** | Manually re-attach to the device after a disconnect (e.g. after cancelling the unlock prompt). Enabled only while disconnected |
 | **Connection mode ▸** | Submenu — toggle between **Connected (USB)** and **Offline** at runtime (see [Offline Mode](#offline-mode)) |
 | **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
-| **About** | Show version, license, and project information |
+| **About** | Show the application version, license, and project links. When a device is connected it also lists the device **model** and **firmware** (e.g. `4x4MINI` / `V010`) read from the firmware query; offline or before connecting it shows a status line instead |
 
 ---
 

@@ -60,6 +60,21 @@ def test_from_config_preset_metadata(preset_cfg):
     assert len(state.preset_names) == 30
 
 
+def test_from_config_firmware_populates_fields(preset_cfg):
+    cfg = copy.deepcopy(preset_cfg)
+    cfg["firmware"] = {"model": "4x4MINI", "version": "V010", "raw": "4x4MINI V010"}
+    state = DeviceState.from_config(cfg)
+    assert state.firmware_model == "4x4MINI"
+    assert state.firmware_version == "V010"
+
+
+def test_from_config_without_firmware_leaves_blank(preset_cfg):
+    # Offline / .unt configs carry no firmware key.
+    state = DeviceState.from_config(preset_cfg)
+    assert state.firmware_model == ""
+    assert state.firmware_version == ""
+
+
 def test_set_field_writes_through(preset_cfg):
     state = DeviceState.from_config(preset_cfg)
     assert state.set_field(0, "muted", True) is True

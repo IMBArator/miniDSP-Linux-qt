@@ -63,7 +63,7 @@ make test            # QT_QPA_PLATFORM=offscreen uv run pytest -v
 `make test` sets `QT_QPA_PLATFORM=offscreen` so the Qt widgets run headless —
 no display server required, which also makes it safe for CI.
 
-473 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
+480 tests covering the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, the About dialog, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
 
 ## Building the AppImage
 
@@ -190,7 +190,7 @@ minidspqt/                     Main package
   widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
   resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
-tests/                         pytest suite (473 tests)
+tests/                         pytest suite (480 tests)
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
   test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
   test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
@@ -203,6 +203,7 @@ tests/                         pytest suite (473 tests)
   test_overlay_controls.py     "Show other outputs" overlay checkboxes: reset-on-switch, graph push, always-enabled
   test_freq_response_graph_overlay.py  Overlay storage + shared response-polyline helper (flat vs active)
   test_detail_view_overlay.py  Sibling-output overlay sources pushed to both output graphs
+  test_about_dialog.py         About HTML: app version always, device model/firmware when connected
   test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
   test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
   test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock

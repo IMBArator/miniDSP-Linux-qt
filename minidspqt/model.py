@@ -182,6 +182,10 @@ class DeviceState:
     active_slot: int | None = None
     preset_names: list[str] = field(default_factory=list)
     test_tone: TestToneState = field(default_factory=TestToneState)
+    # Device identity from the 0x13 firmware/model query (empty offline / from
+    # .unt, which carry no live device behind them).
+    firmware_model: str = ""
+    firmware_version: str = ""
     _link_info_cache: list[dict] | None = field(default=None, repr=False)
 
     def _link_flags_list(self) -> list[int]:
@@ -640,8 +644,9 @@ class DeviceState:
                 the input ``gates`` list (4 entries) and the output
                 ``delays``, ``crossovers``, ``compressors``, ``peqs``,
                 ``routings`` lists (also 4 entries each). The
-                ``active_slot``, ``preset_names``, ``test_tone_mode``
-                and ``test_tone_freq`` keys are optional.
+                ``active_slot``, ``preset_names``, ``test_tone_mode``,
+                ``test_tone_freq`` and ``firmware`` (a dict with
+                ``model`` / ``version``) keys are optional.
 
         Returns:
             A fully-populated ``DeviceState`` with ``connected=True``
@@ -694,6 +699,7 @@ class DeviceState:
                 )
             )
 
+        fw = cfg.get("firmware") or {}
         state = cls(
             connected=True,
             inputs=inputs,
@@ -704,6 +710,8 @@ class DeviceState:
                 mode=cfg.get("test_tone_mode", 0),
                 sine_freq_index=cfg.get("test_tone_freq", 0),
             ),
+            firmware_model=fw.get("model", ""),
+            firmware_version=fw.get("version", ""),
         )
         state._link_info_cache = decode_link_groups(
             [ch.link_flags for ch in inputs] + [ch.link_flags for ch in outputs]

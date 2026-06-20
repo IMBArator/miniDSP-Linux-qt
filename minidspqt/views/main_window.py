@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from importlib.metadata import PackageNotFoundError, version as _app_version
 from pathlib import Path
 
 from PySide6.QtGui import QActionGroup, QIcon
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from .. import __version__
 from ..blank_seed import seed_virtual_dsp_from_blank
 from ..device_thread import DeviceThread
 from ..model import (
@@ -378,12 +380,37 @@ class MainWindow(QMainWindow):
                 names[idx] = dlg.chosen_name
             self._apply_state_to_views()
 
-    def _on_about(self) -> None:
-        QMessageBox.about(
-            self,
-            "About DSP 4x4 Mini",
-            "<h3>DSP 4x4 Mini</h3>"
+    def _about_html(self) -> str:
+        """Build the About dialog's HTML body.
+
+        Pure string builder (no UI side effects) so it can be unit-tested.
+        Shows the app version in the heading and, when a device is connected,
+        its model and firmware from the ``0x13`` query; otherwise a single
+        muted status line ("Offline mode" / "Not connected").
+
+        Returns:
+            The HTML markup passed to :meth:`QMessageBox.about`.
+        """
+        try:
+            app_version = _app_version("minidsp-linux-qt")
+        except PackageNotFoundError:
+            app_version = __version__
+
+        if self._state.firmware_model:
+            device_block = (
+                "<p><b>Device:</b> "
+                f"{self._state.firmware_model}<br>"
+                "<b>Firmware:</b> "
+                f"{self._state.firmware_version or '—'}</p>"
+            )
+        else:
+            status = "Offline mode" if self._offline else "Not connected"
+            device_block = f'<p style="color:gray">{status}</p>'
+
+        return (
+            f"<h3>DSP 4x4 Mini <span style='color:gray'>v{app_version}</span></h3>"
             "<p>Qt graphical interface for the t.racks DSP 4x4 Mini.</p>"
+            f"{device_block}"
             '<p><a href="https://github.com/IMBArator/miniDSP-Linux-qt">'
             "github.com/IMBArator/miniDSP-Linux-qt</a></p>"
             "<p>Licensed under the "
@@ -395,8 +422,11 @@ class MainWindow(QMainWindow):
             '<a href="https://www.gnu.org/licenses/lgpl-3.0.en.html">'
             "GNU Lesser General Public License v3</a>. "
             "PySide6 is dynamically linked; users may replace the library "
-            "with a modified version.</p>",
+            "with a modified version.</p>"
         )
+
+    def _on_about(self) -> None:
+        QMessageBox.about(self, "About DSP 4x4 Mini", self._about_html())
 
     # --- UI -> DeviceThread ---
 

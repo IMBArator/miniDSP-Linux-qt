@@ -9,7 +9,7 @@ description = "Graphical interface for the t.racks DSP 4x4 Mini"
 requires-python = ">=3.11"
 dependencies = [
     "PySide6-Essentials>=6.8",
-    "minidsp-linux @ https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.1.0/minidsp_linux-1.1.0-py3-none-any.whl",
+    "minidsp-linux @ https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.2.0/minidsp_linux-1.2.0-py3-none-any.whl",
 ]
 
 [project.optional-dependencies]
