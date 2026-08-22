@@ -448,6 +448,9 @@ class ThemeManager(QObject):
 # ---------------------------------------------------------------------------
 # Module-level singleton.  Custom widgets import this directly:
 #   from ..theme import theme_manager
+#
+# An unbound manager already reports DARK_THEME, so widgets can paint in
+# headless tests that never call bind_to_app().
 # ---------------------------------------------------------------------------
 
 theme_manager = ThemeManager()
@@ -460,18 +463,3 @@ def current_theme() -> Theme:
     manager singleton just to read one property.
     """
     return theme_manager.current
-
-
-def _bootstrap_for_headless() -> None:
-    """Ensure ``theme_manager.current`` is non-None in tests that paint a
-    widget without ever calling ``ThemeManager.bind_to_app``.
-
-    Tests still get the dark default; production calls ``bind_to_app`` once
-    in ``app.run()`` and overrides this.
-    """
-    # No-op: the dataclass default already gives us DARK_THEME.  This
-    # function exists only as a documented hook in case future tests need
-    # to opt into LIGHT_THEME.
-
-
-_bootstrap_for_headless()
