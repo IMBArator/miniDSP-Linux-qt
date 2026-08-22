@@ -5,7 +5,7 @@
 - stick to the architecture decisions recorded in [docs/decisions/](docs/decisions/index.md) — never contradict one silently; if a change would conflict with an ADR, or makes a new ADR-worthy decision, stop and ask whether to record it.
 - commit using conventional commits, grouped by feature: a feature's implementation, its tests, and its documentation all go together in one commit (not split into separate test/docs commits).
 - do NOT add `Co-Authored-By: Claude …` trailers or AI-generated footers to commit messages or PR bodies.
-- use uv to manage the python project; run tests with `uv run pytest`.
+- use uv to manage the python project.
 - new features add tests in `tests/`, matching the existing one-file-per-feature pattern.
 - automatically commit after significant changes.
 - always feel free to suggest improvements to the code and to the process!
@@ -13,6 +13,8 @@
 - always have a look at the protocol documentation of miniDSP-Linux ... it is located at analysis/protocol.md
 - suggest fixes for the miniDSP-Linux lib if they make sense
 - always create documentation for newly created code as Google-Style doc strings
+- never mention how many tests exactly are there in any documentation. (No counts.)
+- always use the make targets instead of create oneliners to test and build the software or docs
 
 ## Project Goal
 
