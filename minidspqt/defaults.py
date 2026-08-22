@@ -18,7 +18,18 @@ from minidsp.defaults import load_factory_defaults
 
 
 @lru_cache(maxsize=1)
-def _factory() -> dict:
+def factory_params() -> dict:
+    """Return the F00 factory preset's raw parameter mapping.
+
+    Parsed once per process. Every caller receives the same object, so
+    treat it as read-only and deep-copy anything you intend to mutate.
+
+    Returns:
+        The ``params`` mapping from
+        ``minidsp.defaults.load_factory_defaults()``, keyed by feature
+        (``gates``, ``crossovers``, ``compressors``, ``peqs``, ``delays``,
+        ``gains``, …) in raw protocol units.
+    """
     return load_factory_defaults()["params"]
 
 
@@ -29,7 +40,7 @@ def default_gate_state() -> tuple:
         Four raw protocol values in the same order the device expects them
         for ``cmd_gate``.
     """
-    g = _factory()["gates"][0]
+    g = factory_params()["gates"][0]
     return g["attack"], g["release"], g["hold"], g["threshold"]
 
 
@@ -40,7 +51,7 @@ def default_crossover_state() -> tuple:
         Four raw protocol values: hi-pass frequency and slope index, then
         lo-pass frequency and slope index. Slope index 0 means "bypass".
     """
-    x = _factory()["crossovers"][0]
+    x = factory_params()["crossovers"][0]
     return x["hipass_freq"], x["hipass_slope"], x["lopass_freq"], x["lopass_slope"]
 
 
@@ -51,7 +62,7 @@ def default_compressor_state() -> tuple:
         Five raw protocol values in the order ``cmd_compressor`` expects.
         ``ratio == 0`` corresponds to 1:1.0 (no compression).
     """
-    c = _factory()["compressors"][0]
+    c = factory_params()["compressors"][0]
     return c["ratio"], c["knee"], c["attack"], c["release"], c["threshold"]
 
 
@@ -62,20 +73,20 @@ def default_peq_bands() -> list[tuple]:
         A list of 7 tuples ``(gain, freq, q, type, bypass)`` in raw
         protocol units. ``gain == 120`` is 0 dB; ``bypass`` is a bool.
     """
-    bands = _factory()["peqs"][0]["bands"]
+    bands = factory_params()["peqs"][0]["bands"]
     return [(b["gain"], b["freq"], b["q"], b["type"], b["bypass"]) for b in bands]
 
 
 def default_peq_channel_bypass() -> bool:
     """Return the factory value of the per-channel PEQ bypass flag."""
-    return _factory()["peqs"][0]["channel_bypass"]
+    return factory_params()["peqs"][0]["channel_bypass"]
 
 
 def default_delay_samples() -> int:
     """Return the factory output-delay value, in samples (sample rate 48 kHz)."""
-    return _factory()["delays"][0]
+    return factory_params()["delays"][0]
 
 
 def default_gain() -> int:
     """Return the factory channel gain in raw protocol units (120 = 0 dB)."""
-    return _factory()["gains"][0]
+    return factory_params()["gains"][0]

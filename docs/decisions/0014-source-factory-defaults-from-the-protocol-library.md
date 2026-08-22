@@ -90,9 +90,9 @@ quietly wrong and would need a channel parameter.
 * Bad, because the single-channel assumption is invisible at call sites; the
   helpers take no channel argument, so a multi-default device would need a
   signature change everywhere.
-* Neutral, because there are now two caches over the same data:
-  `defaults.py`'s `lru_cache` and a separate hand-rolled module global in
-  `virtual_dsp.py`. Harmless, but redundant.
+* Neutral, because the cached mapping is shared by every caller, so it must be
+  treated as read-only. `factory_params()` documents that, and `VirtualDSP`
+  deep-copies each slot key out of it rather than aliasing.
 
 ### Confirmation
 

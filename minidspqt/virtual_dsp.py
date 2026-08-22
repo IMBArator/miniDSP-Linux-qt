@@ -10,8 +10,9 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from minidsp.defaults import load_factory_defaults
 from minidsp.device import DeviceLockedError
+
+from .defaults import factory_params
 
 _SLOT_KEYS = frozenset(
     {
@@ -31,18 +32,9 @@ _SLOT_KEYS = frozenset(
     }
 )
 
-_FACTORY_PARAMS_CACHE: dict[str, Any] | None = None
-
-
-def _factory_params() -> dict[str, Any]:
-    global _FACTORY_PARAMS_CACHE
-    if _FACTORY_PARAMS_CACHE is None:
-        _FACTORY_PARAMS_CACHE = load_factory_defaults()["params"]
-    return _FACTORY_PARAMS_CACHE
-
 
 def _default_config() -> dict[str, Any]:
-    params = _factory_params()
+    params = factory_params()
     cfg = {k: copy.deepcopy(params[k]) for k in _SLOT_KEYS if k in params}
     cfg["active_slot"] = 1
     cfg["preset_names"] = [f"U{i + 1:02d}" for i in range(30)]
