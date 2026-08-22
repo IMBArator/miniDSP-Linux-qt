@@ -83,5 +83,6 @@ nav:
   - User Guide: user-guide.md
   - Development: development.md
   - UI Concepts: concepts.md
+  - Decisions: decisions/
   - API Reference: api/
   - Changelog: changelog.md

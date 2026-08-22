@@ -221,8 +221,25 @@ docs/                          MkDocs Material site source
   development.md               This page — contributor setup, testing, packaging, release
   changelog.md                 Transcludes CHANGELOG.md
   concepts.md                  UI concepts page (references concept-art/)
+  decisions/                   Architecture decision records (MADR) + adr-template.md
   concept-art/                 UI mockups (.excalidraw + .png)
   img/                         Screenshots and recordings
   gen_ref_pages.py             Builds the mkdocstrings API reference
   hooks.py                     Post-processes the transcluded README
 ```
+
+## Architecture decisions
+
+Design decisions with lasting consequences are recorded as
+[architecture decision records](decisions/index.md) in
+[MADR](https://adr.github.io/madr/) format, one file per decision under
+`docs/decisions/`.
+
+Read them before changing behaviour in an area they cover — several document a
+position the project actively abandoned, so the record explains why the obvious
+alternative was already tried and rejected. The
+[index](decisions/index.md#decisions-that-reversed-an-earlier-position) lists
+those reversals separately.
+
+When you make a decision worth recording, copy `docs/decisions/adr-template.md`
+to the next number and add it to the index.
