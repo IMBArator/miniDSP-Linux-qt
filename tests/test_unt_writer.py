@@ -104,3 +104,41 @@ def test_round_trip_after_store_and_edit():
         out2 = Path(tmp) / "step2.unt"
         save_unt(out2, slots2, names2, active2, raw2)
         assert out2.read_bytes() == raw, "Double round-trip must be identical"
+
+
+def _blank_save_args():
+    """Return ``(slots, names, active)`` for a freshly-created VirtualDSP."""
+    from minidspqt.virtual_dsp import VirtualDSP
+
+    slots, active, _ = VirtualDSP().export_to_unt_args()
+    return slots, [f"U{i + 1:02d}" for i in range(30)], active
+
+
+def test_save_leaves_no_temporary_file():
+    """A successful save removes its scratch file, leaving only the target."""
+    slots, names, active = _blank_save_args()
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "out.unt"
+        save_unt(out, slots, names, active, template=None)
+        assert [p.name for p in Path(tmp).iterdir()] == ["out.unt"]
+
+
+def test_failed_rename_preserves_existing_file(monkeypatch):
+    """An interrupted write leaves the previous file intact, not truncated."""
+    slots, names, active = _blank_save_args()
+
+    def boom(src, dst):
+        raise OSError("rename failed")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "out.unt"
+        out.write_bytes(b"previous preset")
+
+        monkeypatch.setattr("minidspqt.unt_writer.os.replace", boom)
+        with pytest.raises(OSError):
+            save_unt(out, slots, names, active, template=None)
+
+        assert out.read_bytes() == b"previous preset", "Existing file must survive"
+        assert [p.name for p in Path(tmp).iterdir()] == ["out.unt"], (
+            "Scratch file must be cleaned up on failure"
+        )

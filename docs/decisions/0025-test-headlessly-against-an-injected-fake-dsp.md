@@ -76,8 +76,8 @@ source layout, and a `conftest` shim synthesizes `PySide6.__version__` because
 
 ### Consequences
 
-* Good, because the full suite — 480 tests as of v1.1.0 — runs on any Linux machine
-  with no display and no hardware.
+* Good, because the full suite runs on any Linux machine with no display and no
+  hardware.
 * Good, because the fake is behaviourally realistic, so tests catch protocol-order
   and state-propagation bugs a mock would silently accept.
 * Good, because the test double and the offline feature are the same code, so

@@ -76,8 +76,8 @@ override plus a return-to-system path (`9e4c844`, ADR-0020).
 
 ### Confirmation
 
-The test suite passed unchanged across the narrowing (328 tests at the time), and
-imports stay confined to the three Essentials modules. The AppImage smoke test
+The test suite passed unchanged across the narrowing, and imports stay confined to
+the three Essentials modules. The AppImage smoke test
 boots the GUI under the offscreen QPA platform, which would fail loudly if a
 required Qt module were missing from the bundle (`c34205d`).
 

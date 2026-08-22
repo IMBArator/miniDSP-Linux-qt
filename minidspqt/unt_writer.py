@@ -8,6 +8,7 @@ Pure function — does not depend on VirtualDSP or Qt.
 
 from __future__ import annotations
 
+import os
 import struct
 from pathlib import Path
 
@@ -81,8 +82,10 @@ def save_unt(
     untouched data round-trips byte-identically.
 
     Args:
-        path: Destination path. The file is written atomically by
-            ``Path.write_bytes``.
+        path: Destination path. Written atomically: the bytes go to a
+            temporary file alongside ``path``, are flushed to disk, then
+            renamed over the destination. An interrupted write therefore
+            leaves any existing file untouched rather than truncated.
         slots: 30 entries (0-indexed, U01–U30) in the same shape
             ``parse_preset_params`` produces; ``None`` means "leave
             slot empty" — the template's empty-slot bytes are kept.
@@ -117,7 +120,17 @@ def save_unt(
             continue
         _write_slot(data, i, slots[i], slot_names[i] if i < len(slot_names) else "")
 
-    Path(path).write_bytes(bytes(data))
+    target = Path(path)
+    tmp = target.with_name(f".{target.name}.tmp")
+    try:
+        with open(tmp, "wb") as fh:
+            fh.write(bytes(data))
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, target)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 def _write_slot(
