@@ -473,10 +473,10 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
 | **Copy channel settings...** | Copy parameters from one channel to others (see [Copy Channel Settings](#copy-channel-settings)) |
 | **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |
-| **Set device PIN...** | Set a 4-character lock PIN; the device disconnects after applying (see [Device Lock / PIN](#device-lock--pin)). Enabled only while connected |
+| **Set device PIN...** | Set a 4-character lock PIN; the device disconnects after applying (see [Device Lock / PIN](#device-lock-pin)). Enabled only while connected |
 | **Reconnect** | Manually re-attach to the device after a disconnect (e.g. after cancelling the unlock prompt). Enabled only while disconnected |
 | **Connection mode ▸** | Submenu — toggle between **Connected (USB)** and **Offline** at runtime (see [Offline Mode](#offline-mode)) |
-| **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light--dark)) |
+| **Theme ▸** | Submenu — choose **System**, **Light**, or **Dark** (see [Themes](#themes-light-dark)) |
 | **About** | Show the application version, license, and project links. When a device is connected it also lists the device **model** and **firmware** (e.g. `4x4MINI` / `V010`) read from the firmware query; offline or before connecting it shows a status line instead |
 
 ---

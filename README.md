@@ -167,7 +167,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - **Reconnect** menu entry re-arms the worker after any user-initiated disconnect (cancel, three wrong PINs, or set-PIN ACK)
 - PINs are 4 raw bytes — any 4 printable ASCII characters work, not just digits, regardless of the upstream library docstring
 - No "Remove PIN" action is exposed because the protocol has no such command; offline mode mirrors the same semantics against the in-memory virtual DSP for safe experimentation
-- See [Device Lock / PIN in the user guide](docs/user-guide.md#device-lock--pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
+- See [Device Lock / PIN in the user guide](docs/user-guide.md#device-lock-pin) for the full UX walkthrough and the **⚠ no known factory reset** warning
 
 ### About / device info
 
