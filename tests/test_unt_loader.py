@@ -13,7 +13,15 @@ from minidspqt.unt_loader import (
     load_unt_all_slots,
 )
 
-FIXTURE_PATH = "/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt"
+# Real-device capture from a sibling checkout of the protocol library, located
+# relative to this file so it resolves on any machine and OS. Absent unless
+# miniDSP-Linux is cloned next to this repository, hence the graceful skip.
+FIXTURE_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "miniDSP-Linux"
+    / "analysis"
+    / "miniDSP current settings.unt"
+)
 BUNDLED_BLANK = (
     Path(__file__).resolve().parent.parent / "minidspqt" / "resources" / "blank.unt"
 )
@@ -22,12 +30,9 @@ BUNDLED_BLANK = (
 @pytest.fixture
 def real_unt(tmp_path):
     """Return the real .unt fixture path, or skip if absent."""
-    import pathlib
-
-    p = pathlib.Path(FIXTURE_PATH)
-    if not p.exists():
+    if not FIXTURE_PATH.exists():
         pytest.skip(f"fixture not found: {FIXTURE_PATH}")
-    return p
+    return FIXTURE_PATH
 
 
 def test_load_unt_parses_real_fixture(real_unt):

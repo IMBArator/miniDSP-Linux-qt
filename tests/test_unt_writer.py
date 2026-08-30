@@ -10,7 +10,14 @@ import pytest
 from minidspqt.unt_loader import load_unt_all_slots
 from minidspqt.unt_writer import save_unt
 
-FIXTURE_PATH = Path("/home/max/src/miniDSP-Linux/analysis/miniDSP current settings.unt")
+# Real-device capture from a sibling checkout of the protocol library, located
+# relative to this file so it resolves on any machine and OS.
+FIXTURE_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "miniDSP-Linux"
+    / "analysis"
+    / "miniDSP current settings.unt"
+)
 skip_if_no_fixture = pytest.mark.skipif(
     not FIXTURE_PATH.exists(),
     reason="fixture .unt not available",
