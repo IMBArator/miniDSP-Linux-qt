@@ -7,8 +7,27 @@ Setup, testing, packaging, and release workflow for contributors.
 - Python 3.11+
 - [uv](https://docs.astral.sh/uv/) — manages the virtual environment and dependencies
 - [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed automatically from the pinned upstream release wheel)
-- Linux with kernel HID driver — communicates via `/dev/hidraw*`
+
+The protocol library picks its HID transport by platform, so nothing in this
+repository branches on the operating system (see
+[ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md)).
+
+### Linux
+
+- Kernel HID driver — communicates via `/dev/hidraw*`
 - Read/write access to `/dev/hidraw*` (see [Permissions](https://github.com/IMBArator/miniDSP-Linux-qt#permissions))
+
+### Windows
+
+- No driver installation and no udev equivalent — Windows binds its built-in HID
+  driver to the DSP automatically
+- `hidapi` is pulled in by the protocol library through a platform marker, so it
+  is installed on Windows only
+- The pinned release wheel is still the Linux-only build of the protocol
+  library, so Windows currently needs the [local checkout](#developing-against-a-local-protocol-library)
+  for anything that imports `minidsp` — the test suite and offline mode included,
+  not just hardware access. This lifts with the next protocol-library release
+  (see [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md))
 
 ## Development environment
 
@@ -18,6 +37,13 @@ cd miniDSP-Linux-qt
 uv sync              # creates .venv, installs dependencies
 uv sync --extra dev  # also installs pytest for development
 ```
+
+On Windows the same commands run unchanged in PowerShell — install uv with
+`winget install astral-sh.uv` first; it provisions Python itself. Clone the
+protocol library as a sibling directory (`../miniDSP-Linux`) and follow
+[Developing against a local protocol library](#developing-against-a-local-protocol-library);
+that sibling checkout also supplies the real `.unt` fixture the round-trip tests
+use, which they skip when it is absent.
 
 ### Developing against a local protocol library
 
@@ -39,7 +65,7 @@ silently ignored.
 > changes, run with sync disabled so your reinstall sticks:
 >
 > ```bash
-> QT_QPA_PLATFORM=offscreen uv run --no-sync pytest
+> uv run --no-sync pytest
 > ```
 
 The override is reverted by the next `uv sync` / `uv lock` (or any plain
@@ -57,11 +83,28 @@ make sync            # runs `uv sync --extra dev`
 Then run the tests:
 
 ```bash
-make test            # QT_QPA_PLATFORM=offscreen uv run pytest -v
+make test            # uv run pytest -v
 ```
 
-`make test` sets `QT_QPA_PLATFORM=offscreen` so the Qt widgets run headless —
-no display server required, which also makes it safe for CI.
+`tests/conftest.py` sets `QT_QPA_PLATFORM=offscreen` before importing PySide6, so
+the Qt widgets always run headless — no display server required, which makes the
+suite safe for CI and identical on every platform. It uses `os.environ.setdefault`,
+so exporting `QT_QPA_PLATFORM=xcb` yourself still wins when you want to watch a
+test drive a real window. Because the variable is no longer a POSIX `VAR=x cmd`
+prefix in the recipe, `make test` needs no POSIX shell.
+
+### GNU make on Windows (optional)
+
+`make` is not part of a Windows install. It is not required — every target that
+matters day to day is a one-line `uv` invocation you can type directly
+(`uv sync --extra dev`, `uv run pytest -v`, `uv build`, `uv run mkdocs build`).
+If you prefer the targets, install GNU make (for example
+`winget install ezwinports.make`); `sync`, `install`, `test`, `build`, `docs`,
+and `docs-serve` are shell-agnostic and work as-is.
+
+`version`, `publish`, and `appimage` shell out to bash scripts, and `clean`,
+`docs-clean`, and `appimage-clean` use `rm -rf`, so those remain Linux-only —
+or Git Bash, which ships with Git for Windows.
 
 The suite covers the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, the About dialog, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
 
@@ -133,6 +176,15 @@ podman run --rm \
 Upload both files (`.AppImage` and `.AppImage.zsync`) as release assets. Without `APPIMAGE_UPDATE_INFO`, no `.zsync` is produced and the AppImage carries no update info — that's the right choice for one-off local builds.
 
 ## Releasing
+
+> **Open release blocker — Windows support.** Windows currently works only from
+> a local protocol-library checkout. Before it can be advertised in a release,
+> the protocol library's Windows transport must be published as a release wheel
+> (v1.3.0) and the PEP 508 direct URL in `pyproject.toml` bumped to it, followed
+> by `uv lock` — the mechanism is
+> [ADR-0003](decisions/0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md),
+> the reasoning is
+> [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md).
 
 The release flow uses two helper scripts under [`scripts/`](https://github.com/IMBArator/miniDSP-Linux-qt/tree/main/scripts), wired into the Makefile:
 

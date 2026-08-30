@@ -10,6 +10,16 @@ module thin-wraps it for backward-compat with existing tests.
 
 from __future__ import annotations
 
+# Run every Qt widget headlessly, on every platform, without a display server.
+# Setting this here rather than in the `make test` recipe keeps the suite
+# shell-agnostic: a POSIX `VAR=x cmd` prefix is not valid in PowerShell, so a
+# Makefile-level export would have made `uv run pytest` Linux-only. It must be
+# set before Qt loads, hence the position above the PySide6 import.
+# setdefault() leaves an explicit QT_QPA_PLATFORM (e.g. `xcb` when debugging a
+# test visually) untouched.
+import os  # noqa: E402
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+
 # pytest-qt's qt_compat.get_versions() reads PySide6.__version__ directly.
 # When we depend on PySide6-Essentials (no Addons), PySide6 is a namespace
 # package with no __init__.py, so the attribute is absent. Synthesize it from

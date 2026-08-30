@@ -7,9 +7,10 @@ sync:
 
 install: sync   ## alias kept for muscle memory
 
-# Run the test suite
+# Run the test suite (headless: tests/conftest.py sets QT_QPA_PLATFORM=offscreen,
+# so this recipe needs no POSIX env prefix and works under Windows GNU make too)
 test:
-	QT_QPA_PLATFORM=offscreen $(UV) run pytest -v
+	$(UV) run pytest -v
 
 # Build the package (sdist and wheel into dist/)
 build:

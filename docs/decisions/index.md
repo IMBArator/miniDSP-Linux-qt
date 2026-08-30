@@ -20,6 +20,7 @@ a line to the relevant table below.
 | [0002](0002-use-pyside6-essentials-as-the-gui-toolkit.md) | Use PySide6-Essentials as the GUI toolkit |
 | [0003](0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md) | Pin the protocol library to a published release wheel via a PEP 508 direct URL |
 | [0004](0004-license-under-gplv3-with-lgpl-and-interop-notices.md) | License under GPLv3, with explicit Qt LGPL and protocol-interoperability notices |
+| [0030](0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md) | Support Windows by delegating transport selection to the protocol library |
 
 ## Runtime architecture
 

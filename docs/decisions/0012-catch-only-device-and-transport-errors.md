@@ -123,3 +123,7 @@ remains in `device_thread.py`.
 * `7b23114`, `ae0cdd7` — the upstream `DeviceClosedError` change and its adoption
 * Related: ADR-0001 (upstream relationship), ADR-0005 (the loop being protected),
   ADR-0017 (`DeviceLockedError` in the lock flow)
+* Amended by [ADR-0030](0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md):
+  the `OSError` member covers the `hidraw`/libusb layer on Linux and hidapi on
+  Windows, whose failures surface as `OSError` too. The tuple itself did not
+  change, and `DeviceClosedError` subclasses `OSError` on both platforms.

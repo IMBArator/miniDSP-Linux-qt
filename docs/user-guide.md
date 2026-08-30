@@ -12,7 +12,9 @@ To run from source for development, see the [Development Guide](development.md).
 
 ## USB Permissions
 
-The application talks to the DSP via `/dev/hidraw*`, which requires root by default. To use it as a regular user, add the udev rule documented in the [**Permissions**](../README.md#permissions) section of the README, then disconnect and reconnect the device.
+On Linux the application talks to the DSP via `/dev/hidraw*`, which requires root by default. To use it as a regular user, add the udev rule documented in the [**Permissions**](../README.md#permissions) section of the README, then disconnect and reconnect the device.
+
+On Windows there is nothing to set up: no driver installation, no udev equivalent, and no elevated shell — Windows binds its built-in HID driver to the DSP automatically. As on Linux, only one program may hold the DSP at a time, so close the manufacturer's editor before connecting.
 
 ---
 
@@ -25,7 +27,7 @@ minidspqt -vv          # debug-level logging (USB frame traces)
 minidspqt --offline    # virtual DSP, no hardware needed
 ```
 
-On launch the application attempts to open the DSP via `/dev/hidraw*`. If the device is found, it reads the full configuration (preset data, channel names, gain, routing, mute/phase state) and populates all controls. Level meters begin updating at ~150 ms intervals.
+On launch the application attempts to open the DSP through the platform's HID interface (`/dev/hidraw*` on Linux, the Windows HID API on Windows). If the device is found, it reads the full configuration (preset data, channel names, gain, routing, mute/phase state) and populates all controls. Level meters begin updating at ~150 ms intervals.
 
 If no device is found, the UI shows **Disconnected** and all controls are disabled. The application will auto-retry every 2 seconds.
 
@@ -683,7 +685,7 @@ Open the menu (≡) → **Theme** and pick one:
 | **Light** | Force light mode regardless of OS preference |
 | **Dark** | Force dark mode regardless of OS preference |
 
-Your selection is remembered between sessions (stored via `QSettings`, typically at `~/.config/miniDSP/minidspqt.conf` on Linux).  Choosing **System** at any time clears the override and resumes following the OS.
+Your selection is remembered between sessions, stored via `QSettings` in whatever location the platform considers native — typically `~/.config/miniDSP/minidspqt.conf` on Linux, and the registry key `HKCU\Software\miniDSP\minidspqt` on Windows.  Choosing **System** at any time clears the override and resumes following the OS.
 
 ### What changes
 

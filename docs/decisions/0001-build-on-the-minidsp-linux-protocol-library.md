@@ -102,3 +102,8 @@ maths, which is display-only and never reaches the device (ADR-0015).
   that the library boundary was drawn in the right place.
 * Related: ADR-0003 (how the dependency is pinned), ADR-0014 (factory defaults
   come from the library), ADR-0015 (the one deliberate exception).
+* Amended by [ADR-0030](0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md):
+  the library no longer speaks only `/dev/hidraw*`. It selects a transport by
+  platform — hidraw on Linux, hidapi on Windows — so "every byte that reaches the
+  device" now includes the choice of how it gets there. This side still contains
+  no transport code and no platform branch.

@@ -37,7 +37,22 @@ pip install "https://github.com/IMBArator/miniDSP-Linux-qt/releases/download/vX.
 minidspqt            # or: minidspqt --offline
 ```
 
-Both install paths talk to the device over `/dev/hidraw*`, so non-root use needs the udev rule under [Permissions](#permissions).
+Both install paths are Linux packages and talk to the device over `/dev/hidraw*`, so non-root use needs the udev rule under [Permissions](#permissions).
+
+### Windows (from source)
+
+There is no packaged Windows build yet — on Windows the application runs from a source checkout. Install [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`), then run the same two commands in PowerShell; uv provisions Python itself, so nothing else is needed:
+
+```powershell
+git clone https://github.com/IMBArator/miniDSP-Linux.git       # temporary, see below
+git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
+cd miniDSP-Linux-qt
+uv sync
+uv pip install --reinstall --no-cache ../miniDSP-Linux/        # temporary, see below
+uv run --no-sync minidspqt  # or: uv run --no-sync minidspqt --offline
+```
+
+The two lines marked *temporary* exist because the Windows HID transport lives in the protocol library and has not been published in a release wheel yet — the pinned dependency is still Linux-only and cannot even be imported on Windows. Until that release lands, Windows needs the sibling protocol-library checkout installed on top, as described under [Developing against a local protocol library](docs/development.md#developing-against-a-local-protocol-library) (including why `--no-cache` and `--no-sync` matter) — see [ADR-0030](docs/decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md). Once the release is published, the extra lines disappear and Windows uses the same `uv sync` + `uv run minidspqt` as any source install.
 
 ## Usage
 
@@ -61,6 +76,8 @@ Use the menu button (top-right) to load or save `.unt` preset files. In offline 
 
 ## Permissions
 
+### Linux
+
 The tool communicates via `/dev/hidraw*`. By default this requires root. To allow regular users, create a udev rule:
 
 ```bash
@@ -71,6 +88,10 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
 Then reconnect the device.
+
+### Windows
+
+Nothing to configure — no driver installation and no udev equivalent. Windows binds its built-in HID driver to the DSP automatically, and HID devices are accessible to normal users, so no elevated shell is needed either. As on Linux, only one process may talk to the DSP at a time; the protocol library enforces that with a named mutex instead of a file lock, and a second process fails immediately.
 
 ## Features
 
