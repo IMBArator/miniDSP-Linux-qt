@@ -127,3 +127,16 @@ remains in `device_thread.py`.
   the `OSError` member covers the `hidraw`/libusb layer on Linux and hidapi on
   Windows, whose failures surface as `OSError` too. The tuple itself did not
   change, and `DeviceClosedError` subclasses `OSError` on both platforms.
+* Amended by the **Device busy** chip: `DeviceBusyError` — raised upstream when
+  the single-instance guard (flock on Linux, named mutex on Windows) is already
+  held by another process — is the one `OSError` subclass the connect loop now
+  distinguishes, and it is caught *before* the bare `OSError` in `_try_connect`
+  for exactly that reason. The distinction is made in order to **keep waiting**
+  visibly, not to swallow anything: both branches retry on the unchanged
+  cadence, and the narrow catch only decides what the user is told (a "Device
+  busy" chip and one warning line, versus the silent debug-level "device not
+  found"). `DEVICE_ERRORS` is untouched, since the new class is an `OSError`
+  and the poll loop has no reason to tell the two apart. Note the mirror image
+  of the ADR-0003 pinning concern above: here it is an upstream *addition* that
+  this side cannot import yet, hence the `try`/`except ImportError` shim in
+  `device_thread.py`, to be deleted with the pin bump.

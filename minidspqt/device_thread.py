@@ -20,6 +20,22 @@ from PySide6.QtCore import QThread, Signal
 
 from minidsp.device import DeviceClosedError, DeviceLockedError, DSPmini
 
+try:
+    from minidsp.device import DeviceBusyError
+except ImportError:  # pinned minidsp-linux < 1.3.0; drop this shim with the pin bump
+
+    class DeviceBusyError(OSError):  # type: ignore[no-redef]
+        """Placeholder so except-clauses stay valid on old library versions.
+
+        The pinned release wheel (ADR-0003) predates the library's
+        distinct busy error, so importing it unconditionally would break
+        the app on that version. Subclassing ``OSError`` mirrors the real
+        class, which means the ``except DeviceBusyError`` clause in
+        :meth:`DeviceThread._try_connect` simply never matches until the
+        pin is bumped — the old "device not found" path stays in effect.
+        """
+
+
 # Sentinel used on the PIN queue when the UI cancels the unlock dialog.
 _CANCEL_PIN = object()
 # Max unlock attempts before the worker gives up and disconnects.
@@ -82,6 +98,10 @@ class DeviceThread(QThread):
             ``parse_levels`` result.
         connection_changed (bool): True when a session opens, False
             when it closes.
+        device_busy (bool): True when the connect loop found the device
+            held by another process, False as soon as that is no longer
+            the reason a connect attempt failed (or once it succeeds).
+            Purely informational — the worker keeps retrying either way.
         config_loaded (dict): Emitted when a full config has been
             read (initial connect, after a preset recall, or after a
             ``request_read_config``).
@@ -93,6 +113,7 @@ class DeviceThread(QThread):
 
     levels_updated = Signal(dict)
     connection_changed = Signal(bool)
+    device_busy = Signal(bool)
     config_loaded = Signal(dict)
     pin_required = Signal()
     pin_result = Signal(bool, int)  # success, remaining_attempts
@@ -419,18 +440,54 @@ class DeviceThread(QThread):
                 self.connection_changed.emit(False)
 
     def _try_connect(self, dsp) -> bool:
+        """Retry ``dsp.open()`` every ``RECONNECT_INTERVAL_MS`` until it works.
+
+        Two failure modes are distinguished so the UI can tell them apart:
+
+        * ``DeviceBusyError`` — another process (the ``minidsp`` console
+          tool, the vendor editor, a second GUI) holds the single-instance
+          guard. Worth telling the user about, because the fix is theirs:
+          quit the other program and this loop connects on its own.
+        * any other ``OSError`` — no device, or an unplugged cable. The
+          ordinary "Disconnected" case, logged at debug level only.
+
+        ``device_busy`` is emitted on the *edges* of the busy condition,
+        not once per retry, so the UI sees ``True`` once when the conflict
+        starts and ``False`` once when it clears.
+
+        Returns:
+            True once the device is open, False if ``request_stop`` was
+            called while waiting.
+        """
+        busy = False
         while not self._stop:
             try:
                 dsp.open()
-                return True
+            except DeviceBusyError:
+                if not busy:
+                    busy = True
+                    log.warning("Device is in use by another process, waiting...")
+                    self.device_busy.emit(True)
             except OSError:
+                if busy:
+                    busy = False
+                    log.info("Device is no longer reported as busy")
+                    self.device_busy.emit(False)
                 log.debug(
                     "Device not found, retrying in %dms", self.RECONNECT_INTERVAL_MS
                 )
-                for _ in range(self.RECONNECT_INTERVAL_MS // 100):
-                    if self._stop:
-                        return False
-                    self.msleep(100)
+            else:
+                if busy:
+                    # Emit before returning: the caller goes straight on to
+                    # connection_changed(True), and the UI must not process
+                    # the stale "busy" chip after the "connected" one.
+                    log.info("Device released by the other process")
+                    self.device_busy.emit(False)
+                return True
+            for _ in range(self.RECONNECT_INTERVAL_MS // 100):
+                if self._stop:
+                    return False
+                self.msleep(100)
         return False
 
     def _poll_loop(self, dsp) -> None:

@@ -122,7 +122,11 @@ environment variable set by the caller, including the `.unt` round-trip tests
 against the sibling fixture, and `minidspqt --offline` boots its event loop under
 the offscreen platform plugin. On-hardware confirmation on Windows — connect,
 config read, a gain edit, a preset recall — rides along with the checklist the
-library's ADR-0024 still has open.
+library's ADR-0024 still has open. The lock-conflict item of that checklist is
+exercised by the **Device busy** chip (ADR-0012's second amendment): holding the
+DSP from a second process must produce the busy chip on both platforms, and
+releasing it must reconnect on its own — which tests the named mutex and the
+`hidraw` flock through the same UI path.
 
 ## Pros and Cons of the Options
 

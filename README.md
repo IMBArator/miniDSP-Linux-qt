@@ -89,9 +89,11 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 Then reconnect the device.
 
+Only one process may talk to the DSP at a time; the protocol library enforces that with an exclusive lock on the `hidraw` file descriptor, and a second process fails immediately — the GUI shows **Device busy** until the device is free.
+
 ### Windows
 
-Nothing to configure — no driver installation and no udev equivalent. Windows binds its built-in HID driver to the DSP automatically, and HID devices are accessible to normal users, so no elevated shell is needed either. As on Linux, only one process may talk to the DSP at a time; the protocol library enforces that with a named mutex instead of a file lock, and a second process fails immediately.
+Nothing to configure — no driver installation and no udev equivalent. Windows binds its built-in HID driver to the DSP automatically, and HID devices are accessible to normal users, so no elevated shell is needed either. As on Linux, only one process may talk to the DSP at a time; the protocol library enforces that with a named mutex instead of a file lock, and a second process fails immediately — again with the GUI showing **Device busy** until the device is free.
 
 ## Features
 

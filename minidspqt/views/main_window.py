@@ -210,6 +210,24 @@ class MainWindow(QMainWindow):
         self._home_view.set_connected(connected)
         self._detail_view.set_connected(connected)
 
+    def _on_device_busy(self, busy: bool) -> None:
+        """Mirror the worker's "another process holds the DSP" state to both views.
+
+        Offline mode ignores it: there is no hardware in play, and the
+        chip must keep reading "Offline" even if a worker signal is still
+        in flight from a previous online session (ADR-0006 — MainWindow is
+        the only mediator, so the filtering belongs here rather than in
+        the views).
+
+        Args:
+            busy: True while the connect loop is blocked by another
+                process, False once that conflict has cleared.
+        """
+        if self._offline:
+            return
+        self._home_view.set_device_busy(busy)
+        self._detail_view.set_device_busy(busy)
+
     def _on_config_loaded(self, cfg: dict) -> None:
         log.info(
             "config_loaded: keys=%s active_slot=%s preset_names=%d entries",
@@ -1008,6 +1026,7 @@ class MainWindow(QMainWindow):
         for sig, slot in (
             (self._thread.levels_updated, self._on_levels_updated),
             (self._thread.connection_changed, self._on_connection_changed),
+            (self._thread.device_busy, self._on_device_busy),
             (self._thread.config_loaded, self._on_config_loaded),
             (self._thread.pin_required, self._show_unlock_dialog),
             (self._thread.pin_result, self._on_pin_result),
@@ -1099,6 +1118,7 @@ class MainWindow(QMainWindow):
         )
         self._thread.levels_updated.connect(self._on_levels_updated)
         self._thread.connection_changed.connect(self._on_connection_changed)
+        self._thread.device_busy.connect(self._on_device_busy)
         self._thread.config_loaded.connect(self._on_config_loaded)
         self._thread.pin_required.connect(self._show_unlock_dialog)
         self._thread.pin_result.connect(self._on_pin_result)

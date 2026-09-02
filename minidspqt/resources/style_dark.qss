@@ -34,6 +34,9 @@ QLabel#connectionLabel[state="disconnected"] { background-color: #8a2020; }
 QLabel#connectionLabel[state="connected"]    { background-color: #2fa84a; }
 QLabel#connectionLabel[state="offline"]      { background-color: #8a6d20; }
 QLabel#connectionLabel[state="preview"]      { background-color: #8a6d20; }
+/* Orange, deliberately distinct from the offline/preview amber: "waiting for
+ * another program to release the DSP" is not the same as "Offline". */
+QLabel#connectionLabel[state="busy"]         { background-color: #a85c14; }
 
 QPushButton#menuButton {
     border: 1px solid #55555a;

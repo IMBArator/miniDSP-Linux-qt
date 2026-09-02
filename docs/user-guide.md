@@ -31,6 +31,8 @@ On launch the application attempts to open the DSP through the platform's HID in
 
 If no device is found, the UI shows **Disconnected** and all controls are disabled. The application will auto-retry every 2 seconds.
 
+If the device *is* present but another program is already holding it — the `minidsp` command-line tool, the manufacturer's editor, or a second copy of this application — the chip reads **Device busy** instead, in orange, with a tooltip explaining the cause. Only one program may talk to the DSP at a time, so nothing can be read or edited until the other one lets go. There is nothing to click: quit the other program and the connection is made by itself within a couple of seconds, at which point the configuration loads as usual.
+
 ---
 
 ## Home View Layout

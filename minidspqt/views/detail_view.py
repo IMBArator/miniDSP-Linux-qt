@@ -50,6 +50,7 @@ from ..defaults import (
     default_peq_bands,
     default_peq_channel_bypass,
 )
+from ._connection_chip import DEVICE_BUSY_TOOLTIP
 from .channel_strip import (
     ChannelStrip,
     InputChannelStrip,
@@ -598,6 +599,9 @@ class DetailView(QWidget):
 
     def set_connected(self, connected: bool) -> None:
         """Update the connection chip and enable/disable the channel strip."""
+        # Any real connection transition ends a busy episode, so the
+        # busy tooltip must not linger on the new chip.
+        self._connection_label.setToolTip("")
         if connected:
             self._connection_label.setText("Connected")
             self._set_connection_state("connected")
@@ -609,10 +613,32 @@ class DetailView(QWidget):
             for s in (self._input_strip, self._output_strip):
                 s.set_enabled_state(False)
 
+    def set_device_busy(self, busy: bool) -> None:
+        """Show/clear the "another process holds the DSP" chip.
+
+        Only the chip changes: the strips were already disabled by the
+        preceding ``set_connected(False)``, and they must stay that way
+        because there is still no session to write through.
+
+        Args:
+            busy: True to show the **Device busy** chip with an
+                explanatory tooltip, False to fall back to the plain
+                disconnected rendering.
+        """
+        if busy:
+            self._connection_label.setText("Device busy")
+            self._set_connection_state("busy")
+            self._connection_label.setToolTip(DEVICE_BUSY_TOOLTIP)
+        else:
+            self._connection_label.setText("Disconnected")
+            self._set_connection_state("disconnected")
+            self._connection_label.setToolTip("")
+
     def set_offline_mode(self) -> None:
         """Mark the view as offline; strips stay editable against ``VirtualDSP``."""
         self._connection_label.setText("Offline")
         self._set_connection_state("offline")
+        self._connection_label.setToolTip("")
         for s in (self._input_strip, self._output_strip):
             s.set_enabled_state(True)
 

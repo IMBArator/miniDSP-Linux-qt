@@ -185,6 +185,10 @@ Upload both files (`.AppImage` and `.AppImage.zsync`) as release assets. Without
 > [ADR-0003](decisions/0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md),
 > the reasoning is
 > [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md).
+> The same pin bump must also remove the `DeviceBusyError` import shim in
+> `device_thread.py`: it exists only because the currently pinned wheel predates
+> that class, and once the pin names a version that has it, the `try`/`except
+> ImportError` silently hides a real import failure.
 
 The release flow uses two helper scripts under [`scripts/`](https://github.com/IMBArator/miniDSP-Linux-qt/tree/main/scripts), wired into the Makefile:
 

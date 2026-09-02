@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
+from ._connection_chip import DEVICE_BUSY_TOOLTIP
 from .channel_strip import (
     ChannelStrip,
     InputChannelStrip,
@@ -332,11 +333,33 @@ class HomeView(QWidget):
         self.connectionLabel.setText("Preview")
         self._set_connection_state("preview")
 
+    def set_device_busy(self, busy: bool) -> None:
+        """Show/clear the "another process holds the DSP" chip.
+
+        Only the chip changes: the strips were already disabled by the
+        preceding ``set_connected(False)``, and they must stay that way
+        because there is still no session to write through.
+
+        Args:
+            busy: True to show the **Device busy** chip with an
+                explanatory tooltip, False to fall back to the plain
+                disconnected rendering.
+        """
+        if busy:
+            self.connectionLabel.setText("Device busy")
+            self._set_connection_state("busy")
+            self.connectionLabel.setToolTip(DEVICE_BUSY_TOOLTIP)
+        else:
+            self.connectionLabel.setText("Disconnected")
+            self._set_connection_state("disconnected")
+            self.connectionLabel.setToolTip("")
+
     def set_offline_mode(self) -> None:
         """Mark the view as running against a ``VirtualDSP`` (no hardware)."""
         self.titleLabel.setText("Home")
         self.connectionLabel.setText("Offline")
         self._set_connection_state("offline")
+        self.connectionLabel.setToolTip("")
         for strip in self._input_strips + self._output_strips:
             strip.set_enabled_state(True)
         if self._state:
@@ -354,6 +377,9 @@ class HomeView(QWidget):
             connected: True if a USB session is currently open.
         """
         self.titleLabel.setText("Home")
+        # Any real connection transition ends a busy episode, so the
+        # busy tooltip must not linger on the new chip.
+        self.connectionLabel.setToolTip("")
         if connected:
             self.connectionLabel.setText("Connected")
             self._set_connection_state("connected")

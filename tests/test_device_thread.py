@@ -9,7 +9,16 @@ from __future__ import annotations
 import pytest
 
 from minidsp.device import DeviceClosedError, DeviceLockedError
-from minidspqt.device_thread import MAX_PIN_ATTEMPTS, CommandType, DeviceThread
+
+# Imported from our module, not from minidsp.device: on a library version
+# that predates the class, device_thread re-exports its own shim, and the
+# except-clause under test binds to whichever of the two is in play.
+from minidspqt.device_thread import (
+    MAX_PIN_ATTEMPTS,
+    CommandType,
+    DeviceBusyError,
+    DeviceThread,
+)
 
 
 @pytest.fixture
@@ -385,6 +394,64 @@ def test_set_pin_skips_close_when_device_does_not_ack(thread):
     # PIN that never took. Worker also stays running.
     assert dsp.closed is False
     assert thread._stop is False
+
+
+class TestTryConnectDeviceBusy:
+    """`_try_connect` distinguishes "held by another process" from "not found".
+
+    Both keep retrying; only the busy case tells the UI about it, and it
+    must say so exactly once per episode rather than every 2 s retry.
+    """
+
+    def test_emits_device_busy_once_then_clears_on_connect(
+        self, thread, fake_dsp, monkeypatch
+    ):
+        # No real waiting: the retry cadence is not what we're asserting.
+        monkeypatch.setattr(thread, "msleep", lambda ms: None)
+        attempts = []
+
+        def busy_twice_then_open() -> None:
+            attempts.append(1)
+            if len(attempts) <= 2:
+                raise DeviceBusyError("/dev/hidraw0 is already in use")
+
+        fake_dsp.open = busy_twice_then_open
+        seen: list[bool] = []
+        # Direct (synchronous) delivery: the QThread is never started, so
+        # the emit happens on the calling thread.
+        thread.device_busy.connect(seen.append)
+
+        assert thread._try_connect(fake_dsp) is True
+        assert len(attempts) == 3
+        # Two busy failures, one signal — and the clear arrives before
+        # _try_connect returns, so the UI never shows a stale busy chip.
+        assert seen == [True, False]
+
+    def test_busy_then_not_found_clears_busy(self, thread, fake_dsp, monkeypatch):
+        monkeypatch.setattr(thread, "msleep", lambda ms: None)
+        attempts = []
+
+        def busy_then_missing() -> None:
+            attempts.append(1)
+            if len(attempts) == 1:
+                raise DeviceBusyError("/dev/hidraw0 is already in use")
+            # The other program let go, but the device is unplugged now:
+            # a plain OSError, which is the ordinary "Disconnected" case.
+            thread._stop = True  # stop the loop after this attempt
+            raise OSError(2, "No such file or directory")
+
+        fake_dsp.open = busy_then_missing
+        seen: list[bool] = []
+        thread.device_busy.connect(seen.append)
+
+        assert thread._try_connect(fake_dsp) is False
+        assert attempts == [1, 1]
+        assert seen == [True, False]
+
+
+def test_device_busy_error_is_an_oserror():
+    """Whether real or shimmed, it must stay inside ``DEVICE_ERRORS``' reach."""
+    assert issubclass(DeviceBusyError, OSError)
 
 
 def test_command_type_enum_is_exhaustive():
