@@ -10,9 +10,8 @@ import pytest
 
 from minidsp.device import DeviceClosedError, DeviceLockedError
 
-# Imported from our module, not from minidsp.device: on a library version
-# that predates the class, device_thread re-exports its own shim, and the
-# except-clause under test binds to whichever of the two is in play.
+# Imported from our module rather than minidsp.device so the test binds to
+# exactly the name the except-clause under test uses.
 from minidspqt.device_thread import (
     MAX_PIN_ATTEMPTS,
     CommandType,
@@ -450,7 +449,7 @@ class TestTryConnectDeviceBusy:
 
 
 def test_device_busy_error_is_an_oserror():
-    """Whether real or shimmed, it must stay inside ``DEVICE_ERRORS``' reach."""
+    """It must stay inside ``DEVICE_ERRORS``' reach (ADR-0012)."""
     assert issubclass(DeviceBusyError, OSError)
 
 

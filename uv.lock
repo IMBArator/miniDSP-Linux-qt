@@ -174,6 +174,24 @@ wheels = [
 ]
 
 [[package]]
+name = "hidapi"
+version = "0.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/74/f6/caad9ed701fbb9223eb9e0b41a5514390769b4cb3084a2704ab69e9df0fe/hidapi-0.15.0.tar.gz", hash = "sha256:ecbc265cbe8b7b88755f421e0ba25f084091ec550c2b90ff9e8ddd4fcd540311", size = 184995, upload-time = "2025-12-09T09:48:54.129Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/53/40/6a45375a52027d8142e7acdaeab182a44ff6b818df41384019662eb4f351/hidapi-0.15.0-cp311-cp311-win32.whl", hash = "sha256:2c35bd9cc62227ec91047e36b260f75bdbf50814f3cf3c3b28648ac3ffabd9d7", size = 60070, upload-time = "2025-12-09T09:45:24.745Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/a9/8ad4e6423c7416eb8dd765327f3be67f083c985b41b9b48ef3061a64c5f2/hidapi-0.15.0-cp311-cp311-win_amd64.whl", hash = "sha256:c5f7ee9ce8e3373fdb7002497f16bc652d9d4acf20c91275877f55165caf6f0c", size = 67296, upload-time = "2025-12-09T09:45:23.313Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/a7/9b7fe9acd09ed90d702f8cc01190ab53e01d5022c21808b079144bc9017d/hidapi-0.15.0-cp312-cp312-win32.whl", hash = "sha256:ce6f99554dae15c48cd89a12d5aede77a92a8bd184b45d0b257a17c97e053cdb", size = 60136, upload-time = "2025-12-09T09:45:40.612Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/35/f9e2d3ead60b573140546b041dd41c78a48c0e6b573d61a03130adccd32e/hidapi-0.15.0-cp312-cp312-win_amd64.whl", hash = "sha256:9abc71a62bf8a8f1d70a6fd3613f86feb37ddb67e05ed934e734df79e27bf4f6", size = 67073, upload-time = "2025-12-09T09:45:39.261Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/c7/52f2d903a607f024086829349383dcc7f0c22533fc242f26f9754eba2f06/hidapi-0.15.0-cp313-cp313-win32.whl", hash = "sha256:e4ddb57e71e2b8aca2c685b94b8587dc7d7cfae3c529a7c4076ba0775eb28d4a", size = 59749, upload-time = "2025-12-09T09:45:53.882Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/00/7dd3f866a748b0c9eb4adedaa025ec8c533ed1946e9e918661c948a5c0f4/hidapi-0.15.0-cp313-cp313-win_amd64.whl", hash = "sha256:04e0c1ed6d742bc6e1d00599394bec6b2afb8ee2fc5a0a183d3c4c2d4e315c34", size = 66362, upload-time = "2025-12-09T09:45:52.797Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/d6/c0b9d8568fdb38eebb9caaa56643a81d92cccb5d59a5b44e0d975a0f3808/hidapi-0.15.0-cp314-cp314-win32.whl", hash = "sha256:901c03817306eac7edd589f09e0e07467871b45f665949cc4caa645b54abc97b", size = 61089, upload-time = "2025-12-09T09:46:09.59Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/14/3b27516b2867e53545164ebd8ef45d0c36857d2a062036e788e56e2e34ce/hidapi-0.15.0-cp314-cp314-win_amd64.whl", hash = "sha256:df0dd435562654e27ad0c7d045074eb1e1e016b09167dd48a258dec1ce4b9127", size = 67710, upload-time = "2025-12-09T09:46:08.677Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/eb/c0676ff1f7e9ec9d99eaa428c66745cdab5b1742808f0c16061c85bd0b18/hidapi-0.15.0-cp314-cp314t-win32.whl", hash = "sha256:005c84c74c940a314b211674edc763a931ace0b63685ace88148496f563e25f9", size = 66288, upload-time = "2025-12-09T09:46:25.246Z" },
+    { url = "https://files.pythonhosted.org/packages/cd/5b/f22dbf886824559d3e66d84710c5fb48c09856e6816885da97f2f51700eb/hidapi-0.15.0-cp314-cp314t-win_amd64.whl", hash = "sha256:e384430363d400c4ffb33fe65f22a61c9f288a870158dc5a9f5c9d917b7250c7", size = 74723, upload-time = "2025-12-09T09:46:24.36Z" },
+]
+
+[[package]]
 name = "idna"
 version = "3.16"
 source = { registry = "https://pypi.org/simple" }
@@ -318,18 +336,20 @@ wheels = [
 
 [[package]]
 name = "minidsp-linux"
-version = "1.2.0"
-source = { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.2.0/minidsp_linux-1.2.0-py3-none-any.whl" }
+version = "1.3.0"
+source = { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.3.0/minidsp_linux-1.3.0-py3-none-any.whl" }
 dependencies = [
+    { name = "hidapi", marker = "sys_platform == 'win32'" },
     { name = "rich" },
     { name = "tomli-w" },
 ]
 wheels = [
-    { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.2.0/minidsp_linux-1.2.0-py3-none-any.whl", hash = "sha256:347532f358ca26f0f07d6e675602614e536183471add7734400857c82e2cde99" },
+    { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.3.0/minidsp_linux-1.3.0-py3-none-any.whl", hash = "sha256:86ecf5d7c5089a17e67b974d4391c861c62b6262db2c493ef81f65319b176240" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "hidapi", marker = "sys_platform == 'win32'", specifier = ">=0.14" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5" },
     { name = "mkdocs-include-markdown-plugin", marker = "extra == 'docs'", specifier = ">=6.2" },
@@ -369,7 +389,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "minidsp-linux", url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.2.0/minidsp_linux-1.2.0-py3-none-any.whl" },
+    { name = "minidsp-linux", url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.3.0/minidsp_linux-1.3.0-py3-none-any.whl" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5" },
     { name = "mkdocs-include-markdown-plugin", marker = "extra == 'docs'", specifier = ">=6.2" },

@@ -18,23 +18,12 @@ from enum import Enum, auto
 
 from PySide6.QtCore import QThread, Signal
 
-from minidsp.device import DeviceClosedError, DeviceLockedError, DSPmini
-
-try:
-    from minidsp.device import DeviceBusyError
-except ImportError:  # pinned minidsp-linux < 1.3.0; drop this shim with the pin bump
-
-    class DeviceBusyError(OSError):  # type: ignore[no-redef]
-        """Placeholder so except-clauses stay valid on old library versions.
-
-        The pinned release wheel (ADR-0003) predates the library's
-        distinct busy error, so importing it unconditionally would break
-        the app on that version. Subclassing ``OSError`` mirrors the real
-        class, which means the ``except DeviceBusyError`` clause in
-        :meth:`DeviceThread._try_connect` simply never matches until the
-        pin is bumped — the old "device not found" path stays in effect.
-        """
-
+from minidsp.device import (
+    DeviceBusyError,
+    DeviceClosedError,
+    DeviceLockedError,
+    DSPmini,
+)
 
 # Sentinel used on the PIN queue when the UI cancels the unlock dialog.
 _CANCEL_PIN = object()
