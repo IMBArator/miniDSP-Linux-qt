@@ -71,6 +71,7 @@ a line to the relevant table below.
 | [0027](0027-distribute-a-self-contained-appimage-with-bundled-cpython.md) | Distribute a self-contained AppImage with a bundled CPython |
 | [0028](0028-drive-releases-from-conventional-commits.md) | Drive changelog and releases from Conventional Commits |
 | [0029](0029-publish-docs-as-a-mkdocs-site-with-a-generated-api-reference.md) | Publish documentation as an MkDocs Material site with a generated API reference |
+| [0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md) | Build the Windows distribution on Linux from embeddable CPython and wheels |
 
 ## Decisions that reversed an earlier position
 

@@ -1,6 +1,6 @@
 UV := uv
 
-.PHONY: sync install test build version publish clean docs docs-serve docs-clean appimage appimage-clean
+.PHONY: sync install test build version publish clean docs docs-serve docs-clean appimage appimage-clean windows windows-clean
 
 sync:
 	$(UV) sync --extra dev
@@ -37,7 +37,22 @@ appimage:
 appimage-clean:
 	rm -rf build/AppDir build/Python-* dist/*.AppImage
 
-# Remove all build artifacts (sdist/wheel + AppImage + caches)
+# Build the Windows distribution (portable zip + NSIS installer) on Linux.
+# Prereqs are listed in packaging/windows/init_environment.sh — run that once on
+# the host or inside a Debian container. Needs the wheel from `make build`.
+# `--no-project` keeps this off the dev venv: the script only needs a stdlib
+# interpreter plus `uv` on PATH, so it also runs in a container that has no venv.
+# To try unreleased protocol-library changes, point the build at a locally built
+# wheel (the result is an unlocked dev build, not for publishing):
+#   make windows MINIDSP_LINUX_WHEEL=../miniDSP-Linux/dist/minidsp_linux-X.Y.Z-py3-none-any.whl
+windows:
+	$(UV) run --no-project python packaging/windows/build.py
+
+# Remove only Windows artifacts (keeps the embeddable-Python download cache).
+windows-clean:
+	rm -rf build/windows dist/*-win_amd64.zip dist/*-win_amd64-setup.exe
+
+# Remove all build artifacts (sdist/wheel + AppImage + Windows + caches)
 clean:
 	rm -rf dist build *.egg-info
 

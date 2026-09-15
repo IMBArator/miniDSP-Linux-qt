@@ -107,3 +107,8 @@ layout produced by `packaging/appimage/build.sh`.
 * `ec35379` — the Acknowledgments section and About dialog attribution
 * [README licensing section](https://github.com/IMBArator/miniDSP-Linux-qt#license)
 * Related: ADR-0002 (PySide6 choice), ADR-0027 (AppImage bundling)
+* Amended by [ADR-0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md):
+  the Windows distribution keeps the dynamic-linking claim true the same way the
+  AppImage does — `Qt6*.dll` and the PySide6 modules are ordinary files in a
+  `site-packages` beside the bundled interpreter, replaceable without touching
+  the application. Nothing is frozen or statically linked.

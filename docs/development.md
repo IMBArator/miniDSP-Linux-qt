@@ -23,11 +23,11 @@ repository branches on the operating system (see
   driver to the DSP automatically
 - `hidapi` is pulled in by the protocol library through a platform marker, so it
   is installed on Windows only
-- The pinned release wheel is still the Linux-only build of the protocol
-  library, so Windows currently needs the [local checkout](#developing-against-a-local-protocol-library)
-  for anything that imports `minidsp` — the test suite and offline mode included,
-  not just hardware access. This lifts with the next protocol-library release
+- The pinned release wheel carries the Windows transport since the library's
+  v1.3.0, so a plain `uv sync` is all a Windows checkout needs
   (see [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md))
+- The downloadable Windows build (installer + portable zip) is assembled on
+  Linux, not on Windows — see [Building the Windows distribution](#building-the-windows-distribution)
 
 ## Development environment
 
@@ -39,11 +39,11 @@ uv sync --extra dev  # also installs pytest for development
 ```
 
 On Windows the same commands run unchanged in PowerShell — install uv with
-`winget install astral-sh.uv` first; it provisions Python itself. Clone the
-protocol library as a sibling directory (`../miniDSP-Linux`) and follow
-[Developing against a local protocol library](#developing-against-a-local-protocol-library);
-that sibling checkout also supplies the real `.unt` fixture the round-trip tests
-use, which they skip when it is absent.
+`winget install astral-sh.uv` first; it provisions Python itself. A sibling
+checkout of the protocol library (`../miniDSP-Linux`) is optional on every
+platform: it is what [Developing against a local protocol library](#developing-against-a-local-protocol-library)
+installs on top of the pinned wheel, and it supplies the real `.unt` fixture the
+round-trip tests use, which they skip when it is absent.
 
 ### Developing against a local protocol library
 
@@ -102,8 +102,9 @@ If you prefer the targets, install GNU make (for example
 `winget install ezwinports.make`); `sync`, `install`, `test`, `build`, `docs`,
 and `docs-serve` are shell-agnostic and work as-is.
 
-`version`, `publish`, and `appimage` shell out to bash scripts, and `clean`,
-`docs-clean`, and `appimage-clean` use `rm -rf`, so those remain Linux-only —
+`version`, `publish`, and `appimage` shell out to bash scripts, `windows` needs
+`makensis` and a mingw-w64 cross-compiler, and `clean`, `docs-clean`,
+`appimage-clean`, and `windows-clean` use `rm -rf`, so those remain Linux-only —
 or Git Bash, which ships with Git for Windows.
 
 The suite covers the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, the About dialog, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
@@ -175,20 +176,133 @@ podman run --rm \
 
 Upload both files (`.AppImage` and `.AppImage.zsync`) as release assets. Without `APPIMAGE_UPDATE_INFO`, no `.zsync` is produced and the AppImage carries no update info — that's the right choice for one-off local builds.
 
+## Building the Windows distribution
+
+The Windows build — a per-user installer and a portable zip — is assembled **on
+Linux** by `packaging/windows/build.py`
+([ADR-0031](decisions/0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md)).
+Nothing is compiled on Windows and nothing is frozen. The script:
+
+1. downloads python.org's *embeddable* CPython zip (SHA-256 pinned) and writes
+   the `._pth` file that puts it in isolated mode with `Lib\site-packages` on
+   `sys.path`;
+2. exports the locked dependency set and installs it **for Windows** with
+   `uv pip install --python-platform x86_64-pc-windows-msvc --target …` — uv
+   evaluates markers against the target, so the protocol library's
+   `hidapi ; sys_platform == 'win32'` lands in the tree — then installs the
+   project wheel from `dist/` on top;
+3. prunes PySide6 by allow-list to the Qt modules the application imports, and
+   then reads the import tables of every remaining DLL to prove nothing that is
+   still needed was removed;
+4. cross-compiles the `minidspqt.exe` launcher with mingw-w64 (icon, version
+   info, GUI subsystem — no console window);
+5. zips the tree and runs NSIS for the installer;
+6. checks its own zip for the files that must and must not be there.
+
+Qt stays a set of ordinary DLLs next to a real `site-packages`, so the
+dynamic-linking statement in the licence notice
+([ADR-0004](decisions/0004-license-under-gplv3-with-lgpl-and-interop-notices.md))
+holds on Windows exactly as it does in the AppImage.
+
+**Prerequisites** (Debian 12+/Ubuntu 24.04+): `nsis`, `gcc-mingw-w64-x86-64`,
+`binutils-mingw-w64-x86-64`, and `uv`. `packaging/windows/init_environment.sh`
+installs them (and `uv`, when it is missing — for containers).
+
+**Step 1 — build the wheel on the host** (same as for the AppImage):
+
+```bash
+make build      # produces dist/minidsp_linux_qt-<version>-py3-none-any.whl via uv
+```
+
+**Step 2a — container build:**
+
+```bash
+podman run --rm -v "$PWD":/src -w /src -v ~/.cache/uv:/root/.cache/uv \
+    docker.io/library/debian:13 bash -c \
+    "bash packaging/windows/init_environment.sh && make windows"
+# dist/minidspqt-<version>-win_amd64.zip
+# dist/minidspqt-<version>-win_amd64-setup.exe
+```
+
+Mounting `~/.cache/uv` is optional; it saves re-downloading the PySide6 wheel on
+every run. Replace `podman` with `docker` if that's what you have.
+
+**Step 2b — native build:**
+
+```bash
+bash packaging/windows/init_environment.sh   # one-time, may prompt for sudo
+make windows
+```
+
+`make windows-clean` removes `build/windows/` and the two artifacts; the
+embeddable CPython download stays cached under `build/cache/`.
+
+### Building against an unreleased protocol library
+
+A release build installs the protocol library from the lock, like everything
+else. To try unreleased library changes in a bundle, point the build at a wheel
+built from the sibling checkout instead:
+
+```bash
+(cd ../miniDSP-Linux && uv build)
+make windows MINIDSP_LINUX_WHEEL=../miniDSP-Linux/dist/minidsp_linux-<version>-py3-none-any.whl
+```
+
+In the container, mount the wheel and pass the variable with `-e`:
+
+```bash
+podman run --rm -v "$PWD":/src -w /src -v ~/.cache/uv:/root/.cache/uv \
+    -v "$PWD/../miniDSP-Linux/dist":/upstream:ro \
+    -e MINIDSP_LINUX_WHEEL=/upstream/minidsp_linux-<version>-py3-none-any.whl \
+    docker.io/library/debian:13 bash -c \
+    "bash packaging/windows/init_environment.sh && make windows"
+```
+
+The build then prints an **UNLOCKED DEV BUILD** warning: that one requirement and
+its dependencies come from outside `uv.lock`. Such a build is for trying things
+out on a Windows machine — never publish it.
+
+### What the build checks, and what it cannot
+
+On Linux every build verifies its own output: the DLL import-closure check after
+pruning, and a layout check of the zip (launcher, interpreter, `._pth`,
+`blank.unt`, the hidapi extension, Qt's `qwindows.dll`, the project's
+`.dist-info` — and none of the pruned trees). If `wine` is on `PATH`, the script
+additionally runs `--help` and boots the offline mode under Qt's offscreen
+platform, the same two-pass smoke test the AppImage gets. That step is optional
+and is not a release gate.
+
+What Linux cannot check is the real thing. Before a release that ships Windows
+artifacts, walk through this on a Windows 11 machine:
+
+1. Run the installer: SmartScreen → **More info → Run anyway**; licence page;
+   install lands in `%LOCALAPPDATA%\Programs\minidspqt`; a Start Menu entry
+   appears.
+2. Start it from the Start Menu, and `minidspqt.exe --offline` from a terminal:
+   the window appears, the theme switches, a `.unt` loads and saves.
+3. Connect the DSP: config read, level meters move, a gain edit reaches the
+   device.
+4. Start a second instance while the first is connected: it shows
+   **Device busy**; closing the first makes the second connect.
+5. `minidspqt-debug.cmd` opens a console with `-vv` output;
+   `%LOCALAPPDATA%\miniDSP\minidspqt\minidspqt.log` exists after a normal start.
+6. Uninstall via *Settings → Apps → Installed apps*: program folder and shortcut
+   are gone.
+7. Extract the portable zip from the Downloads folder (so Mark-of-the-Web
+   applies) and double-click `minidspqt.exe`.
+
+### Code signing
+
+Neither the launcher nor the installer is signed, hence the SmartScreen dialog
+on first start. `osslsigncode` can sign both from Linux once a code-signing
+certificate exists; until then the README documents the click-through.
+
 ## Releasing
 
-> **Open release blocker — Windows support.** Windows currently works only from
-> a local protocol-library checkout. Before it can be advertised in a release,
-> the protocol library's Windows transport must be published as a release wheel
-> (v1.3.0) and the PEP 508 direct URL in `pyproject.toml` bumped to it, followed
-> by `uv lock` — the mechanism is
-> [ADR-0003](decisions/0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md),
-> the reasoning is
-> [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md).
-> The same pin bump must also remove the `DeviceBusyError` import shim in
-> `device_thread.py`: it exists only because the currently pinned wheel predates
-> that class, and once the pin names a version that has it, the `try`/`except
-> ImportError` silently hides a real import failure.
+A release ships both platforms: `publish.sh` requires the wheel, sdist, AppImage
+and the two Windows artifacts, and refuses otherwise. `SKIP_WINDOWS=1 make publish`
+is the deliberate exception for a Linux-only release. A Windows build made with
+`MINIDSP_LINUX_WHEEL` is an unlocked dev build and must not be published.
 
 The release flow uses two helper scripts under [`scripts/`](https://github.com/IMBArator/miniDSP-Linux-qt/tree/main/scripts), wired into the Makefile:
 
@@ -203,10 +317,13 @@ git push && git push origin vX.Y.Z
 # 3. Build the artifacts that publish.sh will attach.
 make build           # wheel + sdist
 make appimage        # AppImage (requires Ubuntu 20.04 build env or container)
+make windows         # Windows installer + portable zip (requires nsis +
+                     # mingw-w64, or a Debian container)
 
 # 4. Create the GitHub Release, upload wheel + sdist + AppImage (+ .zsync
-#    if present), and deploy docs to GitHub Pages. Needs GITHUB_TOKEN
-#    (PAT with `repo` scope) in the environment.
+#    if present) + the two Windows artifacts, and deploy docs to GitHub
+#    Pages. Needs GITHUB_TOKEN (PAT with `repo` scope) in the environment.
+#    SKIP_WINDOWS=1 publishes a Linux-only release.
 export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 make publish         # or: make publish VERSION=X.Y.Z
 ```

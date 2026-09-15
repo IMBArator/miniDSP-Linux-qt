@@ -39,20 +39,16 @@ minidspqt            # or: minidspqt --offline
 
 Both install paths are Linux packages and talk to the device over `/dev/hidraw*`, so non-root use needs the udev rule under [Permissions](#permissions).
 
-### Windows (from source)
+### Windows
 
-There is no packaged Windows build yet — on Windows the application runs from a source checkout. Install [uv](https://docs.astral.sh/uv/) (`winget install astral-sh.uv`), then run the same two commands in PowerShell; uv provisions Python itself, so nothing else is needed:
+Download one of the two Windows files from the [Releases page](https://github.com/IMBArator/miniDSP-Linux-qt/releases). Both bundle their own CPython and PySide6, so nothing else needs to be installed, and neither needs administrator rights:
 
-```powershell
-git clone https://github.com/IMBArator/miniDSP-Linux.git       # temporary, see below
-git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
-cd miniDSP-Linux-qt
-uv sync
-uv pip install --reinstall --no-cache ../miniDSP-Linux/        # temporary, see below
-uv run --no-sync minidspqt  # or: uv run --no-sync minidspqt --offline
-```
+- **`minidspqt-<version>-win_amd64-setup.exe`** (recommended) — a per-user installer with a Start Menu entry and an uninstaller under *Settings → Apps → Installed apps*.
+- **`minidspqt-<version>-win_amd64.zip`** — the same program as a portable folder: extract it anywhere and double-click `minidspqt.exe`.
 
-The two lines marked *temporary* exist because the Windows HID transport lives in the protocol library and has not been published in a release wheel yet — the pinned dependency is still Linux-only and cannot even be imported on Windows. Until that release lands, Windows needs the sibling protocol-library checkout installed on top, as described under [Developing against a local protocol library](docs/development.md#developing-against-a-local-protocol-library) (including why `--no-cache` and `--no-sync` matter) — see [ADR-0030](docs/decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md). Once the release is published, the extra lines disappear and Windows uses the same `uv sync` + `uv run minidspqt` as any source install.
+The builds are not code-signed, so the first start shows Windows' SmartScreen dialog ("Windows protected your PC") — choose **More info → Run anyway**. Command-line flags work as on Linux (`minidspqt.exe --offline`). Because the program runs without a console, its log goes to `%LOCALAPPDATA%\miniDSP\minidspqt\minidspqt.log`; for a bug report, run `minidspqt-debug.cmd` next to the exe, which opens a console with debug output.
+
+> Windows downloads appear from the first release that ships them; earlier releases are Linux-only. The build is produced on Linux — see [Building the Windows distribution](docs/development.md#building-the-windows-distribution) and [ADR-0031](docs/decisions/0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md). Running from a source checkout on Windows is described in the [Development Guide](docs/development.md#windows).
 
 ## Usage
 

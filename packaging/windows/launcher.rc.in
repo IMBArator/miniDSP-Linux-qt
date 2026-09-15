@@ -1,0 +1,36 @@
+// Resource script template for minidspqt.exe. build.py fills the @…@ fields
+// from pyproject.toml and compiles it with x86_64-w64-mingw32-windres.
+
+#include <windows.h>
+
+// Application icon (Explorer, taskbar, Alt-Tab).
+1 ICON "@ICON@"
+
+// Manifest: common controls v6 and the supported Windows versions.
+1 RT_MANIFEST "@MANIFEST@"
+
+1 VERSIONINFO
+FILEVERSION     @MAJOR@,@MINOR@,@PATCH@,0
+PRODUCTVERSION  @MAJOR@,@MINOR@,@PATCH@,0
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "miniDSP-Linux-qt project"
+            VALUE "FileDescription",  "Graphical interface for the t.racks DSP 4x4 Mini"
+            VALUE "FileVersion",      "@VERSION@"
+            VALUE "InternalName",     "minidspqt"
+            VALUE "LegalCopyright",   "GNU General Public License v3.0"
+            VALUE "OriginalFilename", "minidspqt.exe"
+            VALUE "ProductName",      "minidspqt"
+            VALUE "ProductVersion",   "@VERSION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

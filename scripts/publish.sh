@@ -100,6 +100,22 @@ ZSYNC="${APPIMAGE}.zsync"
 c_dim "  AppImage: $APPIMAGE"
 [[ -f "$ZSYNC" ]] && c_dim "  zsync:    $ZSYNC"
 
+# Windows is a release platform since ADR-0031, so its two artifacts are
+# required as well. SKIP_WINDOWS=1 is the escape hatch for a Linux-only
+# release (e.g. while the protocol-library pin still lacks the Windows
+# transport) — it is loud on purpose.
+WINZIP="dist/minidspqt-${VERSION}-win_amd64.zip"
+WINSETUP="dist/minidspqt-${VERSION}-win_amd64-setup.exe"
+if [[ "${SKIP_WINDOWS:-0}" == "1" ]]; then
+    c_yel "SKIP_WINDOWS=1: publishing WITHOUT the Windows artifacts"
+    WINZIP=""; WINSETUP=""
+else
+    [[ -f "$WINZIP" ]]   || die "no Windows zip in dist/ for $VERSION (run 'make windows', or SKIP_WINDOWS=1)"
+    [[ -f "$WINSETUP" ]] || die "no Windows installer in dist/ for $VERSION (run 'make windows', or SKIP_WINDOWS=1)"
+    c_dim "  Windows:  $WINZIP"
+    c_dim "            $WINSETUP"
+fi
+
 # Probe: release must not already exist
 EXISTING="$(curl -sS \
     -H "Authorization: Bearer $GITHUB_TOKEN" \
@@ -189,6 +205,8 @@ upload_asset "$WHEEL"
 upload_asset "$SDIST"
 upload_asset "$APPIMAGE"
 [[ -f "$ZSYNC" ]] && upload_asset "$ZSYNC"
+[[ -n "$WINZIP" ]]   && upload_asset "$WINZIP"
+[[ -n "$WINSETUP" ]] && upload_asset "$WINSETUP"
 
 # --- 7. deploy docs ---------------------------------------------------------
 

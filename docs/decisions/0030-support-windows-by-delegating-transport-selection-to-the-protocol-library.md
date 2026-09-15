@@ -176,3 +176,14 @@ releasing it must reconnect on its own — which tests the named mutex and the
   (the packaging reasoning a future Windows build must answer to).
 * Expected to be revisited twice: when the library's Windows release lands and the
   pin moves, and if a packaged Windows build is taken on.
+* Amended by [ADR-0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md):
+  the second revisit happened — the packaged Windows build exists, assembled on
+  Linux. Transport delegation is unchanged. The one application-side addition,
+  a file-logging fallback for processes without a console, checks `sys.stderr`
+  rather than the platform, so the "no `sys.platform` in `minidspqt/`" invariant
+  above still holds.
+* The first revisit happened with the library's v1.3.0 release: the PEP 508
+  direct URL moved to that wheel, `uv lock` picked up `hidapi` under its
+  `sys_platform == 'win32'` marker, and the `DeviceBusyError` import shim in
+  `device_thread.py` was removed. The release blocker recorded above is lifted;
+  Windows now installs from the lock like Linux does.

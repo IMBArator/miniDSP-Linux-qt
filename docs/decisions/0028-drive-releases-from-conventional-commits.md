@@ -134,3 +134,7 @@ before any commit or tag is created.
 * [Releasing](../development.md#releasing)
 * Related: ADR-0026 (`make` targets), ADR-0027 (the AppImage asset),
   ADR-0029 (changelog transclusion)
+* Amended by [ADR-0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md):
+  the sequence gains `make windows` between `make appimage` and `make publish`,
+  and `publish.sh` requires two more assets — the Windows installer and portable
+  zip — unless `SKIP_WINDOWS=1` explicitly asks for a Linux-only release.

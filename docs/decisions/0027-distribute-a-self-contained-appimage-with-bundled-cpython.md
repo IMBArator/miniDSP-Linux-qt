@@ -157,3 +157,10 @@ silently break version extraction.
 * [Building the AppImage](../development.md#building-the-appimage)
 * Related: ADR-0003 (dependency resolved at build time), ADR-0004 (licence
   constraint), ADR-0010 (offline mode used by the smoke test), ADR-0028 (release flow)
+* Amended by [ADR-0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md):
+  the Windows distribution is a sibling pipeline (`packaging/windows/build.py`)
+  built on the same recipe — a bundled interpreter, the project wheel installed
+  into a real `site-packages`, Qt pruned, a two-pass smoke test — with two
+  deliberate differences: it is written in Python so its logic is unit-tested,
+  and it prunes at DLL level because it can verify the result from PE import
+  tables, which `linuxdeploy`'s dependency walk made unnecessary here.
