@@ -16,6 +16,8 @@ On Linux the application talks to the DSP via `/dev/hidraw*`, which requires roo
 
 On Windows there is nothing to set up: no driver installation, no udev equivalent, and no elevated shell — Windows binds its built-in HID driver to the DSP automatically. As on Linux, only one program may hold the DSP at a time, so close the manufacturer's editor before connecting.
 
+The packaged Windows build (installer or portable zip) runs without a console window, so its log is written to `%LOCALAPPDATA%\miniDSP\minidspqt\minidspqt.log` instead — one file per start, overwritten each time. For a bug report, run `minidspqt-debug.cmd` next to `minidspqt.exe`: it opens a console and starts the application with full debug output (`-vv`), including the USB frame trace.
+
 ---
 
 ## Starting the Application
