@@ -184,8 +184,10 @@ Linux** by `packaging/windows/build.py`
 Nothing is compiled on Windows and nothing is frozen. The script:
 
 1. downloads python.org's *embeddable* CPython zip (SHA-256 pinned) and writes
-   the `._pth` file that puts it in isolated mode with `Lib\site-packages` on
-   `sys.path`;
+   the `._pth` file that puts it in isolated mode with exactly the stdlib zip,
+   the application directory (home of the stdlib's `.pyd` extension modules)
+   and `Lib\site-packages` on `sys.path`, then checks that search path covers
+   every loose extension module;
 2. exports the locked dependency set and installs it **for Windows** with
    `uv pip install --python-platform x86_64-pc-windows-msvc --target …` — uv
    evaluates markers against the target, so the protocol library's
@@ -264,8 +266,9 @@ out on a Windows machine — never publish it.
 
 ### What the build checks, and what it cannot
 
-On Linux every build verifies its own output: the DLL import-closure check after
-pruning, and a layout check of the zip (launcher, interpreter, `._pth`,
+On Linux every build verifies its own output: the interpreter search-path check
+(every stdlib `.pyd`, the stdlib zip and `site-packages` reachable from the
+`._pth`), the DLL import-closure check after pruning, and a layout check of the zip (launcher, interpreter, `._pth`,
 `blank.unt`, the hidapi extension, Qt's `qwindows.dll`, the project's
 `.dist-info` — and none of the pruned trees). If `wine` is on `PATH`, the script
 additionally runs `--help` and boots the offline mode under Qt's offscreen

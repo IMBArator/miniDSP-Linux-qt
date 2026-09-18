@@ -84,9 +84,14 @@ upload use.
 3.11.** python.org stops publishing Windows binaries when a branch leaves bugfix
 status, and 3.11 stopped at 3.11.9; only a current branch has an embeddable zip.
 The project's `requires-python` allows it, PySide6's `abi3` wheels cover it, and
-`hidapi` publishes matching wheels. The zip's `._pth` file lists exactly the
-stdlib archive and `Lib\site-packages`, which puts CPython in isolated mode: no
-`PYTHONPATH`, no `site`, no chance of a user's own Python leaking into the bundle.
+`hidapi` publishes matching wheels. The zip's `._pth` file lists exactly three
+entries — the stdlib archive, the application directory itself, and
+`Lib\site-packages` — which puts CPython in isolated mode: no `PYTHONPATH`, no
+`site`, no chance of a user's own Python leaking into the bundle. The
+application-directory entry is where the embeddable distribution keeps the
+stdlib's compiled extension modules (`_ctypes.pyd` among them); the first build
+omitted it and failed on real hardware at the protocol library's `import ctypes`,
+so the build now checks that every loose extension module is on the search path.
 The SHA-256 of the download is pinned in the script.
 
 **PySide6 is pruned by allow-list, and the prune is proven safe on Linux.** The

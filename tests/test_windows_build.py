@@ -56,11 +56,37 @@ def test_artifact_names():
     assert top == "minidspqt-1.2.0"
 
 
-def test_pth_content_is_isolated_stdlib_plus_site_packages():
+def test_pth_content_is_isolated_stdlib_app_dir_and_site_packages():
     text = wb.pth_content("3.13.15")
-    assert text.splitlines() == ["python313.zip", "Lib\\site-packages"]
+    # "." is where the embeddable distribution keeps _ctypes.pyd and friends.
+    assert text.splitlines() == ["python313.zip", ".", "Lib\\site-packages"]
     assert "import site" not in text
-    assert "." not in text.splitlines()
+
+
+def _fake_app_dir(tmp_path: Path) -> Path:
+    app = tmp_path / "app"
+    (app / "Lib" / "site-packages").mkdir(parents=True)
+    for name in ("python313.zip", "python313.dll", "_ctypes.pyd", "_socket.pyd"):
+        (app / name).write_bytes(b"x")
+    return app
+
+
+def test_check_search_path_accepts_the_generated_pth(tmp_path):
+    app = _fake_app_dir(tmp_path)
+    assert wb.check_search_path(app, wb.pth_content("3.13.15")) == []
+
+
+def test_check_search_path_catches_a_missing_app_dir_entry(tmp_path):
+    app = _fake_app_dir(tmp_path)
+    problems = wb.check_search_path(app, "python313.zip\nLib\\site-packages\n")
+    assert any("_ctypes.pyd" in p and "'.'" in p for p in problems)
+
+
+def test_check_search_path_catches_missing_entries(tmp_path):
+    app = _fake_app_dir(tmp_path)
+    problems = "\n".join(wb.check_search_path(app, "python313.zip\n.\nLib\\typo\n"))
+    assert "does not exist: Lib\\typo" in problems
+    assert "site-packages is not on sys.path" in problems
 
 
 def test_render_template_fills_and_rejects_leftovers():

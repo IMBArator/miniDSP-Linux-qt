@@ -236,10 +236,50 @@ def pth_content(python_version: str) -> str:
     A ``._pth`` file next to ``python3xx.dll`` puts CPython in isolated mode:
     ``sys.path`` is exactly these entries, ``PYTHONPATH``/``PYTHONHOME`` are
     ignored, and ``site`` is not imported. That is what we want — a user's own
-    Python installation can never leak into the bundle. The two entries are
-    the stdlib zip and the tree ``uv pip install --target`` produced.
+    Python installation can never leak into the bundle. The three entries are
+    the stdlib zip, the application directory itself, and the tree
+    ``uv pip install --target`` produced.
+
+    The ``.`` entry is not optional. The embeddable distribution keeps the
+    stdlib's compiled extension modules (``_ctypes.pyd``, ``_socket.pyd``,
+    ``_ssl.pyd``, …) loose in the application directory, not inside the zip,
+    so without it ``import ctypes`` fails with ``No module named '_ctypes'`` —
+    which is exactly how the protocol library's Windows mutex first surfaced
+    the mistake. ``check_search_path`` guards against a repeat.
     """
-    return f"python{dll_digits(python_version)}.zip\nLib\\site-packages\n"
+    return f"python{dll_digits(python_version)}.zip\n.\nLib\\site-packages\n"
+
+
+def check_search_path(app_dir: Path, pth_text: str) -> list[str]:
+    """Verify a ``._pth`` file covers everything the bundle must import.
+
+    Resolves each entry relative to ``app_dir`` (which is how CPython reads
+    a ``._pth``), then checks that the directory holding every loose
+    stdlib extension module, the stdlib zip, and ``site-packages`` are all
+    reachable.
+
+    Args:
+        app_dir: Directory the ``._pth`` file lives in.
+        pth_text: The file's contents.
+
+    Returns:
+        Human-readable problems; empty when the search path is complete.
+    """
+    entries = [line.strip() for line in pth_text.splitlines() if line.strip()]
+    resolved = {(app_dir / e.replace("\\", "/")).resolve() for e in entries if not e.startswith("import ")}
+    problems = []
+    for entry in entries:
+        if not (app_dir / entry.replace("\\", "/")).exists():
+            problems.append(f"._pth entry does not exist: {entry}")
+    for pyd in sorted(app_dir.glob("*.pyd")):
+        if pyd.parent.resolve() not in resolved:
+            problems.append(f"{pyd.name} lives in a directory that is not on sys.path (missing '.' entry?)")
+            break
+    if not any(e.lower().endswith(".zip") for e in entries):
+        problems.append("no stdlib zip on sys.path")
+    if not any(e.lower().endswith("site-packages") for e in entries):
+        problems.append("site-packages is not on sys.path")
+    return problems
 
 
 def _normalize(name: str) -> str:
@@ -621,6 +661,12 @@ def step_install_packages(project_wheel: Path) -> None:
             "hidapi was not installed — the minidsp-linux wheel in use does not "
             "declare it; set MINIDSP_LINUX_WHEEL to a wheel with the Windows transport"
         )
+
+    log("checking the interpreter's search path")
+    pth = APP_DIR / f"python{dll_digits(PYTHON_VERSION)}._pth"
+    problems = check_search_path(APP_DIR, pth.read_text())
+    if problems:
+        fail("search path check failed:\n  " + "\n  ".join(problems))
 
 
 def step_prune() -> None:
