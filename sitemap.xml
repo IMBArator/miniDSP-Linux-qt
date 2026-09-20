@@ -2,194 +2,342 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/changelog/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/concepts/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/development/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/user-guide/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/app/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/blank_seed/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/cli/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/defaults/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/device_thread/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/levels/</loc>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/model/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/theme/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/unt_loader/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/unt_writer/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/virtual_dsp/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/_connection_chip/</loc>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/channel_linking_dialog/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/channel_strip/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/copy_channel_dialog/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/detail_view/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/device_pin_dialog/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/home_view/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/main_window/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/preset_picker/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/test_tone_dialog/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/_overlay_controls/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/_slave_lock/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/compressor_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/delay_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/gate_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/peq_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/placeholder_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/views/panels/xover_panel/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/compressor_graph/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/delay_graph/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/freq_response_graph/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/gain_indicator/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/gate_graph/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/led_indicator/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/level_meter/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/param_knob/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/peq_graph/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/routing_matrix/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
     </url>
     <url>
          <loc>https://imbarator.github.io/miniDSP-Linux-qt/api/minidspqt/widgets/toggle_button/</loc>
-         <lastmod>2026-06-20</lastmod>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0000-use-markdown-any-decision-records/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0001-build-on-the-minidsp-linux-protocol-library/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0002-use-pyside6-essentials-as-the-gui-toolkit/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0004-license-under-gplv3-with-lgpl-and-interop-notices/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0005-isolate-device-io-in-a-dedicated-qthread-worker/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0006-make-mainwindow-the-sole-mediator-between-views-and-device/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0007-coalesce-parameter-writes-and-serialise-config-operations/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0008-mirror-device-configuration-in-a-typed-devicestate-dataclass/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0009-replicate-master-to-slave-fan-out-in-the-client/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0010-implement-offline-mode-as-an-in-ram-virtual-dsp/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0011-treat-the-device-as-authoritative-and-re-read-after-multi-step-edits/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0012-catch-only-device-and-transport-errors/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0013-emit-multi-parameter-dsp-commands-atomically/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0014-source-factory-defaults-from-the-protocol-library/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0015-render-filter-curves-locally-from-biquad-math-at-48-khz/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0016-preserve-unknown-unt-bytes-with-field-level-overwrites/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0017-device-lock-pin-flow-stops-the-worker-rather-than-retrying/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0018-build-the-ui-programmatically-instead-of-qt-designer-files/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0019-style-with-qss-and-drive-state-styling-through-dynamic-properties/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0020-let-an-explicit-theme-preference-override-the-reported-system-scheme/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0021-give-each-dsp-feature-one-brand-hue-across-the-whole-ui/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0022-compose-the-detail-view-from-pluggable-feature-panels/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0023-make-linked-slave-channels-read-only-in-the-ui/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0024-use-non-modal-apply-and-stay-open-dialogs-for-iterative-tools/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0025-test-headlessly-against-an-injected-fake-dsp/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0026-manage-the-project-with-uv-hatchling-ruff-and-make/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0027-distribute-a-self-contained-appimage-with-bundled-cpython/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0028-drive-releases-from-conventional-commits/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0029-publish-docs-as-a-mkdocs-site-with-a-generated-api-reference/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample/</loc>
+         <lastmod>2026-09-20</lastmod>
+    </url>
+    <url>
+         <loc>https://imbarator.github.io/miniDSP-Linux-qt/decisions/adr-template/</loc>
+         <lastmod>2026-09-20</lastmod>
     </url>
 </urlset>
