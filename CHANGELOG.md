@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-09-20
+
+### Added
+
+- Support running on Windows from source ([`281d63f`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/281d63fada7a95bfcd99ccbd0c572204b24e2f3d))
+- Show "Device busy" while another process holds the DSP ([`cf9b1d3`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/cf9b1d3b888495baaa8c270640800a70019fc114))
+- Pin minidsp-linux 1.3.0 and drop the DeviceBusyError shim ([`eb73fff`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/eb73fff050e9a3da11b87e6447ae81abf51f03d9))
+- Log to a file when running without a console ([`3c00feb`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/3c00feb3e49998a00a5126f9dedb1ab74d31048c))
+- Build a Windows installer and portable zip from Linux ([`c8636be`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/c8636be27637a68df324c5ff5d05e749af38f5cb))
+- 24-bit level feed with per-channel clip indication from the raw sample ([`6a3cc5f`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/6a3cc5f2326935db4bd4de3ed9a70acd1d26e478))
+
+### Changed
+
+- Drop the no-op headless bootstrap hook ([`93dbde7`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/93dbde7676ded727d69c05baf87cd0b2304afe69))
+- Share one cached factory-params accessor ([`15e80d8`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/15e80d89c113ab841f4be69546e2ab8d7a8bb7c3))
+
+### Documentation
+
+- Add MADR architecture decision records ([`dc56f93`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/dc56f93b8d953b5694f37d615bfbe587024e055f))
+- Require make targets and drop the conflicting pytest line ([`430cbb3`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/430cbb3fde69bf5ee197564ce48f9616c538fad6))
+
+### Fixed
+
+- Correct broken heading anchors for device lock and themes ([`009b33b`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/009b33b70aaa18a919a4a2e4b947e48b00a026b3))
+- Write .unt files atomically ([`112fa6a`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/112fa6a16f574f55170016e29967f6b2aa48a74d))
+- Put the application directory on the bundled interpreter's path ([`808caad`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/808caad354298caae3fbf59ff98ffa38846b655c))
+
 ## [1.1.0] - 2026-06-20
 
 ### Added
