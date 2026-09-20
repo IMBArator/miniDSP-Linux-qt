@@ -229,7 +229,9 @@ class VirtualDSP:
         """Return a flat zero-level reading (offline mode has no signal).
 
         Returns:
-            A dict shaped like the real ``parse_levels`` output, with
+            A dict shaped like the real ``parse_levels`` output — legacy
+            uint16 lists, their 24-bit counterparts, the device's
+            input-only clip flag and the per-channel clip list — with
             all inputs and outputs at 0 and no limiter active. ``None``
             when the session is closed or the device is locked.
         """
@@ -238,8 +240,12 @@ class VirtualDSP:
         return {
             "inputs": [0, 0, 0, 0],
             "outputs": [0, 0, 0, 0],
+            "inputs24": [0, 0, 0, 0],
+            "outputs24": [0, 0, 0, 0],
             "limiter_mask": 0,
             "state": 0,
+            "clip": False,
+            "clipping": [False] * 8,
         }
 
     # --- Setters ---

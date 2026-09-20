@@ -98,7 +98,7 @@ Nothing to configure — no driver installation and no udev equivalent. Windows 
 - Per-channel **gain knobs** (−60 to +12 dB) for 4 inputs and 4 outputs (`cmd_gain`)
 - **Mute** and **phase invert** toggles per channel (`cmd_mute`, `cmd_phase`)
 - **Routing matrix** — interactive 4×4 input-to-output mapping (drag to connect, double-click to disconnect) (`cmd_matrix_route`)
-- **dB-scaled level meters** for all 8 channels (`cmd_poll`, `parse_levels`)
+- **24-bit dB-scaled level meters** for all 8 channels, with per-channel clip indication (`cmd_poll`, `parse_levels`)
 - **Outlined toggle buttons** — each feature button (gate / mute / phase / xover / peq / comp / delay) paints its accent color on the border and text when off, and fills with the same accent when on
 - Startup **config read** — knobs and toggles reflect device state on connect (`cmd_read_config`, `parse_config_page`)
 - **Auto-reconnect** on USB disconnect

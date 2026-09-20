@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 
 from minidsp.protocol import CHANNEL_NAMES
 
+from ..levels import clip_for, level24_for, levels_from_payload
 from ..model import DeviceState
 from ..widgets import LevelMeter
 from ..defaults import (
@@ -132,17 +133,18 @@ class RoutedMetersPanel(QWidget):
 
         Args:
             payload: The dict produced by ``parse_levels``; missing
-                slots reset the corresponding meter.
+                slots reset the corresponding meter. The optional
+                ``"inputs24"`` / ``"outputs24"`` (full 24-bit levels)
+                and ``"clipping"`` (per-channel clip flags) keys are
+                used when present; see ``minidspqt.levels``.
         """
-        inputs = payload.get("inputs", [])
-        outputs = payload.get("outputs", [])
+        lv = levels_from_payload(payload)
         for ch, _lbl, meter in self._meters:
-            if ch < 4 and ch < len(inputs):
-                meter.set_level(inputs[ch])
-            elif ch >= 4 and (ch - 4) < len(outputs):
-                meter.set_level(outputs[ch - 4])
-            else:
+            level = level24_for(lv, ch)
+            if level is None:
                 meter.reset()
+            else:
+                meter.set_level(level, clip_for(lv, ch))
 
 
 class DetailView(QWidget):
@@ -582,16 +584,23 @@ class DetailView(QWidget):
         Args:
             payload: The dict produced by ``parse_levels`` —
                 forwarded verbatim to both ``RoutedMetersPanel``
-                instances.
+                instances. The optional ``"inputs24"`` /
+                ``"outputs24"`` (full 24-bit levels) and ``"clipping"``
+                (per-channel clip flags) keys are used when present;
+                see ``minidspqt.levels``.
         """
-        inputs = payload.get("inputs", [])
-        outputs = payload.get("outputs", [])
+        lv = levels_from_payload(payload)
         limiter_mask = payload.get("limiter_mask", 0)
         ch = self._channel
-        if ch < 4 and ch < len(inputs):
-            self._strip.update_level(inputs[ch])
-        elif ch >= 4 and (ch - 4) < len(outputs):
-            self._strip.update_level(outputs[ch - 4])
+        level = level24_for(lv, ch)
+        if level is None:
+            self._strip.reset_level()
+        else:
+            self._strip.update_level(level, clip_for(lv, ch))
+        if ch >= 4 and level is not None:
+            # Unchanged from the pre-24-bit version: the Lim LED follows the
+            # output level branch, so a payload without this channel leaves it
+            # as it was rather than clearing it.
             self._output_strip.set_limiter_active(bool(limiter_mask & (1 << (ch - 4))))
 
         self._left_meters.update_levels(payload)

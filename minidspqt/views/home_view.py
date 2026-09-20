@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from minidsp.protocol import CHANNEL_NAMES
 
+from ..levels import clip_for, level24_for, levels_from_payload
 from ..model import DeviceState
 from ._connection_chip import DEVICE_BUSY_TOOLTIP
 from .channel_strip import (
@@ -298,16 +299,23 @@ class HomeView(QWidget):
             payload: The dict produced by ``parse_levels`` — must
                 contain ``"inputs"``, ``"outputs"`` (4-element lists)
                 and ``"limiter_mask"`` (per-output bit set when the
-                compressor is actively limiting).
+                compressor is actively limiting). The optional
+                ``"inputs24"`` / ``"outputs24"`` (full 24-bit levels)
+                and ``"clipping"`` (per-channel clip flags) keys are
+                used when present; see ``minidspqt.levels``.
         """
-        inputs = payload.get("inputs", [])
-        outputs = payload.get("outputs", [])
+        lv = levels_from_payload(payload)
         limiter_mask = payload.get("limiter_mask", 0)
         for i in range(NUM_CHANNELS):
-            if i < len(inputs):
-                self._input_strips[i].update_level(inputs[i])
-            if i < len(outputs):
-                self._output_strips[i].update_level(outputs[i])
+            for strip, ch in (
+                (self._input_strips[i], i),
+                (self._output_strips[i], i + 4),
+            ):
+                level = level24_for(lv, ch)
+                if level is None:
+                    strip.reset_level()
+                else:
+                    strip.update_level(level, clip_for(lv, ch))
             self._output_strips[i].set_limiter_active(bool(limiter_mask & (1 << i)))
 
     @property

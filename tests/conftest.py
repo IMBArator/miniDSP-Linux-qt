@@ -42,6 +42,7 @@ import threading
 
 import pytest
 
+from minidspqt.levels import LEVEL24_PER_UINT16
 from minidspqt.virtual_dsp import VirtualDSP
 
 
@@ -118,11 +119,19 @@ class FakeDSPmini(VirtualDSP):
     def poll_levels(self) -> dict:
         self.calls.append(("poll_levels", ()))
         self.poll_event.set()
+        inputs = [100, 150, 50, 200]
+        outputs = [120, 80, 40, 220]
         return {
-            "inputs": [100, 150, 50, 200],
-            "outputs": [120, 80, 40, 220],
+            "inputs": inputs,
+            "outputs": outputs,
+            # The 24-bit levels the device actually sends; the legacy
+            # uint16 lists above are their upper 16 bits.
+            "inputs24": [v * LEVEL24_PER_UINT16 for v in inputs],
+            "outputs24": [v * LEVEL24_PER_UINT16 for v in outputs],
             "limiter_mask": 0,
             "state": 0,
+            "clip": False,
+            "clipping": [False] * 8,
         }
 
     def set_gain(self, channel: int, raw_value: int) -> bool:

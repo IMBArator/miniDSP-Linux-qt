@@ -12,6 +12,13 @@ The protocol library picks its HID transport by platform, so nothing in this
 repository branches on the operating system (see
 [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md)).
 
+Per-channel clip indication, the 24-bit meter feed and the bench-verified level
+calibration come from the protocol library — `LEVEL_CLIP_LEVEL24`,
+`level24_is_clipping()`, `level24_to_dbu()` and the `inputs24` / `outputs24` /
+`clipping` payload keys — and need its **v1.4.0 or newer**, which is the pinned
+release. `minidspqt/levels.py` is the single import point for those symbols (see
+[ADR-0032](decisions/0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md)).
+
 ### Linux
 
 - Kernel HID driver — communicates via `/dev/hidraw*`

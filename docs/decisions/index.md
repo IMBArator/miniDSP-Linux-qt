@@ -56,6 +56,7 @@ a line to the relevant table below.
 | [0022](0022-compose-the-detail-view-from-pluggable-feature-panels.md) | Compose the detail view from pluggable feature panels with shared helpers |
 | [0023](0023-make-linked-slave-channels-read-only-in-the-ui.md) | Make linked slave channels read-only in the UI |
 | [0024](0024-use-non-modal-apply-and-stay-open-dialogs-for-iterative-tools.md) | Use non-modal, apply-and-stay-open dialogs for iterative device tools |
+| [0032](0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md) | Meter from the device's 24-bit levels and decide clip on the raw sample |
 
 ## Testing
 
@@ -90,3 +91,4 @@ alternative has already been tried here.
 | [0012](0012-catch-only-device-and-transport-errors.md) | `except Exception` around the worker loop | Swallowed genuine bugs, presenting them as mysterious reconnects |
 | [0019](0019-style-with-qss-and-drive-state-styling-through-dynamic-properties.md) | Inline `setStyleSheet()` per widget | Near-identical strings proliferated and state changes rebuilt stylesheets at runtime |
 | [0016](0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md) | `blank.unt` seeded with hand-rolled values | It re-seeded slot U01 with wrong values, masking in-RAM corrections |
+| [0032](0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md) | A red level zone at +15 dB on the smoothed uint16 level | The threshold was wrong and the smoothing hid short overloads, so the clip LED never lit |

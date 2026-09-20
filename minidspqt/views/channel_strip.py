@@ -329,13 +329,28 @@ class ChannelStrip(QFrame):
     def meter(self) -> LevelMeter:
         return self._meter
 
-    def update_level(self, value: int) -> None:
-        self._meter.set_level(value)
+    def update_level(self, value: int | float, clipping: bool | None = None) -> None:
+        """Push one poll cycle's level into the meter and the dB readout.
+
+        Args:
+            value: Raw 24-bit level for this channel (``inputs24`` /
+                ``outputs24`` from ``parse_levels``, normalised by
+                ``minidspqt.levels``).
+            clipping: The device parser's per-channel clip flag when
+                the payload carried one; ``None`` lets the meter apply
+                the library's clip rule to *value* itself.
+        """
+        self._meter.set_level(value, clipping)
         db = self._meter.display_db
         if db == float("-inf"):
             self._db_label.setText("\u2014 dB")
         else:
             self._db_label.setText(f"{db:+.1f} dB")
+
+    def reset_level(self) -> None:
+        """Clear the meter and the dB readout (no level for this channel)."""
+        self._meter.reset()
+        self._db_label.setText("\u2014 dB")
 
 
 class InputChannelStrip(ChannelStrip):

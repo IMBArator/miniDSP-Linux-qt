@@ -80,8 +80,14 @@ The arc fills with blue as gain increases from minimum to maximum. The needle in
 Each channel has a horizontal LED-style level meter with 20 segments:
 
 - **Green** (15 segments): -50 dB to 0 dB
-- **Yellow** (4 segments): 0 dB to +15 dB
-- **Red** (1 segment): clip indicator (+15 dB)
+- **Yellow** (4 segments): 0 dB up to the clip point
+- **Red** (1 segment): **clip** indicator
+
+The red segment is not a level zone — it lights when the channel's level is at or above the manufacturer's editor's **+11 dB** clip point (about +11 dBu on this project's calibrated scale). The decision is made **per channel**, on inputs and outputs alike, from the unsmoothed sample, so a single overloaded poll cannot be averaged away; once lit, the segment is held for about a second. The yellow zone ends exactly at that point, so "bar full" and "red LED" mean the same level.
+
+Meters are fed from the device's full **24-bit** channel levels rather than the 16-bit value older tools used. That is roughly 0.0005 dB of resolution near 0 dBu instead of 0.1 dB, which is why the bars and the numeric readouts move smoothly instead of stepping. Readouts are in dBu against a bench-verified reference.
+
+The device also reports a clip flag of its own in the level response. It covers the **inputs only** and trips at a different level; the manufacturer's editor ignores it, and so does this GUI — what you see is the per-channel rule described above.
 
 A white peak-hold marker tracks the highest recent level and decays slowly (~1.5 s half-life). The numeric readout below the meter shows the peak-held dB value with ~1 s hold before decay.
 
