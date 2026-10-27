@@ -480,6 +480,33 @@ class MainWindow(QMainWindow):
             does, ``"include"`` to write the current settings into that
             slot, or ``"cancel"`` to abort the save.
         """
+        box, buttons = self._build_unsaved_changes_box(slot)
+        box.exec()
+        clicked = box.clickedButton()
+        for choice, button in buttons.items():
+            if clicked is button:
+                return choice
+        return "cancel"
+
+    def _build_unsaved_changes_box(self, slot: int) -> tuple[QMessageBox, dict]:
+        """Build the unsaved-changes question with a fixed button order.
+
+        Qt arranges dialog buttons by their *role* following each desktop's
+        convention, so accept and reject buttons land in different places on
+        Windows, KDE, GNOME and macOS (GNOME showed "Include current changes
+        | Cancel | Save stored version"). All three buttons therefore share
+        one role: within a role Qt keeps insertion order on every layout, so
+        the order is always "Save stored version | Include current changes |
+        Cancel". Cancel stays the answer to Escape and to closing the box.
+
+        Args:
+            slot: The active user slot (1–30), named in the text.
+
+        Returns:
+            The message box, not yet shown, and its buttons keyed by the
+            choice they stand for, in display order: ``"stored"``,
+            ``"include"``, ``"cancel"``.
+        """
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Question)
         box.setWindowTitle("Unsaved changes")
@@ -492,17 +519,15 @@ class MainWindow(QMainWindow):
             "original editor's files. Include the current settings in "
             f"U{slot:02d} instead?"
         )
-        stored_btn = box.addButton("Save stored version", QMessageBox.ButtonRole.AcceptRole)
-        include_btn = box.addButton("Include current changes", QMessageBox.ButtonRole.AcceptRole)
-        box.addButton(QMessageBox.StandardButton.Cancel)
-        box.setDefaultButton(stored_btn)
-        box.exec()
-        clicked = box.clickedButton()
-        if clicked is stored_btn:
-            return "stored"
-        if clicked is include_btn:
-            return "include"
-        return "cancel"
+        role = QMessageBox.ButtonRole.ActionRole
+        buttons = {
+            "stored": box.addButton("Save stored version", role),
+            "include": box.addButton("Include current changes", role),
+            "cancel": box.addButton("Cancel", role),
+        }
+        box.setDefaultButton(buttons["stored"])
+        box.setEscapeButton(buttons["cancel"])
+        return box, buttons
 
     # --- Recall / Store ---
 

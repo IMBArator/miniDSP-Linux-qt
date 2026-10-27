@@ -18,8 +18,17 @@ from pathlib import Path
 import pytest
 from minidsp.device import DeviceLockedError
 from minidsp.unt import UntFile
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox
+from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtTest import QTest
+from PySide6.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QMessageBox,
+    QProxyStyle,
+    QStyle,
+)
 
 from minidspqt.device_thread import DeviceThread
 from minidspqt.unt_files import UNT_FILTER, differs_from_stored, include_live_changes
@@ -355,6 +364,96 @@ def test_save_dialog_warns_about_the_extended_name(window, tmp_path, qtbot, butt
 
     assert warnings and "backup.unt" in warnings[0]
     assert (dialog.result() == QDialog.DialogCode.Accepted) is accepted
+
+
+class _ButtonLayoutStyle(QProxyStyle):
+    """Fusion with a chosen dialog-button layout, to emulate other desktops."""
+
+    def __init__(self, layout: QDialogButtonBox.ButtonLayout) -> None:
+        super().__init__("Fusion")
+        self._layout = layout
+
+    def styleHint(self, hint, option=None, widget=None, return_data=None):
+        if hint == QStyle.StyleHint.SH_DialogButtonLayout:
+            return int(self._layout.value)
+        return super().styleHint(hint, option, widget, return_data)
+
+
+def _shown_order(box, layout) -> list[str]:
+    """Button texts left to right after laying ``box`` out with ``layout``."""
+    style = _ButtonLayoutStyle(layout)
+    button_box = box.findChild(QDialogButtonBox)
+    button_box.setStyle(style)
+    box.show()
+    QApplication.processEvents()
+    order = sorted(box.buttons(), key=lambda b: b.mapToGlobal(QPoint(0, 0)).x())
+    box.close()
+    del style  # keep alive until the layout was read
+    return [b.text() for b in order]
+
+
+ALL_LAYOUTS = [
+    QDialogButtonBox.ButtonLayout.WinLayout,
+    QDialogButtonBox.ButtonLayout.MacLayout,
+    QDialogButtonBox.ButtonLayout.KdeLayout,
+    QDialogButtonBox.ButtonLayout.GnomeLayout,
+    QDialogButtonBox.ButtonLayout.AndroidLayout,
+]
+
+
+def test_layout_emulation_reproduces_the_gnome_order(window):
+    """Guard for the harness: mixed roles really are reordered under GNOME."""
+    box = QMessageBox(window)
+    box.addButton("Save stored version", QMessageBox.ButtonRole.AcceptRole)
+    box.addButton("Include current changes", QMessageBox.ButtonRole.AcceptRole)
+    box.addButton(QMessageBox.StandardButton.Cancel)
+    assert _shown_order(box, QDialogButtonBox.ButtonLayout.GnomeLayout) == [
+        "Include current changes",
+        "Cancel",
+        "Save stored version",
+    ]
+
+
+@pytest.mark.parametrize("layout", ALL_LAYOUTS, ids=lambda layout: layout.name)
+def test_unsaved_changes_buttons_keep_their_order_on_every_desktop(window, layout):
+    box, buttons = window._build_unsaved_changes_box(3)
+    assert set(box.buttons()) == set(buttons.values())
+    assert _shown_order(box, layout) == [
+        "Save stored version",
+        "Include current changes",
+        "Cancel",
+    ]
+
+
+def test_unsaved_changes_defaults_to_stored_and_escapes_to_cancel(window):
+    box, buttons = window._build_unsaved_changes_box(3)
+    assert box.defaultButton() is buttons["stored"]
+    assert box.escapeButton() is buttons["cancel"]
+
+
+@pytest.mark.parametrize("choice", ["stored", "include", "cancel"])
+def test_ask_unsaved_changes_returns_the_clicked_choice(window, monkeypatch, choice):
+    build = window._build_unsaved_changes_box
+
+    def build_and_click(slot):
+        box, buttons = build(slot)
+        QTimer.singleShot(0, buttons[choice].click)
+        return box, buttons
+
+    monkeypatch.setattr(window, "_build_unsaved_changes_box", build_and_click)
+    assert window._ask_unsaved_changes(3) == choice
+
+
+def test_escape_in_the_unsaved_changes_box_cancels(window, monkeypatch):
+    build = window._build_unsaved_changes_box
+
+    def build_and_escape(slot):
+        box, buttons = build(slot)
+        QTimer.singleShot(0, lambda: QTest.keyClick(box, Qt.Key.Key_Escape))
+        return box, buttons
+
+    monkeypatch.setattr(window, "_build_unsaved_changes_box", build_and_escape)
+    assert window._ask_unsaved_changes(3) == "cancel"
 
 
 def test_unt_exported_is_wired_to_the_worker(window, monkeypatch):
