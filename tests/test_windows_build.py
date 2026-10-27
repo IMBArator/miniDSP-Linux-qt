@@ -204,7 +204,7 @@ _DROP = [
 ]
 _OTHER = [
     "minidspqt/__init__.py",
-    "minidspqt/resources/blank.unt",
+    "minidspqt/resources/style_dark.qss",
     "minidsp/device.py",
     "hid.cp313-win_amd64.pyd",
     "minidsp_linux_qt-1.1.0.dist-info/METADATA",
@@ -350,7 +350,7 @@ def _good_members(top="minidspqt-1.1.0"):
         f"{top}/python313.dll",
         f"{top}/python313._pth",
         f"{top}/python313.zip",
-        f"{top}/Lib/site-packages/minidspqt/resources/blank.unt",
+        f"{top}/Lib/site-packages/minidspqt/resources/style_dark.qss",
         f"{top}/Lib/site-packages/minidsp_linux_qt-1.1.0.dist-info/METADATA",
         f"{top}/Lib/site-packages/PySide6/QtWidgets.pyd",
         f"{top}/Lib/site-packages/PySide6/Qt6Widgets.dll",
@@ -365,11 +365,11 @@ def test_check_zip_layout_accepts_a_complete_tree():
 
 
 def test_check_zip_layout_reports_missing_forbidden_and_stray_entries():
-    members = [m for m in _good_members() if "blank.unt" not in m and "hid." not in m]
+    members = [m for m in _good_members() if "style_dark.qss" not in m and "hid." not in m]
     members += ["minidspqt-1.1.0/Lib/site-packages/PySide6/qml/x.dll", "README.txt"]
     problems = wb.check_zip_layout(members, "minidspqt-1.1.0", "3.13.15", "1.1.0")
     text = "\n".join(problems)
-    assert "blank.unt" in text
+    assert "style_dark.qss" in text
     assert "hid" in text
     assert "prune failed" in text
     assert "README.txt" in text

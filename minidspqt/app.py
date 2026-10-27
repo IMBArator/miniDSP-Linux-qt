@@ -77,8 +77,8 @@ def run(*, offline: bool = False, verbose: int = 0) -> None:
     """Configure logging, build the QApplication and run the main window.
 
     Args:
-        offline: When True, instantiate a ``VirtualDSP``, seed it from
-            the bundled ``blank.unt`` template, and pass it to the main
+        offline: When True, instantiate a ``VirtualDSP``, seed it with
+            the protocol library's empty .unt file, and pass it to the main
             window; no USB hardware is touched.
         verbose: Logging verbosity counter from the CLI; ``0`` =
             WARNING, ``1`` = INFO, ``>=2`` = DEBUG.

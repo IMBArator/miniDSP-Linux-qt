@@ -164,7 +164,7 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 - **Load and save .unt files** — round-trip with the manufacturer file format
 - Online → Offline carries the live device state into the virtual DSP so you keep editing what was on the device
 - Offline → Online prompts before discarding offline edits (save your `.unt` first to keep them)
-- Cold-launching offline (no live config seen yet) seeds from the bundled `blank.unt` template
+- Cold-launching offline (no live config seen yet) starts from an empty `.unt` file with factory defaults
 
 ### .unt file support
 

@@ -336,15 +336,15 @@ wheels = [
 
 [[package]]
 name = "minidsp-linux"
-version = "1.4.0"
-source = { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.4.0/minidsp_linux-1.4.0-py3-none-any.whl" }
+version = "1.5.0"
+source = { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.5.0/minidsp_linux-1.5.0-py3-none-any.whl" }
 dependencies = [
     { name = "hidapi", marker = "sys_platform == 'win32'" },
     { name = "rich" },
     { name = "tomli-w" },
 ]
 wheels = [
-    { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.4.0/minidsp_linux-1.4.0-py3-none-any.whl", hash = "sha256:aacd40cd2444b96a09ea5696811f22f07acf4dbed63388868a7631cf98c18e11" },
+    { url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.5.0/minidsp_linux-1.5.0-py3-none-any.whl", hash = "sha256:e86318a7f48334e3f8857b4f8574d4c85ce44cd6ef1961b9e0f16c848e938744" },
 ]
 
 [package.metadata]
@@ -389,7 +389,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "minidsp-linux", url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.4.0/minidsp_linux-1.4.0-py3-none-any.whl" },
+    { name = "minidsp-linux", url = "https://github.com/IMBArator/miniDSP-Linux/releases/download/v1.5.0/minidsp_linux-1.5.0-py3-none-any.whl" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6,<2.0" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5" },
     { name = "mkdocs-include-markdown-plugin", marker = "extra == 'docs'", specifier = ">=6.2" },

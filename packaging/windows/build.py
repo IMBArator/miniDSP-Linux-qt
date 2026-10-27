@@ -95,7 +95,7 @@ REQUIRED_ZIP_ENTRIES = (
     "python{sv}.dll",
     "python{sv}._pth",
     "python{sv}.zip",
-    "Lib/site-packages/minidspqt/resources/blank.unt",
+    "Lib/site-packages/minidspqt/resources/style_dark.qss",
     "Lib/site-packages/minidsp_linux_qt-{version}.dist-info/METADATA",
     "Lib/site-packages/PySide6/QtWidgets.pyd",
     "Lib/site-packages/PySide6/Qt6Widgets.dll",

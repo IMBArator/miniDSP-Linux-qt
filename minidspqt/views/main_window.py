@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
+from minidsp.unt import UNT_SLOT_COUNT, UntFile, UntParseError
+
 from .. import __version__
 from ..blank_seed import seed_virtual_dsp_from_blank
 from ..device_thread import DeviceThread
@@ -29,8 +31,6 @@ from ..model import (
     TestToneState,
 )
 from ..theme import theme_manager
-from ..unt_loader import UntParseError, load_unt, load_unt_all_slots
-from ..unt_writer import save_unt
 from ..virtual_dsp import VirtualDSP
 from .channel_linking_dialog import ChannelLinkingDialog
 from .copy_channel_dialog import CopyChannelDialog
@@ -289,14 +289,15 @@ class MainWindow(QMainWindow):
         if not path:
             return
 
+        try:
+            unt = UntFile.read(path)
+        except (UntParseError, OSError) as e:
+            QMessageBox.critical(self, "Cannot load .unt file", str(e))
+            return
+
         vdsp = self._virtual_dsp
         if vdsp is not None:
-            try:
-                slots, active_slot, names, raw = load_unt_all_slots(path)
-            except (UntParseError, OSError) as e:
-                QMessageBox.critical(self, "Cannot load .unt file", str(e))
-                return
-            vdsp.load_from_unt_bytes(raw, slots, active_slot, names)
+            vdsp.load_from_unt(unt)
             cfg = vdsp.read_config()
             try:
                 self._state = DeviceState.from_config(cfg)
@@ -308,13 +309,21 @@ class MainWindow(QMainWindow):
             self._save_action.setEnabled(True)
             return
 
-        try:
-            cfg, active_slot, names = load_unt(path)
-        except (UntParseError, OSError) as e:
-            QMessageBox.critical(self, "Cannot load .unt file", str(e))
+        # Connected: show the file's active preset as a read-only preview.
+        active_slot = unt.active_slot
+        cfg = unt.slot_params(active_slot) if 1 <= active_slot <= UNT_SLOT_COUNT else None
+        if cfg is None:
+            QMessageBox.information(
+                self,
+                "Nothing to preview",
+                "The file's active preset is F00 (factory) or an unused slot, "
+                "so there is no stored preset to preview.",
+            )
             return
         cfg["active_slot"] = active_slot
-        cfg["preset_names"] = names
+        cfg["preset_names"] = [
+            unt.slot_name(s) or "" for s in range(1, UNT_SLOT_COUNT + 1)
+        ]
         self._state = DeviceState.from_config(cfg)
         self._state.connected = False
         self._home_view.set_connected(False)
@@ -335,11 +344,10 @@ class MainWindow(QMainWindow):
         )
         if not path:
             return
-        slots_0based, active_0based, template = vdsp.export_to_unt_args()
-        slot_names = self._state.preset_names
+        unt = vdsp.export_unt(self._state.preset_names)
         try:
-            save_unt(path, slots_0based, slot_names, active_0based, template)
-        except Exception as e:
+            unt.write(path)
+        except OSError as e:
             QMessageBox.critical(self, "Cannot save .unt file", str(e))
 
     # --- Recall / Store ---
@@ -1052,8 +1060,8 @@ class MainWindow(QMainWindow):
                 new_instance.seed_from_config(self._last_config)
             else:
                 # Cold switch with no live config ever seen (e.g. device
-                # unplugged at launch). Fall back to the bundled blank.unt
-                # so the strips have sane defaults to edit.
+                # unplugged at launch). Fall back to the library's empty .unt
+                # file so the strips have sane defaults to edit.
                 seed_virtual_dsp_from_blank(new_instance)
         else:
             new_instance = None  # → DSPmini factory path

@@ -133,3 +133,9 @@ double-click resetting to the default value rather than the minimum.
   per-feature Reset; `9cdf657` — knob defaults
 * Related: ADR-0001 (upstream as source of truth), ADR-0008 (raw units),
   ADR-0010 (offline seeding), ADR-0016 (`blank.unt` as a writer template)
+* Amended when `.unt` handling moved to the protocol library: the bundled
+  `blank.unt` is gone. Offline seeding loads `minidsp.unt.UntFile.blank()`,
+  which has the same header and all 30 slots unused, so the working
+  configuration still comes from the factory defaults as decided here. The one
+  byte-level difference is that unused slots keep their CRLF terminator, as in
+  editor-saved files.

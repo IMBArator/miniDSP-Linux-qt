@@ -187,7 +187,7 @@ def test_mode_chosen_no_op_when_already_in_mode(offline_window):
 
 
 def test_online_to_offline_falls_back_to_blank_when_no_config(online_window):
-    """Cold switch (no config ever seen) seeds VirtualDSP from blank.unt."""
+    """Cold switch (no config ever seen) seeds VirtualDSP with the empty .unt file."""
     # FakeDSPmini's worker may have managed to emit one config_loaded before
     # _stop_worker drained it; force the "no config" premise we want to test.
     online_window._last_config = None
@@ -196,6 +196,6 @@ def test_online_to_offline_falls_back_to_blank_when_no_config(online_window):
 
     assert online_window._offline is True
     assert isinstance(online_window._thread._dsp_instance, VirtualDSP)
-    # blank.unt's slot 1 has all 30 preset names defined; the seed worked.
+    # The empty .unt file still yields 30 (blank) preset names; the seed worked.
     cfg = online_window._thread._dsp_instance.read_config()
     assert len(cfg["preset_names"]) == 30

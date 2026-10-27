@@ -1,4 +1,4 @@
-"""Shared helper for seeding a :class:`VirtualDSP` from the bundled blank.unt.
+"""Shared helper for seeding a :class:`VirtualDSP` with an empty .unt file.
 
 Both the application entry point (``app.run`` in offline-on-launch mode) and
 ``MainWindow`` (on a cold runtime switch to offline before any live config has
@@ -10,27 +10,21 @@ Keeping it here avoids a circular import between ``app.py`` (which imports
 
 from __future__ import annotations
 
-from pathlib import Path
+from minidsp.unt import UntFile
 
-from .unt_loader import load_unt_all_slots
 from .virtual_dsp import VirtualDSP
-
-BLANK_UNT = Path(__file__).parent / "resources" / "blank.unt"
 
 
 def seed_virtual_dsp_from_blank(dsp: VirtualDSP) -> None:
-    """Load the bundled ``blank.unt`` template into ``dsp``.
+    """Load the protocol library's empty .unt file into ``dsp``.
 
-    No-op if the template is missing from the install (e.g. running from a
-    source tree without resources packaged) — the caller still gets a usable
-    VirtualDSP, just with factory defaults instead of the curated blank.
+    ``UntFile.blank()`` is a file with all 30 user slots unused and U01
+    active, so the working configuration stays at the factory defaults
+    (ADR-0014). Its header becomes the byte base for a later save.
 
     Args:
         dsp: VirtualDSP instance to seed in place. After this call its 30
-            user slots, preset names and active-slot pointer match the
-            bundled ``blank.unt`` template.
+            user slots are empty, its preset names are blank and U01 is
+            the active slot.
     """
-    if not BLANK_UNT.exists():
-        return
-    slots, active_slot, names, raw = load_unt_all_slots(BLANK_UNT)
-    dsp.load_from_unt_bytes(raw, slots, active_slot, names)
+    dsp.load_from_unt(UntFile.blank())

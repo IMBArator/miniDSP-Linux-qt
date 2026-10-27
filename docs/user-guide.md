@@ -441,7 +441,7 @@ This is useful for designing presets on the go, testing configurations, or explo
 
 ### Switching modes at runtime
 
-- **Connected → Offline** carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to `.unt` without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP is seeded from the bundled `blank.unt` template instead.
+- **Connected → Offline** carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to `.unt` without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP starts from an empty `.unt` file with factory defaults instead.
 - **Offline → Connected** prompts a confirmation first: switching back discards any unsaved offline edits. Save your `.unt` file first if you want to keep them. After confirming, the worker re-attaches to the real USB device exactly as if you had relaunched without `--offline`.
 - The mode choice is **session-only** — restarting the app drops you back into connected mode (unless you pass `--offline` on the command line).
 

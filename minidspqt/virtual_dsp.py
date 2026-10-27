@@ -11,6 +11,7 @@ import copy
 from typing import Any
 
 from minidsp.device import DeviceLockedError
+from minidsp.unt import UNT_SLOT_COUNT, UntFile
 
 from .defaults import factory_params
 
@@ -61,44 +62,40 @@ class VirtualDSP:
     def __init__(self) -> None:
         """Create an unlocked virtual DSP seeded with the factory config.
 
-        All 30 user slots start empty (``None``); use
-        ``load_from_unt_bytes`` to seed them from a .unt file.
+        All 30 user slots start empty (``None``); use ``load_from_unt``
+        to seed them from a .unt file.
         """
         self._config: dict[str, Any] = _default_config()
-        self._slots: list[dict[str, Any] | None] = [None] * 30
-        self._source_bytes: bytes | None = None
+        self._slots: list[dict[str, Any] | None] = [None] * UNT_SLOT_COUNT
+        # The file the slots came from, kept as the byte base for
+        # ``export_unt`` so bytes this app does not model survive a round
+        # trip (ADR-0016). ``None`` until a file is loaded.
+        self._unt: UntFile | None = None
         self._open: bool = True
         self._locked: bool = False
         self._pin: str | None = None
 
-    def load_from_unt_bytes(
-        self,
-        raw: bytes,
-        slots: list[dict[str, Any] | None],
-        active_slot_0based: int,
-        preset_names: list[str],
-    ) -> None:
-        """Seed state from a parsed .unt file.
+    def load_from_unt(self, unt: UntFile) -> None:
+        """Replace every slot, the preset names and the active slot from a .unt file.
+
+        The working configuration becomes the file's active preset. When
+        the file's active slot is F00 (0) or an unused slot, it becomes the
+        factory default instead, which is what the device does when F00 is
+        recalled.
 
         Args:
-            raw: Full 13,010 raw bytes from the .unt file; retained so
-                a later ``export_to_unt_args`` can round-trip unknown
-                fields byte-identically.
-            slots: 30 parsed slot dicts (0-indexed); ``None`` for
-                empty slots.
-            active_slot_0based: 0-indexed active slot (0 = U01 …
-                29 = U30). Internally we store it in device numbering
-                (1 = U01 … 30 = U30).
-            preset_names: 30 ASCII preset names; empty string for
-                unused slots.
+            unt: The parsed file. A private copy is kept as the byte base
+                for :meth:`export_unt`, so later changes to ``unt`` do not
+                leak into this instance.
         """
-        self._source_bytes = raw
-        self._slots = list(slots)
-        active = active_slot_0based + 1
-        if 0 <= active_slot_0based < 30 and slots[active_slot_0based] is not None:
-            self._config = copy.deepcopy(slots[active_slot_0based])
+        self._unt = UntFile(unt.to_bytes())
+        self._slots = [self._unt.slot_params(s) for s in range(1, UNT_SLOT_COUNT + 1)]
+        names = [self._unt.slot_name(s) or "" for s in range(1, UNT_SLOT_COUNT + 1)]
+        active = self._unt.active_slot
+        stored = self._slots[active - 1] if 1 <= active <= UNT_SLOT_COUNT else None
+        self._config = copy.deepcopy(stored) if stored is not None else _default_config()
         self._config["active_slot"] = active
-        self._config["preset_names"] = list(preset_names)
+        self._config["preset_names"] = names
 
     def seed_from_config(self, cfg: dict[str, Any]) -> None:
         """Replace the active-slot state from a ``read_config``-shaped dict.
@@ -108,6 +105,11 @@ class VirtualDSP:
         current device state into offline mode instead of starting from a
         factory default. Only the keys this class already understands are
         copied — anything else in ``cfg`` is ignored.
+
+        The seeded configuration is also stored in the active user slot, as
+        the device's live state is the best available knowledge of that
+        slot. Without this, offline Recall of the active slot did nothing
+        and a save straight after the switch wrote an empty file.
 
         Args:
             cfg: Config dict shaped like ``DSPmini.read_config()`` /
@@ -120,23 +122,44 @@ class VirtualDSP:
             self._config["active_slot"] = cfg["active_slot"]
         if "preset_names" in cfg:
             self._config["preset_names"] = list(cfg["preset_names"])
+        active = self._active_slot
+        if 1 <= active <= UNT_SLOT_COUNT:
+            self._slots[active - 1] = self._slot_config()
 
-    def export_to_unt_args(
-        self,
-    ) -> tuple[list[dict[str, Any] | None], int, bytes | None]:
-        """Return the inputs needed for ``unt_writer.save_unt``.
+    def export_unt(self, preset_names: list[str] | None = None) -> UntFile:
+        """Build a .unt file from the stored slots, like ``DSPmini.export_unt``.
+
+        Mirrors the device: the file holds the *stored* presets, not
+        unsaved edits of the working configuration. The caller decides
+        whether to patch those in (see ``minidspqt.unt_files``).
+
+        Starts from a copy of the loaded file, or ``UntFile.blank()`` when
+        none was loaded. A slot is re-packed only when its parameters or its
+        name differ from the base file's, so untouched slots stay
+        byte-identical (ADR-0016).
+
+        Args:
+            preset_names: The 30 preset names in slot order. Defaults to
+                this instance's own names; accepted so the signature
+                matches ``DSPmini.export_unt``.
 
         Returns:
-            A 3-tuple ``(slots_0based, active_slot_0based, source_bytes)``:
-
-            * ``slots_0based`` — 30 slot dicts in user-slot order, with
-                ``None`` for empty slots.
-            * ``active_slot_0based`` — 0-indexed active slot.
-            * ``source_bytes`` — the original 13,010-byte file content
-                if this instance was seeded via ``load_from_unt_bytes``,
-                else ``None`` (caller falls back to the bundled template).
+            The file, ready for ``UntFile.write``.
         """
-        return list(self._slots), self._active_slot - 1, self._source_bytes
+        base = self._unt if self._unt is not None else UntFile.blank()
+        unt = UntFile(base.to_bytes())
+        names = list(preset_names) if preset_names is not None else list(self._preset_names)
+        for slot in range(1, UNT_SLOT_COUNT + 1):
+            params = self._slots[slot - 1]
+            if params is None:
+                continue
+            name = names[slot - 1] if slot - 1 < len(names) else ""
+            if params == base.slot_params(slot) and name == base.slot_name(slot):
+                continue
+            unt.set_slot_params(slot, params, name=name)
+        if 0 <= self._active_slot <= UNT_SLOT_COUNT:
+            unt.active_slot = self._active_slot
+        return unt
 
     @property
     def _active_slot(self) -> int:

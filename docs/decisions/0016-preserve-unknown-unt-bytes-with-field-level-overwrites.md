@@ -121,3 +121,14 @@ all other bytes untouched, and writing onto the blank template.
 * `8b54dcb` — blanking all 30 slots in `blank.unt` so it mimics a never-used
   device and stops competing with factory defaults (ADR-0014)
 * Related: ADR-0010 (offline persistence), ADR-0014 (the blank template)
+* Amended when `.unt` handling moved to the protocol library (ADR-0001: the
+  library owns the device's formats). The rule decided here is unchanged, but it
+  now lives upstream. `minidsp.unt.UntFile` holds the 13,010 raw bytes and edits
+  them in place, and `pack_preset_params` overwrites only the modelled fields, so
+  load → save stays byte-identical. `unt_loader.py`, `unt_writer.py` and the
+  bundled `blank.unt` were deleted, and the offset tables no longer exist in this
+  repository. `VirtualDSP.export_unt` starts from a copy of the loaded file and
+  re-packs a slot only when its parameters or name changed, so untouched slots
+  are copied verbatim. `tests/test_unt_files.py` checks the byte-identical round
+  trip against the editor-saved files in the library's `analysis/` folder; the
+  format's own tests live in the library.

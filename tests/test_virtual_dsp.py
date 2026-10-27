@@ -144,7 +144,9 @@ def test_open_close_noop():
     dsp.close()
 
 
-def test_load_from_unt_bytes():
+def test_load_from_unt():
+    from minidsp.unt import UntFile
+
     dsp = VirtualDSP()
     slot_cfg = {
         "names": ["InA", "InB", "InC", "InD", "Out1", "Out2", "Out3", "Out4"],
@@ -174,28 +176,27 @@ def test_load_from_unt_bytes():
         ]
         * 4,
     }
-    raw = b"\x00" * 13010
-    slots = [None] * 30
-    slots[1] = slot_cfg
-    names = [""] * 30
-    names[1] = "TestPreset"
+    unt = UntFile.blank()
+    unt.set_slot_params(2, slot_cfg, name="TestPreset")
+    unt.active_slot = 2
 
-    dsp.load_from_unt_bytes(raw, slots, active_slot_0based=1, preset_names=names)
+    dsp.load_from_unt(unt)
     cfg = dsp.read_config()
-    assert cfg["active_slot"] == 2  # device numbering: 0based=1 → 1based=2
+    assert cfg["active_slot"] == 2
     assert cfg["gains"][0] == 300
     assert cfg["gains"][4] == 200
-    assert dsp._source_bytes == raw
+    assert cfg["preset_names"][1] == "TestPreset"
+    assert cfg["preset_names"][0] == ""
 
 
-def test_export_to_unt_args():
+def test_export_unt():
     dsp = VirtualDSP()
     dsp.store_preset(3, "ExportTest")
     dsp.load_preset(3)
-    slots, active_0based, source = dsp.export_to_unt_args()
-    assert active_0based == 2
-    assert slots[2] is not None
-    assert source is None
+    unt = dsp.export_unt()
+    assert unt.active_slot == 3
+    assert unt.filled_slots() == [3]
+    assert unt.slot_name(3) == "ExportTest"
 
 
 def test_set_channel_name():
@@ -372,7 +373,7 @@ def test_prepare_link_unlink_does_not_copy():
 
 
 def test_offline_startup_seeded_from_blank_yields_factory_defaults():
-    """End-to-end offline startup: blank.unt is empty → factory defaults remain."""
+    """End-to-end offline startup: the empty .unt file → factory defaults remain."""
     from minidsp.defaults import load_factory_defaults
     from minidspqt.blank_seed import seed_virtual_dsp_from_blank
 

@@ -143,3 +143,11 @@ application itself rather than asserted separately.
   semantics; `7a1eb01` — runtime mode switching
 * Related: ADR-0005 (the injection seam), ADR-0009 (fan-out parity),
   ADR-0016 (`.unt` persistence), ADR-0025 (test fixtures)
+* Amended when `.unt` handling moved to the protocol library's `minidsp.unt`:
+  the statement above that "the `.unt` format has no field for" the lock state
+  is wrong. The header carries the 4-character PIN at offsets 0x1D–0x20, and the
+  original editor fills it from the device (decoded by the library from a USB
+  capture of the editor's save). The decision itself stands: `VirtualDSP` keeps
+  its lock state out of the config dict, and an offline export writes whatever
+  PIN the loaded file (or the library's empty file) already had.
+  `VirtualDSP.load_from_unt` / `export_unt` now take and return a `UntFile`.

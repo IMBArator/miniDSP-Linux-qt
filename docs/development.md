@@ -19,6 +19,12 @@ calibration come from the protocol library — `LEVEL_CLIP_LEVEL24`,
 release. `minidspqt/levels.py` is the single import point for those symbols (see
 [ADR-0032](decisions/0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md)).
 
+Reading and writing `.unt` files goes through the protocol library's
+`minidsp.unt` module (`UntFile`), and saving while connected uses
+`DSPmini.export_unt()`. Both need the library's **v1.5.0 or newer**, which is the
+pinned release (see the amendment in
+[ADR-0016](decisions/0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md)).
+
 ### Linux
 
 - Kernel HID driver — communicates via `/dev/hidraw*`
@@ -276,7 +282,7 @@ out on a Windows machine — never publish it.
 On Linux every build verifies its own output: the interpreter search-path check
 (every stdlib `.pyd`, the stdlib zip and `site-packages` reachable from the
 `._pth`), the DLL import-closure check after pruning, and a layout check of the zip (launcher, interpreter, `._pth`,
-`blank.unt`, the hidapi extension, Qt's `qwindows.dll`, the project's
+a stylesheet from the package data, the hidapi extension, Qt's `qwindows.dll`, the project's
 `.dist-info` — and none of the pruned trees). If `wine` is on `PATH`, the script
 additionally runs `--help` and boots the offline mode under Qt's offscreen
 platform, the same two-pass smoke test the AppImage gets. That step is optional
@@ -350,9 +356,7 @@ minidspqt/                     Main package
   model.py                     Typed device state (DeviceState dataclass)
   device_thread.py             QThread: poll loop, command coalescing, preset queue
   virtual_dsp.py               In-RAM DSP implementing DSPmini interface
-  blank_seed.py                Bundled blank.unt seed helper (shared by app + runtime mode switch)
-  unt_loader.py                Parse .unt files (single-slot and all-slots)
-  unt_writer.py                Write .unt files with field-level overwrites
+  blank_seed.py                Seeds a VirtualDSP with the library's empty .unt file (shared by app + runtime mode switch)
   views/
     main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
     home_view.py               8 channel strips + routing matrix + level meters
@@ -371,7 +375,7 @@ minidspqt/                     Main package
       _overlay_controls.py     Shared "show other outputs" overlay checkboxes for the PEQ + Xover graphs
       placeholder_panel.py     Shown when the active feature is N/A for the selected channel
   widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
-  resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
+  resources/                   Icons, style_dark.qss + style_light.qss (selected by ThemeManager)
 
 tests/                         pytest suite
   conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
@@ -393,8 +397,7 @@ tests/                         pytest suite
   test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
   test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
   test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
-  test_unt_loader.py           .unt parsing and validation
-  test_unt_writer.py           Byte-identical round-trip, field-level edits
+  test_unt_files.py            Offline .unt round trips through VirtualDSP: byte-identical export, edits confined to their slot, F00
   test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
   test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
 
