@@ -98,6 +98,11 @@ class DeviceThread(QThread):
             should show the unlock dialog and call ``submit_pin``.
         pin_result (bool, int): ``(success, attempts_remaining)`` —
             result of one ``submit_pin`` round.
+        unt_exported (object, object): ``(unt, live_config)`` answer to
+            ``request_export_unt`` — the ``minidsp.unt.UntFile`` holding
+            the stored presets and the live ``read_config`` dict taken at
+            the same moment, or ``(None, None)`` when either read failed.
+            Always emitted once per request, so the UI never waits forever.
     """
 
     levels_updated = Signal(dict)
@@ -106,6 +111,7 @@ class DeviceThread(QThread):
     config_loaded = Signal(dict)
     pin_required = Signal()
     pin_result = Signal(bool, int)  # success, remaining_attempts
+    unt_exported = Signal(object, object)  # UntFile | None, live config | None
 
     POLL_INTERVAL_MS = 150
     RECONNECT_INTERVAL_MS = 2000
@@ -283,6 +289,19 @@ class DeviceThread(QThread):
         """
         with self._lock:
             self._preset_queue.append(("read_config",))
+
+    def request_export_unt(self) -> None:
+        """Queue building a .unt file from the stored presets.
+
+        The worker reads the live config and then the stored presets the
+        way the manufacturer's editor does (``export_unt``: no preset is
+        recalled, so the audio does not change), and answers with
+        ``unt_exported``. Serialised with the other config operations on
+        the FIFO queue; pending parameter writes are flushed first so the
+        live config reflects every edit made so far.
+        """
+        with self._lock:
+            self._preset_queue.append(("export_unt",))
 
     def request_stop(self) -> None:
         """Ask the worker to stop after the current iteration.
@@ -523,12 +542,12 @@ class DeviceThread(QThread):
                 log.exception("Failed dispatching %s(%s)", key, args)
 
     def _drain_preset_queue(self, dsp) -> bool:
-        """Process pending preset load/store/set-PIN/read-config requests.
+        """Process pending preset load/store/set-PIN/read-config/export requests.
 
         Returns:
             True if a preset load was attempted (whether it succeeded
-            or not). Other entry kinds — store, set_pin, read_config
-            — do not affect the return value.
+            or not). Other entry kinds — store, set_pin, read_config,
+            export_unt — do not affect the return value.
         """
         with self._lock:
             pending = list(self._preset_queue)
@@ -613,9 +632,37 @@ class DeviceThread(QThread):
                         log.warning(
                             "read_config: dsp.read_config returned None — UI will NOT update"
                         )
+                elif kind == "export_unt":
+                    self._export_unt(dsp)
             except DEVICE_ERRORS:
                 log.exception("Preset operation %s failed", entry)
         return did_recall
+
+    def _export_unt(self, dsp) -> None:
+        """Read the live config and the stored presets; emit ``unt_exported``.
+
+        Emits exactly once, with ``(None, None)`` on any device error or
+        empty read, so the UI's busy state always ends.
+
+        Args:
+            dsp: The open ``DSPmini`` or ``VirtualDSP``.
+        """
+        try:
+            # Same reason as in read_config: queued writes must reach the
+            # device before the live state is read back.
+            self._drain_pending(dsp)
+            log.info("export_unt: reading live config and stored presets")
+            live = dsp.read_config()
+            unt = dsp.export_unt(live["preset_names"]) if live is not None else None
+        except DEVICE_ERRORS:
+            log.exception("export_unt: reading from the device failed")
+            live, unt = None, None
+        if unt is None or live is None:
+            log.warning("export_unt: no file built")
+            self.unt_exported.emit(None, None)
+            return
+        log.info("export_unt: stored slots %s", unt.filled_slots())
+        self.unt_exported.emit(unt, live)
 
     def _handle_locked(self, dsp) -> dict | None:
         """Drive the UI through up to ``MAX_PIN_ATTEMPTS`` unlock attempts.

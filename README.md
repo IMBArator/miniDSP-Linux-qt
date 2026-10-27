@@ -170,7 +170,8 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 
 - **Load** manufacturer .unt files — parses all 30 preset slots
 - **Save** .unt files with byte-identical round-trip for untouched data
-- Preserves unknown bytes when editing individual fields
+- **Save while connected** — reads the device's stored presets the way the manufacturer's editor does, without switching presets, and asks whether unsaved edits of the active preset should go into the file
+- Preserves unknown bytes when editing individual fields; the file format itself is handled by the protocol library (`minidsp.unt`)
 
 ### Test tone generator
 

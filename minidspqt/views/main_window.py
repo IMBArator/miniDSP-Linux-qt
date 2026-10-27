@@ -7,8 +7,10 @@ import logging
 from importlib.metadata import PackageNotFoundError, version as _app_version
 from pathlib import Path
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QActionGroup, QIcon
 from PySide6.QtWidgets import (
+    QApplication,
     QDialog,
     QFileDialog,
     QMainWindow,
@@ -31,6 +33,7 @@ from ..model import (
     TestToneState,
 )
 from ..theme import theme_manager
+from ..unt_files import differs_from_stored, include_live_changes
 from ..virtual_dsp import VirtualDSP
 from .channel_linking_dialog import ChannelLinkingDialog
 from .copy_channel_dialog import CopyChannelDialog
@@ -93,6 +96,12 @@ class MainWindow(QMainWindow):
         # later online → offline switch can seed the new VirtualDSP with the
         # device's last-known state without re-querying the worker.
         self._last_config: dict | None = None
+        # Save-.unt bookkeeping. ``_connected`` mirrors connection_changed so
+        # a save is only offered while the worker can answer it; offline the
+        # VirtualDSP opens at once, so it starts out True. ``_export_pending``
+        # is set while a requested export is in flight.
+        self._connected = offline
+        self._export_pending = False
 
         self._stack = QStackedWidget()
         self._home_view = HomeView()
@@ -182,7 +191,7 @@ class MainWindow(QMainWindow):
         if offline:
             self._home_view.set_offline_mode()
             self._detail_view.set_offline_mode()
-            self._save_action.setEnabled(True)
+        self._update_save_action()
 
     @property
     def _virtual_dsp(self) -> VirtualDSP | None:
@@ -198,6 +207,12 @@ class MainWindow(QMainWindow):
 
     def _on_connection_changed(self, connected: bool) -> None:
         self._state.connected = connected
+        self._connected = connected
+        if not connected:
+            # A queued export cannot be answered without a session; end the
+            # busy state now rather than wait for a reconnect.
+            self._end_export()
+        self._update_save_action()
         # Set device PIN is a device-only action; it follows the worker's
         # connection state even in offline mode (where VirtualDSP toggles
         # _open during the set-PIN → relock cycle).
@@ -240,6 +255,7 @@ class MainWindow(QMainWindow):
         # downstream consumers (DeviceState.from_config) don't mutate today
         # but might tomorrow — this is cheap insurance.
         self._last_config = copy.deepcopy(cfg)
+        self._update_save_action()
         old_names = list(self._state.preset_names)
         try:
             self._state = DeviceState.from_config(cfg)
@@ -306,7 +322,6 @@ class MainWindow(QMainWindow):
                 return
             self._apply_state_to_views()
             self._sync_linking_dialog()
-            self._save_action.setEnabled(True)
             return
 
         # Connected: show the file's active preset as a read-only preview.
@@ -332,10 +347,78 @@ class MainWindow(QMainWindow):
         self._sync_test_tone_dialog()
         self._home_view.show_preview_banner(Path(path).name)
 
+    def _update_save_action(self) -> None:
+        """Enable "Save .unt file…" only when a save can actually run.
+
+        Saving asks the worker for an export, so the worker must hold a
+        session. Connected, it also waits until a device config has been
+        read; offline, the VirtualDSP always has one. While an export is in
+        flight the action stays disabled so it cannot be queued twice.
+        """
+        ready = self._offline or self._last_config is not None
+        self._save_action.setEnabled(
+            ready and self._connected and not self._export_pending
+        )
+
     def _on_save_unt(self) -> None:
-        vdsp = self._virtual_dsp
-        if vdsp is None:
+        """Ask the worker for the stored presets; the save continues in
+        :meth:`_on_unt_exported`.
+
+        The same path serves both modes: ``DSPmini.export_unt`` reads the
+        device's stored presets the way the manufacturer's editor does,
+        and ``VirtualDSP.export_unt`` returns its in-RAM slots. On the
+        device this takes a moment per stored preset, so a wait cursor is
+        shown meanwhile.
+        """
+        if self._export_pending:
             return
+        self._export_pending = True
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self._update_save_action()
+        self._thread.request_export_unt()
+
+    def _end_export(self) -> None:
+        """Leave the export busy state, if it is active."""
+        if not self._export_pending:
+            return
+        self._export_pending = False
+        QApplication.restoreOverrideCursor()
+        self._update_save_action()
+
+    def _on_unt_exported(self, unt: UntFile | None, live: dict | None) -> None:
+        """Finish a save: check for unsaved edits, ask for a path, write.
+
+        Like the editor, the file holds the *stored* presets. When the live
+        settings differ from the stored active preset, the user chooses
+        whether to include them (ADR-0033).
+
+        Args:
+            unt: The file built from the stored presets, or ``None`` if
+                reading failed.
+            live: The live ``read_config`` dict taken in the same worker
+                step, or ``None`` if reading failed.
+        """
+        if not self._export_pending:
+            # Answer to a request that was abandoned (disconnect or mode
+            # switch while it was in flight) — the user is no longer waiting.
+            return
+        self._end_export()
+        if unt is None or live is None:
+            QMessageBox.critical(
+                self,
+                "Cannot save .unt file",
+                "Could not read the presets from the device.",
+            )
+            return
+
+        active = live.get("active_slot", 0)
+        if isinstance(active, int) and differs_from_stored(live, unt, active):
+            choice = self._ask_unsaved_changes(active)
+            if choice == "cancel":
+                return
+            if choice == "include":
+                include_live_changes(unt, active, live)
+
         path, _ = QFileDialog.getSaveFileName(
             self,
             "Save .unt preset",
@@ -344,11 +427,46 @@ class MainWindow(QMainWindow):
         )
         if not path:
             return
-        unt = vdsp.export_unt(self._state.preset_names)
         try:
             unt.write(path)
         except OSError as e:
             QMessageBox.critical(self, "Cannot save .unt file", str(e))
+
+    def _ask_unsaved_changes(self, slot: int) -> str:
+        """Ask whether unsaved edits of the active preset go into the file.
+
+        Args:
+            slot: The active user slot (1–30) whose live settings differ
+                from its stored version.
+
+        Returns:
+            ``"stored"`` to save the stored version as the original editor
+            does, ``"include"`` to write the current settings into that
+            slot, or ``"cancel"`` to abort the save.
+        """
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("Unsaved changes")
+        box.setText(
+            f"The current settings differ from preset U{slot:02d} as stored "
+            "on the device."
+        )
+        box.setInformativeText(
+            "The .unt file normally holds the stored presets, like the "
+            "original editor's files. Include the current settings in "
+            f"U{slot:02d} instead?"
+        )
+        stored_btn = box.addButton("Save stored version", QMessageBox.ButtonRole.AcceptRole)
+        include_btn = box.addButton("Include current changes", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.setDefaultButton(stored_btn)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked is stored_btn:
+            return "stored"
+        if clicked is include_btn:
+            return "include"
+        return "cancel"
 
     # --- Recall / Store ---
 
@@ -1038,6 +1156,7 @@ class MainWindow(QMainWindow):
             (self._thread.config_loaded, self._on_config_loaded),
             (self._thread.pin_required, self._show_unlock_dialog),
             (self._thread.pin_result, self._on_pin_result),
+            (self._thread.unt_exported, self._on_unt_exported),
         ):
             try:
                 sig.disconnect(slot)
@@ -1046,12 +1165,14 @@ class MainWindow(QMainWindow):
                 pass
 
         # 4. Stop the current worker. Even when parked in _handle_locked,
-        #    request_stop pushes _CANCEL_PIN to unblock it.
+        #    request_stop pushes _CANCEL_PIN to unblock it. An export still
+        #    in flight is abandoned with it, so end its busy state.
         self._thread.request_stop()
         self._thread.wait(2000)
         old_thread = self._thread
         old_thread.setParent(None)
         old_thread.deleteLater()
+        self._end_export()
 
         # 5. Build the new DSP instance.
         if offline:
@@ -1067,8 +1188,10 @@ class MainWindow(QMainWindow):
             new_instance = None  # → DSPmini factory path
 
         # 6. Update flag BEFORE creating the new thread so the first signal
-        #    that arrives lands on a consistent self._offline.
+        #    that arrives lands on a consistent self._offline. The VirtualDSP
+        #    opens at once; the real device reports in via connection_changed.
         self._offline = offline
+        self._connected = offline
         if not offline:
             # Drop the offline-mode config so a subsequent switch back to
             # offline doesn't re-seed from a stale offline snapshot. The
@@ -1091,7 +1214,7 @@ class MainWindow(QMainWindow):
             self._home_view.set_connected(False)
             self._detail_view.set_connected(False)
 
-        self._save_action.setEnabled(offline)
+        self._update_save_action()
         if offline:
             # Reconnect is meaningless against VirtualDSP (it doesn't drop).
             self._reconnect_action.setEnabled(False)
@@ -1130,6 +1253,7 @@ class MainWindow(QMainWindow):
         self._thread.config_loaded.connect(self._on_config_loaded)
         self._thread.pin_required.connect(self._show_unlock_dialog)
         self._thread.pin_result.connect(self._on_pin_result)
+        self._thread.unt_exported.connect(self._on_unt_exported)
         self._thread.start()
 
     # --- Lifecycle ---

@@ -463,14 +463,28 @@ The `.unt` file format is used by the manufacturer's software. This application 
 
 ### Saving a .unt File
 
-> Only available in **offline mode**.
+Saving works in both modes.
 
 1. Click the **menu button** (≡)
 2. Select **Save .unt file...**
-3. Choose a location and filename in the file dialog
-4. The current state of all 30 virtual preset slots is written to disk
+3. If the current settings differ from the active preset as it is stored, choose what to save (see below)
+4. Choose a location and filename in the file dialog
 
-The saved file is byte-identical to the original for any untouched data, making it safe to round-trip existing `.unt` files.
+**With hardware connected:** the file holds the presets as **stored on the device**, exactly as the manufacturer's editor writes them. Every user slot with a real name is saved; slots still named "Default Preset" have never been stored and are left empty. The presets are read without switching to them, so the audio does not change. The read takes a moment per stored preset, during which the mouse pointer shows a busy cursor and the level meters pause. Save is available once the device is connected and its configuration has been read.
+
+**In offline mode:** the file holds the 30 virtual preset slots. A file you loaded is saved back byte-identical for any data you did not change, so it is safe to round-trip existing `.unt` files.
+
+**Unsaved changes.** A `.unt` file holds stored presets, so edits you have not yet stored to a slot are normally not in it, as with the original editor. When the current settings differ from the stored version of the active preset, the application asks:
+
+| Choice | Effect |
+|--------|--------|
+| **Save stored version** | Save the presets as stored, like the original editor. Your unsaved edits are not in the file |
+| **Include current changes** | Write the current settings into the active preset's slot in the file. The device itself is not changed; use **Store** for that |
+| **Cancel** | Save nothing |
+
+The test tone generator is not counted as a change. When F00 (the factory preset) is active there is no prompt, because F00 is not one of the file's slots.
+
+> **The file contains the device PIN.** The `.unt` header carries the device's 4-character lock PIN in plain text, as in files saved by the original editor. Anyone who has the file can read it, so keep that in mind before sharing a file.
 
 ---
 
@@ -481,7 +495,7 @@ Click the **menu button** (≡) in the top-right corner of the window:
 | Option | Description |
 |--------|-------------|
 | **Load .unt file...** | Import a manufacturer preset file |
-| **Save .unt file...** | Export preset data to a `.unt` file (offline mode only) |
+| **Save .unt file...** | Save the presets to a `.unt` file: the device's stored presets when connected, the virtual slots when offline (see [Saving a .unt File](#saving-a-unt-file)) |
 | **Channel linking...** | Open the channel-linking dialog (see [Channel Linking](#channel-linking)) |
 | **Copy channel settings...** | Copy parameters from one channel to others (see [Copy Channel Settings](#copy-channel-settings)) |
 | **Test tone...** | Open the test tone generator dialog (see [Test Tone Generator](#test-tone-generator)) |

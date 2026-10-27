@@ -44,6 +44,7 @@ a line to the relevant table below.
 | [0015](0015-render-filter-curves-locally-from-biquad-math-at-48-khz.md) | Render filter response curves locally from biquad maths at 48 kHz |
 | [0016](0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md) | Preserve unknown `.unt` bytes by writing field-level overwrites onto a template |
 | [0017](0017-device-lock-pin-flow-stops-the-worker-rather-than-retrying.md) | Stop the worker on lock cancellation rather than auto-reconnecting |
+| [0033](0033-save-unt-files-from-the-stored-presets-like-the-original-editor.md) | Save .unt files from the stored presets, like the original editor, and ask about unsaved edits |
 
 ## UI composition and styling
 
@@ -92,3 +93,4 @@ alternative has already been tried here.
 | [0019](0019-style-with-qss-and-drive-state-styling-through-dynamic-properties.md) | Inline `setStyleSheet()` per widget | Near-identical strings proliferated and state changes rebuilt stylesheets at runtime |
 | [0016](0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md) | `blank.unt` seeded with hand-rolled values | It re-seeded slot U01 with wrong values, masking in-RAM corrections |
 | [0032](0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md) | A red level zone at +15 dB on the smoothed uint16 level | The threshold was wrong and the smoothing hid short overloads, so the clip LED never lit |
+| [0033](0033-save-unt-files-from-the-stored-presets-like-the-original-editor.md) | Save .unt in offline mode only | Users could not back up the connected device, and the Offline-then-Save workaround wrote an empty file |
