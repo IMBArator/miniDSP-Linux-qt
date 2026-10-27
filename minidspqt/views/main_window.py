@@ -33,7 +33,12 @@ from ..model import (
     TestToneState,
 )
 from ..theme import theme_manager
-from ..unt_files import differs_from_stored, include_live_changes
+from ..unt_files import (
+    UNT_DEFAULT_SUFFIX,
+    UNT_DIALOG_FILTERS,
+    differs_from_stored,
+    include_live_changes,
+)
 from ..virtual_dsp import VirtualDSP
 from .channel_linking_dialog import ChannelLinkingDialog
 from .copy_channel_dialog import CopyChannelDialog
@@ -300,7 +305,7 @@ class MainWindow(QMainWindow):
             self,
             "Load .unt preset",
             "",
-            "miniDSP preset (*.unt);;All files (*)",
+            UNT_DIALOG_FILTERS,
         )
         if not path:
             return
@@ -419,18 +424,49 @@ class MainWindow(QMainWindow):
             if choice == "include":
                 include_live_changes(unt, active, live)
 
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save .unt preset",
-            "",
-            "miniDSP preset (*.unt);;All files (*)",
-        )
+        path = self._ask_save_path()
         if not path:
             return
         try:
             unt.write(path)
         except OSError as e:
             QMessageBox.critical(self, "Cannot save .unt file", str(e))
+
+    def _make_save_dialog(self) -> QFileDialog:
+        """Build the .unt save dialog: Qt's own, with ``.unt`` as default suffix.
+
+        Qt's built-in dialog adds the default suffix to a name typed without
+        an extension *before* its overwrite check, so typing ``backup`` next
+        to an existing ``backup.unt`` makes the dialog itself ask whether to
+        replace it. The platform dialogs on Linux (GTK, desktop portal) cannot
+        do that: Qt can only add the suffix after they close, so they never
+        warn about the extended name. Using Qt's dialog on every platform
+        keeps that behaviour identical everywhere, without a platform branch
+        (ADR-0030).
+
+        Returns:
+            The configured, not yet shown dialog.
+        """
+        dialog = QFileDialog(self, "Save .unt preset", "", UNT_DIALOG_FILTERS)
+        dialog.setOption(QFileDialog.Option.DontUseNativeDialog, True)
+        dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        dialog.setDefaultSuffix(UNT_DEFAULT_SUFFIX)
+        return dialog
+
+    def _ask_save_path(self) -> str | None:
+        """Show the save dialog and return the chosen path.
+
+        Returns:
+            The absolute path, with ``.unt`` added when the name was typed
+            without an extension, or ``None`` if the user cancelled. An
+            existing file has already been confirmed for replacement by the
+            dialog.
+        """
+        dialog = self._make_save_dialog()
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return None
+        files = dialog.selectedFiles()
+        return files[0] if files else None
 
     def _ask_unsaved_changes(self, slot: int) -> str:
         """Ask whether unsaved edits of the active preset go into the file.

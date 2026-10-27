@@ -1,10 +1,11 @@
-"""GUI-side helpers for saving .unt files: stored versus live presets.
+"""GUI-side helpers for .unt files: stored versus live presets.
 
 A .unt file written by the manufacturer's editor, and by
 ``DSPmini.export_unt``, holds the presets as *stored* on the device. Edits
 that were made but not stored to a slot are not in it. The save flow uses
 these helpers to notice that case and, if the user asks for it, to patch the
-live settings into the active slot.
+live settings into the active slot. The file-dialog constants shared by the
+load and save dialogs live here too.
 
 Pure functions, no Qt, so they can be tested directly.
 """
@@ -21,6 +22,13 @@ from .virtual_dsp import _SLOT_KEYS
 #: generator is transient state the user switches on and off while testing,
 #: not part of what they mean by "changed the preset".
 PRESET_KEYS = _SLOT_KEYS - {"test_tone_mode", "test_tone_freq"}
+
+#: File-dialog filter for .unt files, shared by the load and save dialogs.
+UNT_FILTER = "miniDSP preset (*.unt)"
+#: The full filter string passed to ``QFileDialog``.
+UNT_DIALOG_FILTERS = f"{UNT_FILTER};;All files (*)"
+#: Extension the save dialog adds to a name typed without one (no dot).
+UNT_DEFAULT_SUFFIX = "unt"
 
 
 def differs_from_stored(live_cfg: dict, unt: UntFile, slot: int) -> bool:

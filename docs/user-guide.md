@@ -468,7 +468,7 @@ Saving works in both modes.
 1. Click the **menu button** (≡)
 2. Select **Save .unt file...**
 3. If the current settings differ from the active preset as it is stored, choose what to save (see below)
-4. Choose a location and filename in the file dialog
+4. Choose a location and filename in the file dialog. If the name has no extension, `.unt` is added, so the file shows up in the Load dialog later. The dialog checks the name *with* the extension, so typing `backup` next to an existing `backup.unt` asks before replacing it. A name you type with an extension of your own, such as `backup.v2`, is kept as typed. The save dialog is Qt's own rather than the desktop's, which is what lets it behave the same on Windows and Linux
 
 **With hardware connected:** the file holds the presets as **stored on the device**, exactly as the manufacturer's editor writes them. Every user slot with a real name is saved; slots still named "Default Preset" have never been stored and are left empty. The presets are read without switching to them, so the audio does not change. The read takes a moment per stored preset, during which the mouse pointer shows a busy cursor and the level meters pause. Save is available once the device is connected and its configuration has been read.
 

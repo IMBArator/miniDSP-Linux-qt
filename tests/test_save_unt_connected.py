@@ -7,18 +7,22 @@ Three layers are covered:
 * the pure helpers in ``minidspqt.unt_files`` that detect and include
   unsaved edits of the active preset;
 * the ``MainWindow`` save flow: when the menu entry is enabled, the
-  unsaved-changes prompt, and abandoned requests.
+  unsaved-changes prompt, abandoned requests, and the save dialog that adds
+  the ``.unt`` extension and warns about the extended name itself.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from minidsp.device import DeviceLockedError
 from minidsp.unt import UntFile
-from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox
 
 from minidspqt.device_thread import DeviceThread
-from minidspqt.unt_files import differs_from_stored, include_live_changes
+from minidspqt.unt_files import UNT_FILTER, differs_from_stored, include_live_changes
 
 
 @pytest.fixture
@@ -167,15 +171,18 @@ def _start_save(window, monkeypatch) -> list:
     return requests
 
 
-def _save_to(monkeypatch, path) -> list:
-    """Make the save dialog return ``path``; record each time it opens."""
+def _save_to(window, monkeypatch, path) -> list:
+    """Make the save dialog return ``path`` (``None`` = cancelled).
+
+    Returns a list that records each time the dialog would have opened.
+    """
     opened = []
 
-    def dialog(*_a, **_kw):
+    def ask():
         opened.append(1)
-        return str(path), ""
+        return None if path is None else str(path)
 
-    monkeypatch.setattr(QFileDialog, "getSaveFileName", dialog)
+    monkeypatch.setattr(window, "_ask_save_path", ask)
     return opened
 
 
@@ -203,7 +210,7 @@ def test_save_shows_busy_state_until_the_answer(window, monkeypatch, preset_cfg,
     assert not window._save_action.isEnabled()
     assert QApplication.overrideCursor() is not None
 
-    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: ("", ""))
+    _save_to(window, monkeypatch, None)
     window._on_unt_exported(*_stored(fake_dsp))
     assert window._save_action.isEnabled()
     assert QApplication.overrideCursor() is None
@@ -212,7 +219,7 @@ def test_save_shows_busy_state_until_the_answer(window, monkeypatch, preset_cfg,
 def test_unchanged_preset_is_saved_without_a_prompt(window, monkeypatch, fake_dsp, tmp_path):
     unt, live = _stored(fake_dsp)
     out = tmp_path / "out.unt"
-    _save_to(monkeypatch, out)
+    _save_to(window, monkeypatch, out)
     monkeypatch.setattr(window, "_ask_unsaved_changes", lambda slot: pytest.fail("no prompt"))
 
     _start_save(window, monkeypatch)
@@ -235,7 +242,7 @@ def test_unsaved_edit_prompt_choices(
     asked = []
     monkeypatch.setattr(window, "_ask_unsaved_changes", lambda s: asked.append(s) or choice)
     out = tmp_path / "out.unt"
-    _save_to(monkeypatch, out)
+    _save_to(window, monkeypatch, out)
 
     _start_save(window, monkeypatch)
     window._on_unt_exported(unt, live)
@@ -249,7 +256,7 @@ def test_cancel_in_the_prompt_writes_nothing(window, monkeypatch, fake_dsp):
     unt, live = _stored(fake_dsp)
     live["gains"][0] += 1
     monkeypatch.setattr(window, "_ask_unsaved_changes", lambda s: "cancel")
-    opened = _save_to(monkeypatch, "never.unt")
+    opened = _save_to(window, monkeypatch, "never.unt")
 
     _start_save(window, monkeypatch)
     window._on_unt_exported(unt, live)
@@ -263,7 +270,7 @@ def test_f00_active_saves_without_a_prompt(window, monkeypatch, fake_dsp, tmp_pa
     live["gains"][0] += 1
     monkeypatch.setattr(window, "_ask_unsaved_changes", lambda slot: pytest.fail("no prompt"))
     out = tmp_path / "out.unt"
-    _save_to(monkeypatch, out)
+    _save_to(window, monkeypatch, out)
 
     _start_save(window, monkeypatch)
     window._on_unt_exported(unt, live)
@@ -274,7 +281,7 @@ def test_f00_active_saves_without_a_prompt(window, monkeypatch, fake_dsp, tmp_pa
 def test_failed_export_reports_and_writes_nothing(window, monkeypatch):
     errors = []
     monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: errors.append(a[1:]))
-    opened = _save_to(monkeypatch, "never.unt")
+    opened = _save_to(window, monkeypatch, "never.unt")
 
     _start_save(window, monkeypatch)
     window._on_unt_exported(None, None)
@@ -287,7 +294,7 @@ def test_failed_export_reports_and_writes_nothing(window, monkeypatch):
 def test_answer_after_a_disconnect_is_ignored(window, monkeypatch, fake_dsp):
     unt, live = _stored(fake_dsp)
     window._on_connection_changed(True)
-    opened = _save_to(monkeypatch, "never.unt")
+    opened = _save_to(window, monkeypatch, "never.unt")
 
     _start_save(window, monkeypatch)
     window._on_connection_changed(False)
@@ -295,6 +302,59 @@ def test_answer_after_a_disconnect_is_ignored(window, monkeypatch, fake_dsp):
 
     window._on_unt_exported(unt, live)
     assert opened == []
+
+
+def _save_dialog_in(window, directory, typed):
+    """The window's real save dialog, opened on ``directory`` with ``typed`` entered."""
+    dialog = window._make_save_dialog()
+    dialog.setDirectory(str(directory))
+    dialog.selectFile(typed)
+    return dialog
+
+
+def test_save_dialog_is_qts_own_with_unt_default_suffix(window):
+    """Qt's dialog, not the platform's: only it adds the suffix before its
+    overwrite check, on Linux as on Windows."""
+    dialog = window._make_save_dialog()
+    assert dialog.testOption(QFileDialog.Option.DontUseNativeDialog)
+    assert dialog.acceptMode() == QFileDialog.AcceptMode.AcceptSave
+    assert dialog.defaultSuffix() == "unt"
+    assert dialog.nameFilters()[0] == UNT_FILTER
+
+
+@pytest.mark.parametrize(
+    ("typed", "saved_as"),
+    [
+        ("backup", "backup.unt"),
+        ("backup.unt", "backup.unt"),
+        ("backup.v2", "backup.v2"),  # a typed extension is kept
+    ],
+)
+def test_save_dialog_adds_unt_to_a_name_without_extension(window, tmp_path, typed, saved_as):
+    dialog = _save_dialog_in(window, tmp_path, typed)
+    assert Path(dialog.selectedFiles()[0]).name == saved_as
+
+
+@pytest.mark.parametrize(("button", "accepted"), [("No", False), ("Yes", True)])
+def test_save_dialog_warns_about_the_extended_name(window, tmp_path, qtbot, button, accepted):
+    """Typing "backup" next to an existing backup.unt: the dialog itself asks."""
+    (tmp_path / "backup.unt").write_bytes(b"previous")
+    dialog = _save_dialog_in(window, tmp_path, "backup")
+    qtbot.addWidget(dialog)
+    dialog.show()
+    warnings = []
+
+    def answer():
+        box = QApplication.activeModalWidget()
+        if isinstance(box, QMessageBox):
+            warnings.append(box.text())
+            box.button(getattr(QMessageBox.StandardButton, button)).click()
+
+    QTimer.singleShot(100, answer)
+    dialog.accept()  # runs the dialog's overwrite check; the timer answers it
+
+    assert warnings and "backup.unt" in warnings[0]
+    assert (dialog.result() == QDialog.DialogCode.Accepted) is accepted
 
 
 def test_unt_exported_is_wired_to_the_worker(window, monkeypatch):
