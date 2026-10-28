@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-10-28
+
+### Added
+
+- Save .unt files while connected, like the original editor ([`544d368`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/544d368aee0df92c2d267cff569112ded318893b))
+
+### Changed
+
+- Read and write .unt files through minidsp.unt ([`446516b`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/446516bf4f43aadb1cfade00f40339a55daa5e0b))
+
+### Fixed
+
+- Let the save dialog add .unt and confirm replacing it ([`0b5d089`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/0b5d089f305c2c39c725177ef44d0751fe994c9e))
+- Keep the unsaved-changes buttons in one order on every desktop ([`9ce039e`](https://github.com/IMBArator/miniDSP-Linux-qt/commit/9ce039ef243c1d243c88721dcd881194683c2fce))
+
 ## [1.2.0] - 2026-09-20
 
 ### Added
