@@ -1637,6 +1637,8 @@
       
         
       
+        
+      
     
     
     
@@ -2851,6 +2853,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../decisions/0033-save-unt-files-from-the-stored-presets-like-the-original-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save .unt files from the stored presets, like the original editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../decisions/adr-template/" class="md-nav__link">
         
   
@@ -2957,8 +2994,6 @@
   
     
     
-      
-        
       
         
       
@@ -3267,42 +3302,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/minidspqt/unt_loader/" class="md-nav__link">
+      <a href="../api/minidspqt/unt_files/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    minidspqt.unt_loader
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/minidspqt/unt_writer/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    minidspqt.unt_writer
+    minidspqt.unt_files
   
 
     
@@ -3388,7 +3395,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3410,14 +3417,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11" id="__nav_6_1_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3745,7 +3752,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3767,14 +3774,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12_11" id="__nav_6_1_12_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11_11" id="__nav_6_1_11_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_12_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_11_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4068,7 +4075,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -4090,14 +4097,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_13" id="__nav_6_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6106,7 +6113,7 @@
 <p>This is useful for designing presets on the go, testing configurations, or exploring the UI without a device connected.</p>
 <h3 id="switching-modes-at-runtime">Switching modes at runtime<a class="headerlink" href="#switching-modes-at-runtime" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Connected → Offline</strong> carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to <code>.unt</code> without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP is seeded from the bundled <code>blank.unt</code> template instead.</li>
+<li><strong>Connected → Offline</strong> carries the device's current configuration into the virtual DSP. Whatever the connected device last reported (gains, routing, PEQ, crossovers, …) becomes the editable starting point — so you can take a snapshot off the device, tinker, and save to <code>.unt</code> without touching the hardware. If no device config has ever been read (e.g. the unit was unplugged), the virtual DSP starts from an empty <code>.unt</code> file with factory defaults instead.</li>
 <li><strong>Offline → Connected</strong> prompts a confirmation first: switching back discards any unsaved offline edits. Save your <code>.unt</code> file first if you want to keep them. After confirming, the worker re-attaches to the real USB device exactly as if you had relaunched without <code>--offline</code>.</li>
 <li>The mode choice is <strong>session-only</strong> — restarting the app drops you back into connected mode (unless you pass <code>--offline</code> on the command line).</li>
 </ul>
@@ -6122,16 +6129,42 @@
 <p><strong>In offline mode:</strong> All 30 preset slots from the file are loaded into the virtual DSP. You can browse and edit any slot.</p>
 <p><strong>With hardware connected (online mode):</strong> The file is loaded as a read-only preview. Controls are disabled, but you can inspect the settings. The status bar shows the filename being previewed.</p>
 <h3 id="saving-a-unt-file">Saving a .unt File<a class="headerlink" href="#saving-a-unt-file" title="Permanent link">&para;</a></h3>
-<blockquote>
-<p>Only available in <strong>offline mode</strong>.</p>
-</blockquote>
+<p>Saving works in both modes.</p>
 <ol>
 <li>Click the <strong>menu button</strong> (≡)</li>
 <li>Select <strong>Save .unt file...</strong></li>
-<li>Choose a location and filename in the file dialog</li>
-<li>The current state of all 30 virtual preset slots is written to disk</li>
+<li>If the current settings differ from the active preset as it is stored, choose what to save (see below)</li>
+<li>Choose a location and filename in the file dialog. If the name has no extension, <code>.unt</code> is added, so the file shows up in the Load dialog later. The dialog checks the name <em>with</em> the extension, so typing <code>backup</code> next to an existing <code>backup.unt</code> asks before replacing it. A name you type with an extension of your own, such as <code>backup.v2</code>, is kept as typed. The save dialog is Qt's own rather than the desktop's, which is what lets it behave the same on Windows and Linux</li>
 </ol>
-<p>The saved file is byte-identical to the original for any untouched data, making it safe to round-trip existing <code>.unt</code> files.</p>
+<p><strong>With hardware connected:</strong> the file holds the presets as <strong>stored on the device</strong>, exactly as the manufacturer's editor writes them. Every user slot with a real name is saved; slots still named "Default Preset" have never been stored and are left empty. The presets are read without switching to them, so the audio does not change. The read takes a moment per stored preset, during which the mouse pointer shows a busy cursor and the level meters pause. Save is available once the device is connected and its configuration has been read.</p>
+<p><strong>In offline mode:</strong> the file holds the 30 virtual preset slots. A file you loaded is saved back byte-identical for any data you did not change, so it is safe to round-trip existing <code>.unt</code> files.</p>
+<p><strong>Unsaved changes.</strong> A <code>.unt</code> file holds stored presets, so edits you have not yet stored to a slot are normally not in it, as with the original editor. When the current settings differ from the stored version of the active preset, the application asks:</p>
+<table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save stored version</strong></td>
+<td>Save the presets as stored, like the original editor. Your unsaved edits are not in the file</td>
+</tr>
+<tr>
+<td><strong>Include current changes</strong></td>
+<td>Write the current settings into the active preset's slot in the file. The device itself is not changed; use <strong>Store</strong> for that</td>
+</tr>
+<tr>
+<td><strong>Cancel</strong></td>
+<td>Save nothing</td>
+</tr>
+</tbody>
+</table>
+<p>The test tone generator is not counted as a change. When F00 (the factory preset) is active there is no prompt, because F00 is not one of the file's slots.</p>
+<blockquote>
+<p><strong>The file contains the device PIN.</strong> The <code>.unt</code> header carries the device's 4-character lock PIN in plain text, as in files saved by the original editor. Anyone who has the file can read it, so keep that in mind before sharing a file.</p>
+</blockquote>
 <hr />
 <h2 id="menu">Menu<a class="headerlink" href="#menu" title="Permanent link">&para;</a></h2>
 <p>Click the <strong>menu button</strong> (≡) in the top-right corner of the window:</p>
@@ -6149,7 +6182,7 @@
 </tr>
 <tr>
 <td><strong>Save .unt file...</strong></td>
-<td>Export preset data to a <code>.unt</code> file (offline mode only)</td>
+<td>Save the presets to a <code>.unt</code> file: the device's stored presets when connected, the virtual slots when offline (see <a href="#saving-a-unt-file">Saving a .unt File</a>)</td>
 </tr>
 <tr>
 <td><strong>Channel linking...</strong></td>

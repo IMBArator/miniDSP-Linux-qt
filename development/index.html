@@ -839,6 +839,8 @@
       
         
       
+        
+      
     
     
     
@@ -2053,6 +2055,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../decisions/0033-save-unt-files-from-the-stored-presets-like-the-original-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save .unt files from the stored presets, like the original editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../decisions/adr-template/" class="md-nav__link">
         
   
@@ -2159,8 +2196,6 @@
   
     
     
-      
-        
       
         
       
@@ -2469,42 +2504,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/minidspqt/unt_loader/" class="md-nav__link">
+      <a href="../api/minidspqt/unt_files/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    minidspqt.unt_loader
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/minidspqt/unt_writer/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    minidspqt.unt_writer
+    minidspqt.unt_files
   
 
     
@@ -2590,7 +2597,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2612,14 +2619,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11" id="__nav_6_1_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2947,7 +2954,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2969,14 +2976,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12_11" id="__nav_6_1_12_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11_11" id="__nav_6_1_11_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_12_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_11_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3270,7 +3277,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3292,14 +3299,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_13" id="__nav_6_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3933,6 +3940,11 @@ calibration come from the protocol library — <code>LEVEL_CLIP_LEVEL24</code>,
 <code>clipping</code> payload keys — and need its <strong>v1.4.0 or newer</strong>, which is the pinned
 release. <code>minidspqt/levels.py</code> is the single import point for those symbols (see
 <a href="../decisions/0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample/">ADR-0032</a>).</p>
+<p>Reading and writing <code>.unt</code> files goes through the protocol library's
+<code>minidsp.unt</code> module (<code>UntFile</code>), and saving while connected uses
+<code>DSPmini.export_unt()</code>. Both need the library's <strong>v1.5.0 or newer</strong>, which is the
+pinned release (see the amendment in
+<a href="../decisions/0016-preserve-unknown-unt-bytes-with-field-level-overwrites/">ADR-0016</a>).</p>
 <h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Kernel HID driver — communicates via <code>/dev/hidraw*</code></li>
@@ -4117,7 +4129,7 @@ out on a Windows machine — never publish it.</p>
 <p>On Linux every build verifies its own output: the interpreter search-path check
 (every stdlib <code>.pyd</code>, the stdlib zip and <code>site-packages</code> reachable from the
 <code>._pth</code>), the DLL import-closure check after pruning, and a layout check of the zip (launcher, interpreter, <code>._pth</code>,
-<code>blank.unt</code>, the hidapi extension, Qt's <code>qwindows.dll</code>, the project's
+a stylesheet from the package data, the hidapi extension, Qt's <code>qwindows.dll</code>, the project's
 <code>.dist-info</code> — and none of the pruned trees). If <code>wine</code> is on <code>PATH</code>, the script
 additionally runs <code>--help</code> and boots the offline mode under Qt's offscreen
 platform, the same two-pass smoke test the AppImage gets. That step is optional
@@ -4180,65 +4192,62 @@ is the deliberate exception for a Linux-only release. A Windows build made with
 <a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>  model.py                     Typed device state (DeviceState dataclass)
 <a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>  device_thread.py             QThread: poll loop, command coalescing, preset queue
 <a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>  virtual_dsp.py               In-RAM DSP implementing DSPmini interface
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>  blank_seed.py                Bundled blank.unt seed helper (shared by app + runtime mode switch)
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>  unt_loader.py                Parse .unt files (single-slot and all-slots)
-<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>  unt_writer.py                Write .unt files with field-level overwrites
-<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>  views/
-<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>    main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
-<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>    home_view.py               8 channel strips + routing matrix + level meters
-<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>    preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
-<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>    device_pin_dialog.py       UnlockPinDialog + SetPinDialog for the device-lock feature
-<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>    channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
-<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>    channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
-<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>    detail_view.py             Per-channel detail view with feature panels and routed meters
-<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>    panels/
-<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>      gate_panel.py            Gate parameters (threshold, attack, hold, release) + transfer graph
-<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>      peq_panel.py             7 bands × (Type / Freq / Gain / Q / Byp) + channel bypass + summed-response graph
-<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>      xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
-<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>      compressor_panel.py      Threshold / Ratio (combo) / Knee / Attack / Release + transfer-function graph
-<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>      delay_panel.py           Single edit knob for the displayed output + overview graph of all four delays
-<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a>      _slave_lock.py           Shared &quot;Linked to &lt;master&gt; — read-only&quot; banner used by every feature panel
-<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a>      _overlay_controls.py     Shared &quot;show other outputs&quot; overlay checkboxes for the PEQ + Xover graphs
-<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a>      placeholder_panel.py     Shown when the active feature is N/A for the selected channel
-<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a>  widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
-<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a>  resources/                   blank.unt template, icons, style_dark.qss + style_light.qss (selected by ThemeManager)
-<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a>
-<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a>tests/                         pytest suite
-<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a>  conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
-<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a>  test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
-<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a>  test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
-<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a>  test_virtual_dsp.py          State persistence, load/store round-trip
-<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a>  test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
-<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a>  test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
-<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a>  test_param_knob.py           Construction, value API, clamping, wheel/keyboard/drag interaction, highlight, text input
-<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a>  test_peq_panel.py            Atomic emit, silent setters, peq_active state, per-type Q clamping
-<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a>  test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
-<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a>  test_overlay_controls.py     &quot;Show other outputs&quot; overlay checkboxes: reset-on-switch, graph push, always-enabled
-<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a>  test_freq_response_graph_overlay.py  Overlay storage + shared response-polyline helper (flat vs active)
-<a id="__codelineno-17-43" name="__codelineno-17-43" href="#__codelineno-17-43"></a>  test_detail_view_overlay.py  Sibling-output overlay sources pushed to both output graphs
-<a id="__codelineno-17-44" name="__codelineno-17-44" href="#__codelineno-17-44"></a>  test_about_dialog.py         About HTML: app version always, device model/firmware when connected
-<a id="__codelineno-17-45" name="__codelineno-17-45" href="#__codelineno-17-45"></a>  test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
-<a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a>  test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
-<a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a>  test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock
-<a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a>  test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
-<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a>  test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
-<a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a>  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
-<a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a>  test_unt_loader.py           .unt parsing and validation
-<a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a>  test_unt_writer.py           Byte-identical round-trip, field-level edits
-<a id="__codelineno-17-53" name="__codelineno-17-53" href="#__codelineno-17-53"></a>  test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
-<a id="__codelineno-17-54" name="__codelineno-17-54" href="#__codelineno-17-54"></a>  test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
-<a id="__codelineno-17-55" name="__codelineno-17-55" href="#__codelineno-17-55"></a>
-<a id="__codelineno-17-56" name="__codelineno-17-56" href="#__codelineno-17-56"></a>docs/                          MkDocs Material site source
-<a id="__codelineno-17-57" name="__codelineno-17-57" href="#__codelineno-17-57"></a>  index.md                     Transcludes README at the site root
-<a id="__codelineno-17-58" name="__codelineno-17-58" href="#__codelineno-17-58"></a>  user-guide.md                End-user documentation
-<a id="__codelineno-17-59" name="__codelineno-17-59" href="#__codelineno-17-59"></a>  development.md               This page — contributor setup, testing, packaging, release
-<a id="__codelineno-17-60" name="__codelineno-17-60" href="#__codelineno-17-60"></a>  changelog.md                 Transcludes CHANGELOG.md
-<a id="__codelineno-17-61" name="__codelineno-17-61" href="#__codelineno-17-61"></a>  concepts.md                  UI concepts page (references concept-art/)
-<a id="__codelineno-17-62" name="__codelineno-17-62" href="#__codelineno-17-62"></a>  decisions/                   Architecture decision records (MADR) + adr-template.md
-<a id="__codelineno-17-63" name="__codelineno-17-63" href="#__codelineno-17-63"></a>  concept-art/                 UI mockups (.excalidraw + .png)
-<a id="__codelineno-17-64" name="__codelineno-17-64" href="#__codelineno-17-64"></a>  img/                         Screenshots and recordings
-<a id="__codelineno-17-65" name="__codelineno-17-65" href="#__codelineno-17-65"></a>  gen_ref_pages.py             Builds the mkdocstrings API reference
-<a id="__codelineno-17-66" name="__codelineno-17-66" href="#__codelineno-17-66"></a>  hooks.py                     Post-processes the transcluded README
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>  blank_seed.py                Seeds a VirtualDSP with the library&#39;s empty .unt file (shared by app + runtime mode switch)
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>  views/
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>    main_window.py             Main window: owns thread, state, Recall/Store, channel-linking apply flow
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>    home_view.py               8 channel strips + routing matrix + level meters
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>    preset_picker.py           Recall/Store preset dialog (F00 + 30 user slots)
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>    device_pin_dialog.py       UnlockPinDialog + SetPinDialog for the device-lock feature
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>    channel_linking_dialog.py  Triangular radio matrices for input/output channel linking
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a>    channel_strip.py           ChannelStrip + InputChannelStrip / OutputChannelStrip
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>    detail_view.py             Per-channel detail view with feature panels and routed meters
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>    panels/
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>      gate_panel.py            Gate parameters (threshold, attack, hold, release) + transfer graph
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>      peq_panel.py             7 bands × (Type / Freq / Gain / Q / Byp) + channel bypass + summed-response graph
+<a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>      xover_panel.py           Hi-Pass / Lo-Pass crossover (freq + slope + bypass) + shared response graph
+<a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>      compressor_panel.py      Threshold / Ratio (combo) / Knee / Attack / Release + transfer-function graph
+<a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>      delay_panel.py           Single edit knob for the displayed output + overview graph of all four delays
+<a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>      _slave_lock.py           Shared &quot;Linked to &lt;master&gt; — read-only&quot; banner used by every feature panel
+<a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>      _overlay_controls.py     Shared &quot;show other outputs&quot; overlay checkboxes for the PEQ + Xover graphs
+<a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a>      placeholder_panel.py     Shown when the active feature is N/A for the selected channel
+<a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a>  widgets/                     Custom Qt widgets (CompressorGraph, DelayGraph, FreqResponseGraph, GateGraph, LedIndicator, LevelMeter, ParamKnob, PEQGraph, RoutingMatrix, ToggleButton)
+<a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a>  resources/                   Icons, style_dark.qss + style_light.qss (selected by ThemeManager)
+<a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a>
+<a id="__codelineno-17-29" name="__codelineno-17-29" href="#__codelineno-17-29"></a>tests/                         pytest suite
+<a id="__codelineno-17-30" name="__codelineno-17-30" href="#__codelineno-17-30"></a>  conftest.py                  FakeDSPmini test fixture (extends VirtualDSP)
+<a id="__codelineno-17-31" name="__codelineno-17-31" href="#__codelineno-17-31"></a>  test_device_thread.py        Command coalescing, queue behaviour, prepare_link / read_config sequencing
+<a id="__codelineno-17-32" name="__codelineno-17-32" href="#__codelineno-17-32"></a>  test_model.py                DeviceState.from_config parsing, comp_active / delay_active / linked-mutator helpers
+<a id="__codelineno-17-33" name="__codelineno-17-33" href="#__codelineno-17-33"></a>  test_virtual_dsp.py          State persistence, load/store round-trip
+<a id="__codelineno-17-34" name="__codelineno-17-34" href="#__codelineno-17-34"></a>  test_preset_picker.py        Dialog behaviour (disabled slots, F00, store)
+<a id="__codelineno-17-35" name="__codelineno-17-35" href="#__codelineno-17-35"></a>  test_routing_matrix.py       Drag-to-connect, double-click-disconnect, hit detection
+<a id="__codelineno-17-36" name="__codelineno-17-36" href="#__codelineno-17-36"></a>  test_param_knob.py           Construction, value API, clamping, wheel/keyboard/drag interaction, highlight, text input
+<a id="__codelineno-17-37" name="__codelineno-17-37" href="#__codelineno-17-37"></a>  test_peq_panel.py            Atomic emit, silent setters, peq_active state, per-type Q clamping
+<a id="__codelineno-17-38" name="__codelineno-17-38" href="#__codelineno-17-38"></a>  test_xover_panel.py          Crossover bypass/slope behavior, biquad math, xover_active indicator
+<a id="__codelineno-17-39" name="__codelineno-17-39" href="#__codelineno-17-39"></a>  test_overlay_controls.py     &quot;Show other outputs&quot; overlay checkboxes: reset-on-switch, graph push, always-enabled
+<a id="__codelineno-17-40" name="__codelineno-17-40" href="#__codelineno-17-40"></a>  test_freq_response_graph_overlay.py  Overlay storage + shared response-polyline helper (flat vs active)
+<a id="__codelineno-17-41" name="__codelineno-17-41" href="#__codelineno-17-41"></a>  test_detail_view_overlay.py  Sibling-output overlay sources pushed to both output graphs
+<a id="__codelineno-17-42" name="__codelineno-17-42" href="#__codelineno-17-42"></a>  test_about_dialog.py         About HTML: app version always, device model/firmware when connected
+<a id="__codelineno-17-43" name="__codelineno-17-43" href="#__codelineno-17-43"></a>  test_compressor_panel.py     Combined 5-value emit, ratio combo contents, silent setters, slave lock, graph wiring
+<a id="__codelineno-17-44" name="__codelineno-17-44" href="#__codelineno-17-44"></a>  test_compressor_graph.py     Curve math (baseline, slope, Limit clamp, knee smoothing), parameter binding
+<a id="__codelineno-17-45" name="__codelineno-17-45" href="#__codelineno-17-45"></a>  test_delay_panel.py          Knob emit, silent setters, set_active_channel retarget, ms/samples parser, slave lock
+<a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a>  test_delay_graph.py          set_delays clamping, active row, channel names, dynamic-axis snap, tick generation
+<a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a>  test_channel_linking_dialog.py  Flag computation, enabled-state rules, custom channel-name handling
+<a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a>  test_channel_linking_sync.py    Master → slave fan-out for gate / PEQ / xover / compressor / delay / gain / mute, link banner + slave-lock plumbing
+<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a>  test_unt_files.py            Offline .unt round trips through VirtualDSP: byte-identical export, edits confined to their slot, F00
+<a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a>  test_device_pin_dialog.py    UnlockPinDialog + SetPinDialog interaction (validator, in-flight gate, result handling)
+<a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a>  test_virtual_dsp_lock.py     VirtualDSP lock/unlock round-trip (submit_pin, set_lock_pin, DeviceLockedError)
+<a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a>
+<a id="__codelineno-17-53" name="__codelineno-17-53" href="#__codelineno-17-53"></a>docs/                          MkDocs Material site source
+<a id="__codelineno-17-54" name="__codelineno-17-54" href="#__codelineno-17-54"></a>  index.md                     Transcludes README at the site root
+<a id="__codelineno-17-55" name="__codelineno-17-55" href="#__codelineno-17-55"></a>  user-guide.md                End-user documentation
+<a id="__codelineno-17-56" name="__codelineno-17-56" href="#__codelineno-17-56"></a>  development.md               This page — contributor setup, testing, packaging, release
+<a id="__codelineno-17-57" name="__codelineno-17-57" href="#__codelineno-17-57"></a>  changelog.md                 Transcludes CHANGELOG.md
+<a id="__codelineno-17-58" name="__codelineno-17-58" href="#__codelineno-17-58"></a>  concepts.md                  UI concepts page (references concept-art/)
+<a id="__codelineno-17-59" name="__codelineno-17-59" href="#__codelineno-17-59"></a>  decisions/                   Architecture decision records (MADR) + adr-template.md
+<a id="__codelineno-17-60" name="__codelineno-17-60" href="#__codelineno-17-60"></a>  concept-art/                 UI mockups (.excalidraw + .png)
+<a id="__codelineno-17-61" name="__codelineno-17-61" href="#__codelineno-17-61"></a>  img/                         Screenshots and recordings
+<a id="__codelineno-17-62" name="__codelineno-17-62" href="#__codelineno-17-62"></a>  gen_ref_pages.py             Builds the mkdocstrings API reference
+<a id="__codelineno-17-63" name="__codelineno-17-63" href="#__codelineno-17-63"></a>  hooks.py                     Post-processes the transcluded README
 </code></pre></div>
 <h2 id="architecture-decisions">Architecture decisions<a class="headerlink" href="#architecture-decisions" title="Permanent link">&para;</a></h2>
 <p>Design decisions with lasting consequences are recorded as

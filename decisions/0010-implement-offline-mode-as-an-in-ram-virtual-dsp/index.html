@@ -588,6 +588,8 @@
       
         
       
+        
+      
     
     
     
@@ -2003,6 +2005,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../0033-save-unt-files-from-the-stored-presets-like-the-original-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save .unt files from the stored presets, like the original editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../adr-template/" class="md-nav__link">
         
   
@@ -2109,8 +2146,6 @@
   
     
     
-      
-        
       
         
       
@@ -2419,42 +2454,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/minidspqt/unt_loader/" class="md-nav__link">
+      <a href="../../api/minidspqt/unt_files/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    minidspqt.unt_loader
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/minidspqt/unt_writer/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    minidspqt.unt_writer
+    minidspqt.unt_files
   
 
     
@@ -2540,7 +2547,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2562,14 +2569,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11" id="__nav_6_1_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2897,7 +2904,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2919,14 +2926,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12_11" id="__nav_6_1_12_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11_11" id="__nav_6_1_11_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_12_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_11_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3220,7 +3227,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3242,14 +3249,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_13" id="__nav_6_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3929,6 +3936,14 @@ application itself rather than asserted separately.</p>
   semantics; <code>7a1eb01</code> — runtime mode switching</li>
 <li>Related: ADR-0005 (the injection seam), ADR-0009 (fan-out parity),
   ADR-0016 (<code>.unt</code> persistence), ADR-0025 (test fixtures)</li>
+<li>Amended when <code>.unt</code> handling moved to the protocol library's <code>minidsp.unt</code>:
+  the statement above that "the <code>.unt</code> format has no field for" the lock state
+  is wrong. The header carries the 4-character PIN at offsets 0x1D–0x20, and the
+  original editor fills it from the device (decoded by the library from a USB
+  capture of the editor's save). The decision itself stands: <code>VirtualDSP</code> keeps
+  its lock state out of the config dict, and an offline export writes whatever
+  PIN the loaded file (or the library's empty file) already had.
+  <code>VirtualDSP.load_from_unt</code> / <code>export_unt</code> now take and return a <code>UntFile</code>.</li>
 </ul>
 
 

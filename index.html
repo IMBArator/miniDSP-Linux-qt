@@ -974,6 +974,8 @@
       
         
       
+        
+      
     
     
     
@@ -2188,6 +2190,41 @@
   
   
     <li class="md-nav__item">
+      <a href="decisions/0033-save-unt-files-from-the-stored-presets-like-the-original-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save .unt files from the stored presets, like the original editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="decisions/adr-template/" class="md-nav__link">
         
   
@@ -2294,8 +2331,6 @@
   
     
     
-      
-        
       
         
       
@@ -2604,42 +2639,14 @@
   
   
     <li class="md-nav__item">
-      <a href="api/minidspqt/unt_loader/" class="md-nav__link">
+      <a href="api/minidspqt/unt_files/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    minidspqt.unt_loader
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="api/minidspqt/unt_writer/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    minidspqt.unt_writer
+    minidspqt.unt_files
   
 
     
@@ -2725,7 +2732,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2747,14 +2754,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11" id="__nav_6_1_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3082,7 +3089,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3104,14 +3111,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12_11" id="__nav_6_1_12_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11_11" id="__nav_6_1_11_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_12_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_11_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3405,7 +3412,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3427,14 +3434,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_13" id="__nav_6_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4317,13 +4324,14 @@
 <li><strong>Load and save .unt files</strong> — round-trip with the manufacturer file format</li>
 <li>Online → Offline carries the live device state into the virtual DSP so you keep editing what was on the device</li>
 <li>Offline → Online prompts before discarding offline edits (save your <code>.unt</code> first to keep them)</li>
-<li>Cold-launching offline (no live config seen yet) seeds from the bundled <code>blank.unt</code> template</li>
+<li>Cold-launching offline (no live config seen yet) starts from an empty <code>.unt</code> file with factory defaults</li>
 </ul>
 <h3 id="unt-file-support">.unt file support<a class="headerlink" href="#unt-file-support" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Load</strong> manufacturer .unt files — parses all 30 preset slots</li>
 <li><strong>Save</strong> .unt files with byte-identical round-trip for untouched data</li>
-<li>Preserves unknown bytes when editing individual fields</li>
+<li><strong>Save while connected</strong> — reads the device's stored presets the way the manufacturer's editor does, without switching presets, and asks whether unsaved edits of the active preset should go into the file</li>
+<li>Preserves unknown bytes when editing individual fields; the file format itself is handled by the protocol library (<code>minidsp.unt</code>)</li>
 </ul>
 <h3 id="test-tone-generator">Test tone generator<a class="headerlink" href="#test-tone-generator" title="Permanent link">&para;</a></h3>
 <ul>

@@ -586,6 +586,8 @@
       
         
       
+        
+      
     
     
     
@@ -1800,6 +1802,41 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../decisions/0033-save-unt-files-from-the-stored-presets-like-the-original-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save .unt files from the stored presets, like the original editor
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--accepted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../decisions/adr-template/" class="md-nav__link">
         
   
@@ -1913,8 +1950,6 @@
   
     
     
-      
-        
       
         
       
@@ -2301,42 +2336,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../unt_loader/" class="md-nav__link">
+      <a href="../unt_files/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    minidspqt.unt_loader
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../unt_writer/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    minidspqt.unt_writer
+    minidspqt.unt_files
   
 
     
@@ -2422,7 +2429,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2444,14 +2451,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11" id="__nav_6_1_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -2779,7 +2786,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12_11" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_11_11" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -2801,14 +2808,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_12_11" id="__nav_6_1_12_11_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_11_11" id="__nav_6_1_11_11_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_12_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_12_11">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_6_1_11_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_11_11">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3102,7 +3109,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1_12" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -3124,14 +3131,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_6_1_13" id="__nav_6_1_13_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_6_1_12" id="__nav_6_1_12_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1_13">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_1_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_1_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -3585,7 +3592,7 @@
 
     <div class="doc doc-contents first">
 
-        <p>Shared helper for seeding a :class:<code>VirtualDSP</code> from the bundled blank.unt.</p>
+        <p>Shared helper for seeding a :class:<code>VirtualDSP</code> with an empty .unt file.</p>
 <p>Both the application entry point (<code>app.run</code> in offline-on-launch mode) and
 <code>MainWindow</code> (on a cold runtime switch to offline before any live config has
 arrived) need an identical "fresh VirtualDSP with sane defaults" recipe.</p>
@@ -3625,10 +3632,10 @@ arrived) need an identical "fresh VirtualDSP with sane defaults" recipe.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Load the bundled <code>blank.unt</code> template into <code>dsp</code>.</p>
-<p>No-op if the template is missing from the install (e.g. running from a
-source tree without resources packaged) — the caller still gets a usable
-VirtualDSP, just with factory defaults instead of the curated blank.</p>
+        <p>Load the protocol library's empty .unt file into <code>dsp</code>.</p>
+<p><code>UntFile.blank()</code> is a file with all 30 user slots unused and U01
+active, so the working configuration stays at the factory defaults
+(ADR-0014). Its header becomes the byte base for a later save.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3652,8 +3659,8 @@ VirtualDSP, just with factory defaults instead of the curated blank.</p>
             <td>
               <div class="doc-md-description">
                 <p>VirtualDSP instance to seed in place. After this call its 30
-user slots, preset names and active-slot pointer match the
-bundled <code>blank.unt</code> template.</p>
+user slots are empty, its preset names are blank and U01 is
+the active slot.</p>
               </div>
             </td>
             <td>
@@ -3666,7 +3673,10 @@ bundled <code>blank.unt</code> template.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>minidspqt/blank_seed.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-21">21</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
 <span class="normal"><a href="#__codelineno-0-22">22</a></span>
 <span class="normal"><a href="#__codelineno-0-23">23</a></span>
 <span class="normal"><a href="#__codelineno-0-24">24</a></span>
@@ -3675,28 +3685,19 @@ bundled <code>blank.unt</code> template.</p>
 <span class="normal"><a href="#__codelineno-0-27">27</a></span>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
 <span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">def</span><span class="w"> </span><span class="nf">seed_virtual_dsp_from_blank</span><span class="p">(</span><span class="n">dsp</span><span class="p">:</span> <span class="n">VirtualDSP</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the bundled ``blank.unt`` template into ``dsp``.</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="sd">    No-op if the template is missing from the install (e.g. running from a</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    source tree without resources packaged) — the caller still gets a usable</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    VirtualDSP, just with factory defaults instead of the curated blank.</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">        dsp: VirtualDSP instance to seed in place. After this call its 30</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="sd">            user slots, preset names and active-slot pointer match the</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">            bundled ``blank.unt`` template.</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">BLANK_UNT</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="k">return</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>    <span class="n">slots</span><span class="p">,</span> <span class="n">active_slot</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">raw</span> <span class="o">=</span> <span class="n">load_unt_all_slots</span><span class="p">(</span><span class="n">BLANK_UNT</span><span class="p">)</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">dsp</span><span class="o">.</span><span class="n">load_from_unt_bytes</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">slots</span><span class="p">,</span> <span class="n">active_slot</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">def</span><span class="w"> </span><span class="nf">seed_virtual_dsp_from_blank</span><span class="p">(</span><span class="n">dsp</span><span class="p">:</span> <span class="n">VirtualDSP</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Load the protocol library&#39;s empty .unt file into ``dsp``.</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="sd">    ``UntFile.blank()`` is a file with all 30 user slots unused and U01</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    active, so the working configuration stays at the factory defaults</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    (ADR-0014). Its header becomes the byte base for a later save.</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">        dsp: VirtualDSP instance to seed in place. After this call its 30</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">            user slots are empty, its preset names are blank and U01 is</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">            the active slot.</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="n">dsp</span><span class="o">.</span><span class="n">load_from_unt</span><span class="p">(</span><span class="n">UntFile</span><span class="o">.</span><span class="n">blank</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
