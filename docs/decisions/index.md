@@ -18,6 +18,7 @@ a line to the relevant table below.
 
 | ADR | Decision |
 |-----|----------|
+| [0000](0000-use-markdown-any-decision-records.md) | Record architectural decisions as MADR files |
 | [0001](0001-build-on-the-minidsp-linux-protocol-library.md) | Build on the miniDSP-Linux protocol library instead of speaking USB HID directly |
 | [0002](0002-use-pyside6-essentials-as-the-gui-toolkit.md) | Use PySide6-Essentials as the GUI toolkit |
 | [0003](0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md) | Pin the protocol library to a published release wheel via a PEP 508 direct URL |
@@ -71,7 +72,6 @@ a line to the relevant table below.
 
 | ADR | Decision |
 |-----|----------|
-| [0000](0000-use-markdown-any-decision-records.md) | Record architectural decisions as MADR files |
 | [0026](0026-manage-the-project-with-uv-hatchling-ruff-and-make.md) | Manage the project with uv, Hatchling, ruff, and a Makefile |
 | [0027](0027-distribute-a-self-contained-appimage-with-bundled-cpython.md) | Distribute a self-contained AppImage with a bundled CPython |
 | [0028](0028-drive-releases-from-conventional-commits.md) | Drive changelog and releases from Conventional Commits |
