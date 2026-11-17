@@ -21,6 +21,12 @@ Release       9 -- 2999   10 .. 3000 ms         ms = raw + 1
 
 from __future__ import annotations
 
+from minidsp.protocol import (
+    COMP_RATIO_NAMES,
+    comp_attack_to_ms,
+    comp_release_to_ms,
+    comp_threshold_to_db,
+)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -33,16 +39,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import (
-    COMP_RATIO_NAMES,
-    comp_attack_to_ms,
-    comp_release_to_ms,
-    comp_threshold_to_db,
-)
-
+from ...defaults import default_compressor_state
 from ...widgets import CompressorGraph, ParamKnob
 from ._slave_lock import apply_link_state, install_link_banner
-from ...defaults import default_compressor_state
 
 
 def _fmt_threshold(raw: int) -> str:

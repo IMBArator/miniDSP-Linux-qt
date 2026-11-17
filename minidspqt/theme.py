@@ -386,12 +386,14 @@ class ThemeManager(QObject):
 
     # ----------------- internals -----------------
 
-    def _on_system_scheme_changed(self, scheme: Qt.ColorScheme) -> None:  # noqa: ARG002
+    def _on_system_scheme_changed(self, scheme: Qt.ColorScheme) -> None:
         # Re-resolve from scratch — the signal arg can be Unknown on some
         # platforms, but ``styleHints().colorScheme()`` is authoritative.
         self._reapply()
 
     def _push_preference_to_qt(self, pref: ThemePreference) -> None:
+        # Only reached once bind_to_app has stored the application.
+        assert self._app is not None
         sh = self._app.styleHints()
         if pref == "system":
             sh.unsetColorScheme()
@@ -437,7 +439,7 @@ class ThemeManager(QObject):
         s = QSettings(_QSETTINGS_ORG, _QSETTINGS_APP)
         raw = s.value(_QSETTINGS_KEY, "system")
         if isinstance(raw, str) and raw in ("system", "light", "dark"):
-            return raw  # type: ignore[return-value]
+            return raw
         return "system"
 
     def _save_preference(self, pref: ThemePreference) -> None:

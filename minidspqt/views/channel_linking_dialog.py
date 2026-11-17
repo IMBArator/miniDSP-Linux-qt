@@ -25,6 +25,7 @@ device side snap the UI back instead of leaving stale optimistic state.
 
 from __future__ import annotations
 
+from minidsp.protocol import INPUT_CHANNEL_NAMES, OUTPUT_CHANNEL_NAMES
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -37,8 +38,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from minidsp.protocol import INPUT_CHANNEL_NAMES, OUTPUT_CHANNEL_NAMES
 
 from ..model import DeviceState
 
@@ -318,7 +317,7 @@ class ChannelLinkingDialog(QDialog):
         # Per-row status labels under the matrix.  Sizing is in QSS;
         # colour is left to Qt's WindowText palette role so it stays
         # readable in both light and dark themes.
-        for row in range(4):
+        for _ in range(4):
             lbl = QLabel("")
             lbl.setObjectName("linkingStatusLabel")
             outer.addWidget(lbl)

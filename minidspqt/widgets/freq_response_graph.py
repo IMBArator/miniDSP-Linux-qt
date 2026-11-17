@@ -18,10 +18,6 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
-from PySide6.QtWidgets import QWidget
-
 from minidsp.protocol import (
     PEQ_TYPE_ALLPASS1,
     PEQ_TYPE_ALLPASS2,
@@ -36,6 +32,9 @@ from minidsp.protocol import (
     peq_raw_to_gain,
     peq_raw_to_q,
 )
+from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtWidgets import QWidget
 
 from ..model import PEQBand
 from ..theme import theme_manager

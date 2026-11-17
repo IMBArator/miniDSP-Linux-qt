@@ -19,6 +19,7 @@ and flips the local radio to Off without prompting.
 
 from __future__ import annotations
 
+from minidsp.protocol import TONE_OFF, TONE_PINK, TONE_SINE, TONE_WHITE
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QButtonGroup,
@@ -33,8 +34,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from minidsp.protocol import TONE_OFF, TONE_PINK, TONE_SINE, TONE_WHITE
 
 from ..model import DeviceState
 
@@ -126,7 +125,7 @@ class TestToneDialog(QDialog):
         wave_row = QHBoxLayout(wave_group)
         self._wave_group = QButtonGroup(self)
         self._wave_radios: list[QRadioButton] = []
-        for mode, label in zip(_MODES, _MODE_LABELS):
+        for mode, label in zip(_MODES, _MODE_LABELS, strict=True):
             rb = QRadioButton(label)
             self._wave_group.addButton(rb, mode)
             wave_row.addWidget(rb)
@@ -195,7 +194,7 @@ class TestToneDialog(QDialog):
             rb.blockSignals(True)
         self._freq_spin.blockSignals(True)
         try:
-            for rb_mode, rb in zip(_MODES, self._wave_radios):
+            for rb_mode, rb in zip(_MODES, self._wave_radios, strict=True):
                 rb.setChecked(rb_mode == mode)
             self._freq_spin.setValue(freq)
             self._freq_label.setText(_FREQ_LABELS[freq])
@@ -255,7 +254,7 @@ class TestToneDialog(QDialog):
         # window's _disable_test_tone handler will send the command and
         # update self._state.test_tone; the next refresh() (triggered by
         # _sync_test_tone_dialog) confirms or corrects this optimistic state.
-        for rb_mode, rb in zip(_MODES, self._wave_radios):
+        for rb_mode, rb in zip(_MODES, self._wave_radios, strict=True):
             rb.blockSignals(True)
             rb.setChecked(rb_mode == TONE_OFF)
             rb.blockSignals(False)

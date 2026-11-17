@@ -189,7 +189,7 @@ class DelayGraph(QWidget):
 
     # ------------------------------------------------------------------ #
 
-    def paintEvent(self, event) -> None:  # noqa: ARG002 — Qt signature
+    def paintEvent(self, event) -> None:
         p = QPainter()
         if not p.begin(self):
             return

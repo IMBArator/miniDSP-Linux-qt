@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import copy
 import logging
-from importlib.metadata import PackageNotFoundError, version as _app_version
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _app_version
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+from minidsp.unt import UNT_SLOT_COUNT, UntFile, UntParseError
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QActionGroup, QIcon
 from PySide6.QtWidgets import (
@@ -19,8 +22,6 @@ from PySide6.QtWidgets import (
     QStackedWidget,
 )
 
-from minidsp.unt import UNT_SLOT_COUNT, UntFile, UntParseError
-
 from .. import __version__
 from ..blank_seed import seed_virtual_dsp_from_blank
 from ..device_thread import DeviceThread
@@ -32,7 +33,7 @@ from ..model import (
     PEQBand,
     TestToneState,
 )
-from ..theme import theme_manager
+from ..theme import ThemePreference, theme_manager
 from ..unt_files import (
     UNT_DEFAULT_SUFFIX,
     UNT_DIALOG_FILTERS,
@@ -47,6 +48,9 @@ from .device_pin_dialog import SetPinDialog, UnlockPinDialog
 from .home_view import HomeView
 from .preset_picker import PresetPickerDialog
 from .test_tone_dialog import TestToneDialog
+
+if TYPE_CHECKING:
+    from minidsp.device import DSPmini
 
 log = logging.getLogger(__name__)
 
@@ -74,7 +78,7 @@ class MainWindow(QMainWindow):
     mirror that ``MainWindow`` mutates on each device-driven update.
     """
 
-    def __init__(self, *, dsp_instance: object | None = None, offline: bool = False) -> None:
+    def __init__(self, *, dsp_instance: DSPmini | VirtualDSP | None = None, offline: bool = False) -> None:
         """Build the main window and start the device worker thread.
 
         Args:
@@ -544,7 +548,7 @@ class MainWindow(QMainWindow):
             active_in_list,
             "recall",
         )
-        if dlg.exec() == QDialog.Accepted:
+        if dlg.exec() == QDialog.DialogCode.Accepted:
             slot = dlg.chosen_slot
             self._thread.request_load_preset(slot)
 
@@ -566,7 +570,7 @@ class MainWindow(QMainWindow):
             "store",
             current_name,
         )
-        if dlg.exec() == QDialog.Accepted:
+        if dlg.exec() == QDialog.DialogCode.Accepted:
             slot = dlg.chosen_slot
             reply = QMessageBox.question(
                 self,
@@ -1101,7 +1105,7 @@ class MainWindow(QMainWindow):
         group = QActionGroup(self)
         group.setExclusive(True)
 
-        def _add(label: str, pref: str) -> None:
+        def _add(label: str, pref: ThemePreference) -> None:
             act = theme_menu.addAction(label)
             act.setCheckable(True)
             act.setChecked(theme_manager.preference == pref)
@@ -1281,7 +1285,7 @@ class MainWindow(QMainWindow):
             self._reconnect_action.setEnabled(False)
         self._sync_mode_actions()
 
-    def _create_and_start_thread(self, dsp_instance: object | None) -> None:
+    def _create_and_start_thread(self, dsp_instance: DSPmini | VirtualDSP | None) -> None:
         """Build a fresh :class:`DeviceThread`, wire every signal, and start.
 
         Single source of truth for thread construction — used both at startup

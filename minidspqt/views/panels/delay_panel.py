@@ -31,9 +31,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...defaults import default_delay_samples
 from ...widgets import DelayGraph, ParamKnob
 from ._slave_lock import apply_link_state, install_link_banner
-from ...defaults import default_delay_samples
 
 _SAMPLES_MAX = 32640
 _SAMPLES_PER_MS = 48.0

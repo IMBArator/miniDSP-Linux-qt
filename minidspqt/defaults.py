@@ -11,6 +11,7 @@ output 1 for outputs); the t.racks DSP 4x4 Mini ships with identical
 defaults across all four inputs and all four outputs, so picking the
 first slot is sufficient.
 """
+from __future__ import annotations
 
 from functools import lru_cache
 

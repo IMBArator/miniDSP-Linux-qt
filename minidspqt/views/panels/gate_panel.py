@@ -19,6 +19,7 @@ Release       0 -- 2999   1 .. 3000 ms         ms = raw + 1
 
 from __future__ import annotations
 
+from minidsp.protocol import gate_threshold_to_db, gate_time_to_ms
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -30,11 +31,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import gate_threshold_to_db, gate_time_to_ms
-
+from ...defaults import default_gate_state
 from ...widgets import GateGraph, ParamKnob
 from ._slave_lock import apply_link_state, install_link_banner
-from ...defaults import default_gate_state
 
 
 def _fmt_threshold(raw: int) -> str:
@@ -125,7 +124,7 @@ class GatePanel(QWidget):
 
         factory_defaults = default_gate_state()
 
-        self._threshold = self._make_knob(
+        self._threshold, self._knob_threshold = self._make_knob(
             "Threshold",
             minimum=0,
             maximum=180,
@@ -133,7 +132,7 @@ class GatePanel(QWidget):
             formatter=_fmt_threshold,
             parser=_parse_threshold,
         )
-        self._attack = self._make_knob(
+        self._attack, self._knob_attack = self._make_knob(
             "Attack",
             minimum=0,
             maximum=998,
@@ -141,7 +140,7 @@ class GatePanel(QWidget):
             formatter=_fmt_time,
             parser=_parse_attack,
         )
-        self._hold = self._make_knob(
+        self._hold, self._knob_hold = self._make_knob(
             "Hold",
             minimum=9,
             maximum=998,
@@ -149,7 +148,7 @@ class GatePanel(QWidget):
             formatter=_fmt_time,
             parser=_parse_hold,
         )
-        self._release = self._make_knob(
+        self._release, self._knob_release = self._make_knob(
             "Release",
             minimum=0,
             maximum=2999,
@@ -173,7 +172,21 @@ class GatePanel(QWidget):
         default: int,
         formatter,
         parser,
-    ) -> QVBoxLayout:
+    ) -> tuple[QVBoxLayout, ParamKnob]:
+        """Build one labelled knob column wired to the shared gate emit.
+
+        Args:
+            label: Caption above the knob; ``"Threshold"`` also drives
+                the graph's threshold marker.
+            minimum: Lowest raw value.
+            maximum: Highest raw value.
+            default: Initial (and double-click reset) raw value.
+            formatter: Raw value to display text.
+            parser: Typed text back to a raw value.
+
+        Returns:
+            The column layout to place in the knob row, and the knob.
+        """
         col = QVBoxLayout()
         col.setSpacing(2)
         col.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
@@ -194,9 +207,7 @@ class GatePanel(QWidget):
         if label == "Threshold":
             knob.valueChanged.connect(self._graph.set_threshold)
         col.addWidget(knob)
-
-        setattr(self, f"_knob_{label.lower()}", knob)
-        return col
+        return col, knob
 
     def _on_reset_clicked(self) -> None:
         if (

@@ -1,4 +1,5 @@
 """Custom-painted widgets promoted in Qt Designer forms."""
+from __future__ import annotations
 
 from .compressor_graph import CompressorGraph
 from .delay_graph import DelayGraph

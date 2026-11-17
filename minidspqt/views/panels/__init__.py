@@ -1,4 +1,5 @@
 """Feature panels for the channel detail view."""
+from __future__ import annotations
 
 from .compressor_panel import CompressorPanel
 from .delay_panel import DelayPanel

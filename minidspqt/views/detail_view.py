@@ -26,6 +26,7 @@ The channel header reuses the :class:`ChannelStrip` widget from
 
 from __future__ import annotations
 
+from minidsp.protocol import CHANNEL_NAMES
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -38,11 +39,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import CHANNEL_NAMES
-
-from ..levels import clip_for, level24_for, levels_from_payload
-from ..model import DeviceState
-from ..widgets import LevelMeter
 from ..defaults import (
     default_compressor_state,
     default_crossover_state,
@@ -51,6 +47,10 @@ from ..defaults import (
     default_peq_bands,
     default_peq_channel_bypass,
 )
+from ..levels import clip_for, level24_for, levels_from_payload
+from ..model import DeviceState
+from ..widgets import LevelMeter
+from ..widgets.freq_response_graph import CrossoverData
 from ._connection_chip import DEVICE_BUSY_TOOLTIP
 from .channel_strip import (
     ChannelStrip,
@@ -67,7 +67,6 @@ from .panels import (
     PlaceholderPanel,
     XoverPanel,
 )
-from ..widgets.freq_response_graph import CrossoverData
 
 NUM_CHANNELS = 4
 
@@ -104,6 +103,7 @@ class RoutedMetersPanel(QWidget):
         """
         while self._layout.count():
             item = self._layout.takeAt(0)
+            assert item is not None  # count() > 0, so index 0 exists
             w = item.widget()
             if w:
                 w.deleteLater()
@@ -431,10 +431,10 @@ class DetailView(QWidget):
             return
         is_slave = state.is_linked_slave(ch)
         master_name = self._master_title(state, ch)
-        strip = self._strip
 
+        # ``self._strip`` resolves to exactly these concrete strips per branch.
         if self._is_input:
-            apply_input_strip_state(strip, ch, ch_state, master_name, is_slave)
+            apply_input_strip_state(self._input_strip, ch, ch_state, master_name, is_slave)
             self._gate_panel.set_params_silently(
                 ch_state.gate.attack,
                 ch_state.gate.release,
@@ -442,7 +442,7 @@ class DetailView(QWidget):
                 ch_state.gate.threshold,
             )
         else:
-            apply_output_strip_state(strip, ch, ch_state, master_name, is_slave)
+            apply_output_strip_state(self._output_strip, ch, ch_state, master_name, is_slave)
             self._peq_panel.set_bands_silently(
                 ch_state.peqs, ch_state.peq_channel_bypass
             )

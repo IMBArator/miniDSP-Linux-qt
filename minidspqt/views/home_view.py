@@ -7,6 +7,7 @@ the MainWindow routes them to DeviceThread.request_* methods.
 
 from __future__ import annotations
 
+from minidsp.protocol import CHANNEL_NAMES
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -18,8 +19,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from minidsp.protocol import CHANNEL_NAMES
 
 from ..levels import clip_for, level24_for, levels_from_payload
 from ..model import DeviceState
@@ -324,7 +323,7 @@ class HomeView(QWidget):
         return self.menuButton
 
     def _all_strips(self) -> list[ChannelStrip]:
-        return self._input_strips + self._output_strips
+        return [*self._input_strips, *self._output_strips]
 
     def _set_connection_state(self, state: str) -> None:
         self.connectionLabel.setProperty("state", state)

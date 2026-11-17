@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from minidsp.protocol import CHANNEL_NAMES
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -14,8 +15,6 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from minidsp.protocol import CHANNEL_NAMES
 
 from ..model import DeviceState
 

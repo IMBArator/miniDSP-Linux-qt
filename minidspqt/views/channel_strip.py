@@ -13,6 +13,7 @@ needs to be wired in once.
 
 from __future__ import annotations
 
+from minidsp.protocol import CHANNEL_NAMES, raw_to_db
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QFrame,
@@ -25,11 +26,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import CHANNEL_NAMES, raw_to_db
-
-from ..widgets import GainIndicator, LedIndicator, LevelMeter, ParamKnob, ToggleButton
 from ..defaults import default_gain
 from ..model import InputChannelState, OutputChannelState
+from ..widgets import GainIndicator, LedIndicator, LevelMeter, ParamKnob, ToggleButton
 
 GAIN_RAW_MIN = 0
 GAIN_RAW_MAX = 400

@@ -19,6 +19,7 @@ so the panel tracks the last-active slope and re-sends it on un-bypass.
 
 from __future__ import annotations
 
+from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QComboBox,
@@ -31,14 +32,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from minidsp.protocol import SLOPE_NAMES, freq_raw_to_hz
-
+from ...defaults import default_crossover_state
 from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
 from ._overlay_controls import OverlaySource, install_overlay_controls
 from ._slave_lock import apply_link_state, install_link_banner
-from ...defaults import default_crossover_state
 
 _SLOPE_ITEMS = [SLOPE_NAMES[i] for i in sorted(SLOPE_NAMES) if i != 0]
 
@@ -133,10 +132,31 @@ class XoverPanel(QWidget):
         root.addWidget(self._graph, stretch=1)
 
         factory_defaults = default_crossover_state()
-        root.addLayout(self._build_filter_row("Hi-Pass", "hp", factory_defaults[0]))
-        root.addLayout(self._build_filter_row("Lo-Pass", "lp", factory_defaults[2]))
+        hp_row, self._hp_freq, self._hp_slope, self._hp_bypass = self._build_filter_row(
+            "Hi-Pass", factory_defaults[0]
+        )
+        root.addLayout(hp_row)
+        lp_row, self._lp_freq, self._lp_slope, self._lp_bypass = self._build_filter_row(
+            "Lo-Pass", factory_defaults[2]
+        )
+        root.addLayout(lp_row)
 
-    def _build_filter_row(self, label: str, prefix: str, default_freq: int) -> QHBoxLayout:
+    def _build_filter_row(
+        self, label: str, default_freq: int
+    ) -> tuple[QHBoxLayout, ParamKnob, QComboBox, ToggleButton]:
+        """Build one filter row: label, cutoff knob, slope combo, bypass.
+
+        Every control is wired to ``_on_param_changed`` so any edit emits
+        one atomic ``xover_changed``.
+
+        Args:
+            label: Row caption, ``"Hi-Pass"`` or ``"Lo-Pass"``.
+            default_freq: Initial raw cutoff frequency for the knob.
+
+        Returns:
+            The row layout, the frequency knob, the slope combo and the
+            bypass button.
+        """
         row = QHBoxLayout()
         row.setSpacing(8)
 
@@ -154,7 +174,6 @@ class XoverPanel(QWidget):
         )
         freq_knob.valueChanged.connect(lambda _v: self._on_param_changed())
         row.addWidget(freq_knob)
-        setattr(self, f"_{prefix}_freq", freq_knob)
 
         slope_combo = QComboBox()
         slope_combo.addItems(_SLOPE_ITEMS)
@@ -162,17 +181,15 @@ class XoverPanel(QWidget):
         slope_combo.setFixedWidth(80)
         slope_combo.currentIndexChanged.connect(lambda _i: self._on_param_changed())
         row.addWidget(slope_combo)
-        setattr(self, f"_{prefix}_slope", slope_combo)
 
         bypass_btn = ToggleButton()
         bypass_btn.setText("Byp")
         bypass_btn.setMinimumWidth(48)
         bypass_btn.toggled.connect(lambda _c: self._on_param_changed())
         row.addWidget(bypass_btn)
-        setattr(self, f"_{prefix}_bypass", bypass_btn)
 
         row.addStretch(1)
-        return row
+        return row, freq_knob, slope_combo, bypass_btn
 
     def _on_reset_clicked(self) -> None:
         if (

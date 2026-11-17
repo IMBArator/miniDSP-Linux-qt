@@ -14,9 +14,9 @@ import logging
 import queue
 import threading
 from collections import deque
+from collections.abc import Callable
 from enum import Enum, auto
-
-from PySide6.QtCore import QThread, Signal
+from typing import TYPE_CHECKING
 
 from minidsp.device import (
     DeviceBusyError,
@@ -24,6 +24,10 @@ from minidsp.device import (
     DeviceLockedError,
     DSPmini,
 )
+from PySide6.QtCore import QObject, QThread, Signal
+
+if TYPE_CHECKING:
+    from .virtual_dsp import VirtualDSP
 
 # Sentinel used on the PIN queue when the UI cancels the unlock dialog.
 _CANCEL_PIN = object()
@@ -119,9 +123,9 @@ class DeviceThread(QThread):
 
     def __init__(
         self,
-        dsp_factory: type = DSPmini,
-        dsp_instance: object | None = None,
-        parent: QThread | None = None,
+        dsp_factory: Callable[[], DSPmini | VirtualDSP] = DSPmini,
+        dsp_instance: DSPmini | VirtualDSP | None = None,
+        parent: QObject | None = None,
     ) -> None:
         """Build a worker; pass ``dsp_instance`` for offline / tests.
 

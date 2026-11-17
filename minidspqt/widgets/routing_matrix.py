@@ -13,6 +13,8 @@ Interactions
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from PySide6.QtCore import QLineF, QPointF, Qt, Signal
 from PySide6.QtGui import QCursor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
@@ -90,7 +92,7 @@ class RoutingMatrix(QWidget):
         self._masks = list(masks)
         self.update()
 
-    def set_strips(self, inputs: list[QWidget], outputs: list[QWidget]) -> None:
+    def set_strips(self, inputs: Sequence[QWidget], outputs: Sequence[QWidget]) -> None:
         """Tell the matrix which channel strip widgets to align with.
 
         The matrix reads each strip's screen position on every

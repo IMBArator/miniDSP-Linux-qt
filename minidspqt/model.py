@@ -9,8 +9,9 @@ inputs 0–3, outputs 4–7. `gates` is input-only; `delays`, `crossovers`,
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, ClassVar
+from typing import Any, ClassVar
 
 from minidsp.protocol import decode_link_groups, decode_routing_matrix
 

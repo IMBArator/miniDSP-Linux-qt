@@ -35,19 +35,6 @@ allpass filters keep the full Q range.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (
-    QComboBox,
-    QGridLayout,
-    QHBoxLayout,
-    QLabel,
-    QMessageBox,
-    QPushButton,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
-
 from minidsp.protocol import (
     PEQ_TYPE_ALLPASS1,
     PEQ_TYPE_ALLPASS2,
@@ -63,13 +50,25 @@ from minidsp.protocol import (
     peq_raw_to_gain,
     peq_raw_to_q,
 )
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QComboBox,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget,
+)
 
+from ...defaults import default_peq_bands, default_peq_channel_bypass
 from ...model import PEQBand
 from ...widgets import FreqResponseGraph, ParamKnob, ToggleButton
 from ...widgets.freq_response_graph import CrossoverData
 from ._overlay_controls import OverlaySource, install_overlay_controls
 from ._slave_lock import apply_link_state, install_link_banner
-from ...defaults import default_peq_bands, default_peq_channel_bypass
 
 NUM_BANDS = 7
 

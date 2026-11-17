@@ -17,11 +17,10 @@ from __future__ import annotations
 
 import math
 
+from minidsp.protocol import comp_threshold_to_db
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import QFont, QPainter, QPen, QPolygonF
 from PySide6.QtWidgets import QWidget
-
-from minidsp.protocol import comp_threshold_to_db
 
 from ..theme import theme_manager
 

@@ -9,10 +9,10 @@ scroll interaction are shared by all parameter types.
 from __future__ import annotations
 
 import math
-from typing import Callable
+from collections.abc import Callable
 
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QColor, QFocusEvent, QPainter, QPen
 from PySide6.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
@@ -96,17 +96,13 @@ class ParamKnob(QWidget):
         self._arc_widget.setMinimumSize(56, 56)
         layout.addWidget(self._arc_widget, stretch=1)
 
-        self._value_edit = QLineEdit(self._formatter(self._value))
+        self._value_edit = _ValueEdit(self._formatter(self._value))
         self._value_edit.setObjectName("gainKnobEdit")
         self._value_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._value_edit.setFixedWidth(68)
         self._value_edit.setReadOnly(True)
         self._value_edit.returnPressed.connect(self._apply_edit)
         self._value_edit.editingFinished.connect(self._apply_edit)
-        self._value_edit.focusInEvent = lambda e: (
-            self._value_edit.setReadOnly(False),
-            self._value_edit.selectAll(),
-        )
         layout.addWidget(self._value_edit, alignment=Qt.AlignmentFlag.AlignHCenter)
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -308,6 +304,27 @@ class _ArcWidget(QWidget):
                 p.drawArc(rect, int(_ARC_START_DEG * 16), int(_ARC_SWEEP_DEG * 16))
         finally:
             p.end()
+
+
+class _ValueEdit(QLineEdit):
+    """Knob value label that becomes editable, text selected, on focus.
+
+    The label is read-only until it gains focus, so the user can click it
+    and type an exact value straight away.
+    """
+
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        """Unlock editing and select the whole text.
+
+        Replaces ``QLineEdit.focusInEvent`` entirely: the base handler is
+        deliberately not called, so the selection made here is the one the
+        user types over.
+
+        Args:
+            event: The focus event (unused).
+        """
+        self.setReadOnly(False)
+        self.selectAll()
 
 
 def _default_parser(text: str) -> int:
