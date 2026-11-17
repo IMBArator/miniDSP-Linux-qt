@@ -138,3 +138,8 @@ before any commit or tag is created.
   the sequence gains `make windows` between `make appimage` and `make publish`,
   and `publish.sh` requires two more assets — the Windows installer and portable
   zip — unless `SKIP_WINDOWS=1` explicitly asks for a Linux-only release.
+* `77edcf5` — version.sh also bumps `minidspqt.__version__`, shows the new
+  changelog section and offers to open it in an editor before the release
+  commit, and its optional push needs an explicit yes: without a terminal it
+  no longer pushes (before, a non-interactive run answered every prompt with
+  yes).
