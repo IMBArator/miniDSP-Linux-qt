@@ -118,3 +118,11 @@ required Qt module were missing from the bundle (`c34205d`).
 * `d26414c` — the narrowing, with measurements
 * `ec35379` — the LGPLv3 acknowledgment and About dialog attribution
 * Related: ADR-0004 (licensing), ADR-0019 (QSS styling), ADR-0027 (AppImage)
+* Correction (2026-11-17): the missing `PySide6/__init__.py` named under
+  Consequences is not a property of PySide6-Essentials, whose wheel ships it
+  together with the `.pyi` stubs. Both the full `PySide6` wheel and
+  PySide6-Essentials list these files, so uninstalling the full package during
+  the switch in `d26414c` deleted them from the existing environment. A fresh
+  environment has them, the `pytest-qt` shim was removed from
+  `tests/conftest.py`, and the decision itself is unchanged. An environment
+  that went through the switch is repaired by reinstalling PySide6-Essentials.

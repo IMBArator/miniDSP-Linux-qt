@@ -14,36 +14,30 @@ from __future__ import annotations
 # Setting this here rather than in the `make test` recipe keeps the suite
 # shell-agnostic: a POSIX `VAR=x cmd` prefix is not valid in PowerShell, so a
 # Makefile-level export would have made `uv run pytest` Linux-only. It must be
-# set before Qt loads, hence the position above the PySide6 import.
+# set before Qt loads, hence its position above all the other imports.
 # setdefault() leaves an explicit QT_QPA_PLATFORM (e.g. `xcb` when debugging a
 # test visually) untouched.
-import os  # noqa: E402
+import os
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-# pytest-qt's qt_compat.get_versions() reads PySide6.__version__ directly.
-# When we depend on PySide6-Essentials (no Addons), PySide6 is a namespace
-# package with no __init__.py, so the attribute is absent. Synthesize it from
-# QtCore.__version__ before pytest-qt's pytest_report_header fires.
-import PySide6 as _pyside6  # noqa: E402
-if not hasattr(_pyside6, "__version__"):
-    from PySide6.QtCore import __version__ as _qt_version
-    _pyside6.__version__ = _qt_version
+import threading
+
+import pytest
+from PySide6.QtCore import QStandardPaths
+
+from minidspqt.levels import LEVEL24_PER_UINT16
+from minidspqt.virtual_dsp import VirtualDSP
 
 # Isolate QSettings (and every other standard path) from the real user
 # environment. Without this, tests that exercise the theme manager call
 # set_user_preference(), which writes QSettings(_QSETTINGS_ORG, _QSETTINGS_APP)
 # to ~/.config/miniDSP/minidspqt.conf — clobbering the developer's actual theme
 # choice on every `make test`. Test mode redirects these to a throwaway
-# `qttest` location instead. Must run before any QApplication / QSettings use.
-from PySide6.QtCore import QStandardPaths  # noqa: E402
+# `qttest` location instead. Must run before any QApplication / QSettings use:
+# it runs when pytest imports this conftest, before any test, and none of the
+# imports above create either.
 QStandardPaths.setTestModeEnabled(True)
-
-import threading
-
-import pytest
-
-from minidspqt.levels import LEVEL24_PER_UINT16
-from minidspqt.virtual_dsp import VirtualDSP
 
 
 def _make_preset_cfg() -> dict:
