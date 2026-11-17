@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `b5563ba`.
+
 Each channel strip carries a row of feature buttons — gate, mute, phase, xover,
 peq, comp, delay. Each has three visual states: off, engaged as a toggle or
 navigated-to, and "active", meaning the feature is actually doing something to the

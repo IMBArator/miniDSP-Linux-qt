@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `822046b`.
+
 When channels are linked, the master governs the group and slaves mirror it
 (ADR-0009). The detail view can display any channel, including a slave — so what
 should happen when a user turns a knob on a slave channel's PEQ panel?

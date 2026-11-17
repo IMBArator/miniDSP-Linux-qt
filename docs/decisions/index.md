@@ -4,9 +4,11 @@ This directory holds the project's architecture decision records, written in the
 [MADR](https://adr.github.io/madr/) format — one file per decision, each stating
 the problem, the options that were actually available, and why one was chosen.
 
-The records were written retrospectively from the commit history and the existing
-documentation. They describe real decisions and cite the commits that made them,
-but the reasoning is reconstructed rather than captured at the time. See
+Records 0001 to 0029 were written after the fact from the commit history and the
+existing documentation. They describe real decisions and each names the commit
+that made it, but the reasoning is reconstructed rather than captured at the time.
+The later records were written together with their decision. Each record is dated
+with the day the decision was made. See
 [ADR-0000](0000-use-markdown-any-decision-records.md) for why the log exists.
 
 To add a record, copy [adr-template.md](adr-template.md) to the next number and add
@@ -41,16 +43,16 @@ a line to the relevant table below.
 |-----|----------|
 | [0013](0013-emit-multi-parameter-dsp-commands-atomically.md) | Emit multi-parameter DSP commands atomically from the panel |
 | [0014](0014-source-factory-defaults-from-the-protocol-library.md) | Source factory defaults from the protocol library rather than hardcoding them |
-| [0015](0015-render-filter-curves-locally-from-biquad-math-at-48-khz.md) | Render filter response curves locally from biquad maths at 48 kHz |
-| [0016](0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md) | Preserve unknown `.unt` bytes by writing field-level overwrites onto a template |
+| [0015](0015-render-filter-curves-locally-from-biquad-math-at-48-khz.md) | Render filter response curves locally from biquad maths at the device's 48 kHz rate |
+| [0016](0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md) | Preserve unknown .unt bytes by writing field-level overwrites onto a template |
 | [0017](0017-device-lock-pin-flow-stops-the-worker-rather-than-retrying.md) | Stop the worker on lock cancellation rather than auto-reconnecting |
-| [0033](0033-save-unt-files-from-the-stored-presets-like-the-original-editor.md) | Save .unt files from the stored presets, like the original editor, and ask about unsaved edits |
+| [0033](0033-save-unt-files-from-the-stored-presets-like-the-original-editor.md) | Save .unt files from the stored presets, like the original editor |
 
 ## UI composition and styling
 
 | ADR | Decision |
 |-----|----------|
-| [0018](0018-build-the-ui-programmatically-instead-of-qt-designer-files.md) | Build the UI programmatically instead of using Qt Designer `.ui` files |
+| [0018](0018-build-the-ui-programmatically-instead-of-qt-designer-files.md) | Build the UI programmatically instead of using Qt Designer .ui files |
 | [0019](0019-style-with-qss-and-drive-state-styling-through-dynamic-properties.md) | Style with QSS and drive state-dependent styling through Qt dynamic properties |
 | [0020](0020-let-an-explicit-theme-preference-override-the-reported-system-scheme.md) | Centralise theming in a ThemeManager, and let an explicit preference override the reported system scheme |
 | [0021](0021-give-each-dsp-feature-one-brand-hue-across-the-whole-ui.md) | Give each DSP feature one brand hue, reused across button, indicator, and graph |
@@ -69,6 +71,7 @@ a line to the relevant table below.
 
 | ADR | Decision |
 |-----|----------|
+| [0000](0000-use-markdown-any-decision-records.md) | Record architectural decisions as MADR files |
 | [0026](0026-manage-the-project-with-uv-hatchling-ruff-and-make.md) | Manage the project with uv, Hatchling, ruff, and a Makefile |
 | [0027](0027-distribute-a-self-contained-appimage-with-bundled-cpython.md) | Distribute a self-contained AppImage with a bundled CPython |
 | [0028](0028-drive-releases-from-conventional-commits.md) | Drive changelog and releases from Conventional Commits |

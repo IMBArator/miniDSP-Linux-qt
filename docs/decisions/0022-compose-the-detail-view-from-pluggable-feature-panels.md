@@ -1,12 +1,14 @@
 ---
 status: accepted
-date: 2026-05-08
+date: 2026-05-07
 decision-makers: Maximilian Zettler
 ---
 
 # Compose the detail view from pluggable feature panels with shared helpers
 
 ## Context and Problem Statement
+
+Written after the fact from the commit history; the decision was made in `4081d79`.
 
 The channel detail view has to present six different feature panels — gate, PEQ,
 crossover, compressor, delay, and a placeholder — while switching freely between

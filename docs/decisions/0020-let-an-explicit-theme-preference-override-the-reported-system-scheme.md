@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `9e4c844`.
+
 The application should follow the desktop's light/dark setting, and should also let
 a user override it — a mixing application is often run in a dark room regardless of
 what the desktop is doing.

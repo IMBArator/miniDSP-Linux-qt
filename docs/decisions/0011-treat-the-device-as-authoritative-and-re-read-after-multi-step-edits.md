@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `4925094`.
+
 The application keeps a local mirror of device state (ADR-0008) and updates it
 optimistically on every edit, because there is no synchronous read-back
 (ADR-0005). For single parameter writes that is fine: the device accepts the value

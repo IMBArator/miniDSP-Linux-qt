@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `c430c5c`.
+
 The project needs an environment manager, a build backend, a formatter and linter,
 and some way for a contributor to discover how to run things. It also has one
 constraint most Python projects do not: its main dependency is not on PyPI and must
@@ -125,3 +127,10 @@ exercised on every release rather than only in development.
   `7a51882` — ruff adoption, lint and format separated
 * Related: ADR-0003 (the direct-URL dependency), ADR-0025 (`make test`),
   ADR-0027 (the AppImage targets), ADR-0028 (release targets)
+* Since 2026-11-17, uv, Hatchling with a committed `uv.lock`, ruff with ty, and
+  a Makefile with `help`, `test`, `check`, `build` and `clean` are a standing
+  convention written down in CONTRIBUTING.md (Before you commit, Code);
+  changes within it need no further record. ruff and ty run through
+  `make check` with the protocol library's settings, where formatting is left
+  to the author (`bd43002`), and the Makefile follows the library's layout,
+  including `make help` (`d802dc1`).

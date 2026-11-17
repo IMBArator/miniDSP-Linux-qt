@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `1bb08d1`.
+
 The home view was originally a hybrid. A thin `.ui` file declared the skeleton —
 header, three-column centre row, footer — compiled to `ui_home.py` by
 `pyside6-uic` through a `scripts/build_ui.sh` helper. Everything of substance was

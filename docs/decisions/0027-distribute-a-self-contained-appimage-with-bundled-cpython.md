@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `3179db6`.
+
 The target user is someone with a t.racks DSP 4x4 Mini and a Linux machine who
 wants a control panel for it. They are not necessarily a Python developer. Asking
 them to install Python 3.11+, create a virtual environment, and `pip install` a

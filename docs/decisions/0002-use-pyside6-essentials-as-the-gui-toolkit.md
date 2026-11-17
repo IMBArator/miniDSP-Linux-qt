@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `d26414c`.
+
 The project goal is a Python GUI for the t.racks DSP 4x4 Mini on Linux. The UI is
 dense: eight channel strips with live level meters polled every 150 ms, several
 custom-painted graphs, and a routing matrix with drag interaction. It also needs

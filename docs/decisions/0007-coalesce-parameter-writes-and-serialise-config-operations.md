@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `b129cd7`.
+
 Dragging a knob emits a value change per mouse-move event — potentially dozens
 per second. Sending each one to the device is both pointless and harmful: the
 protocol is request/response over a single handle, the device is slow, and only

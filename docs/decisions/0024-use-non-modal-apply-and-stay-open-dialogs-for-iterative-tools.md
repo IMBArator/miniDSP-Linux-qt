@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `5d2189f`.
+
 Two features are inherently trial-and-error. Channel linking has rules the firmware
 enforces silently, so the only way to learn what a configuration does is to apply it
 and look at what came back (ADR-0011). The test tone generator is a listening tool:

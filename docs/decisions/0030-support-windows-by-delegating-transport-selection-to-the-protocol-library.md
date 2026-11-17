@@ -38,8 +38,8 @@ belongs here, and what has to change for the GUI to run there.
   raises ([ADR-0012](0012-catch-only-device-and-transport-errors.md)); a second
   transport is a second source of `OSError`.
 * The developer workflow had two hard Linux assumptions — a POSIX `VAR=x cmd`
-  prefix in `make test`, and an absolute `/home/max/...` path to the `.unt`
-  fixture — and neither is a real platform constraint.
+  prefix in `make test`, and an absolute path into the maintainer's home
+  directory to the `.unt` fixture — and neither is a real platform constraint.
 * Distribution is a separate problem from execution, and the packaging decision
   in [ADR-0027](0027-distribute-a-self-contained-appimage-with-bundled-cpython.md)
   does not transfer to Windows unexamined.

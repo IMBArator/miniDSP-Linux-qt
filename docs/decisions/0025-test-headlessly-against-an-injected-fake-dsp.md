@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `8459db6`.
+
 This is a GUI application whose entire purpose is to talk to a specific piece of
 hardware that most machines do not have. A test strategy requiring either a display
 server or a plugged-in DSP 4x4 Mini would be unrunnable in CI, unrunnable over SSH,

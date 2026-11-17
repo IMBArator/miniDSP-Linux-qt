@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `c8d3747`.
+
 Two needs pointed the same way. Users want to build and audition configurations
 without the hardware plugged in — editing a `.unt` file on a laptop, away from the
 rack. And the test suite needs to exercise the full application stack without a

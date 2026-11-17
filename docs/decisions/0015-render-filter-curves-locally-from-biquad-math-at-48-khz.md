@@ -1,12 +1,14 @@
 ---
 status: accepted
-date: 2026-05-08
+date: 2026-05-10
 decision-makers: Maximilian Zettler
 ---
 
 # Render filter response curves locally from biquad maths at the device's 48 kHz rate
 
 ## Context and Problem Statement
+
+Written after the fact from the commit history; the decision was made in `1b57275`.
 
 The PEQ and crossover panels are unusable without a frequency-response plot. The
 user needs to see the summed effect of seven PEQ bands plus a high-pass and

@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `5f12b45`.
+
 Editing one parameter can have surprisingly wide effects. Dragging a PEQ gain
 knob on an output has to update the model, send a device command, mirror the
 change onto every linked slave channel and send their commands too (ADR-0009),

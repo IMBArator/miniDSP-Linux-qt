@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `4081d79`.
+
 Several DSP features are a single opcode carrying several parameters at once. The
 gate command (0x3E) takes attack, release, hold, and threshold together. The
 compressor command (0x30) takes ratio, knee, attack, release, and threshold. A PEQ

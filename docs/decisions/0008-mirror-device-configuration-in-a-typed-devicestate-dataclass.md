@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `46bf3f5`.
+
 The protocol library returns device configuration as a flat dictionary from
 `parse_preset_params()`: parallel eight-element lists for `names`, `gains`,
 `mutes`, `phases`, `link_flags`, plus output-only four-element lists for

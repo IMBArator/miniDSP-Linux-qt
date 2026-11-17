@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `9bfaec2`.
+
 The device can be PIN-locked. When it is, the firmware reports it in the
 `cmd_device_info` response (byte 6 = `0x01`) and rejects configuration reads. The
 protocol provides `cmd_submit_pin` to unlock and `cmd_set_lock_pin` to set a new

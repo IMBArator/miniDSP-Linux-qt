@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `e3dc6ba`.
+
 Styling started as inline `setStyleSheet()` calls scattered across `home_view.py`
 and every styled widget. Two patterns in particular had gone wrong.
 

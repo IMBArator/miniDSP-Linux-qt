@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `8b54dcb`.
+
 Several features need to know what "blank" means for a parameter: offline mode has
 to start from a plausible configuration, the per-feature Reset buttons snap a
 feature back to factory values, and double-clicking a knob resets it to its

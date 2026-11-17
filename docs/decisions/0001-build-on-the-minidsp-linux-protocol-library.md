@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `c430c5c`.
+
 The t.racks DSP 4x4 Mini exposes an undocumented vendor protocol over
 `/dev/hidraw*`. Its opcodes, value encodings, and quirks were reverse-engineered
 in the sibling project [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux),

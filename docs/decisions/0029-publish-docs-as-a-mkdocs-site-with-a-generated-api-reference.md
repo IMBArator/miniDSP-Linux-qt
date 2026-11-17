@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `7ff4a0c`.
+
 Documentation had accumulated as loose Markdown in a `doc/` directory: a long
 README, a user guide, and two historical planning documents whose ideas had long
 since shipped. The README had grown to carry both end-user material (installation,
@@ -64,7 +66,8 @@ layer, widgets, panels, views — which also normalised pre-existing
 reStructuredText and NumPy-style sections into a single style so `help()` and IDE
 tooltips render consistently (`ad38b33`, `b2e4383`, `58490a7`, `072b0f8`). A
 follow-up fixed docstring indentation and added missing type annotations so griffe's
-strict parser is clean (`7ca07ff`). The convention is recorded in `CLAUDE.md`.
+strict parser is clean (`7ca07ff`). The convention is recorded in the agent
+working notes of the time (`CLAUDE.md`).
 
 **Historical planning documents were deleted rather than published.**
 `architecture-plan.md` and `offline-mode-unt-read-write.md` were implementation

@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `224afff`.
+
 The DSP supports channel linking: channels can be grouped so that one master's
 settings govern its slaves. On the wire the convention is that a master carries an
 OR-bitmask of its group and slaves carry `0x00`.

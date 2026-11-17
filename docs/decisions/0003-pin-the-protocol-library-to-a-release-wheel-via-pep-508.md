@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `8c2ceb3`.
+
 `minidsp-linux` (ADR-0001) is not published on PyPI. Something has to tell every
 installer where to get it — and "every installer" is the crux, because this
 project is consumed in four different ways: `uv sync` for development, `pip

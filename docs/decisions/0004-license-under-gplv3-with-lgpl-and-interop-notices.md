@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `ec35379`.
+
 This application controls hardware sold by a third party, using a protocol that
 was reverse-engineered rather than published, and links a GUI toolkit distributed
 under LGPLv3. Three distinct licensing questions follow: what licence the

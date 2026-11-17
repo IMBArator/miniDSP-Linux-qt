@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `b129cd7`.
+
 Talking to the DSP means synchronous `ioctl`/read/write against `/dev/hidraw*`.
 Individual operations are slow enough to matter — the 0x20 load-preset command
 uses a 2000 ms timeout because the device reads from flash — and the UI must poll

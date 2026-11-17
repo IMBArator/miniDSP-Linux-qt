@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `8017e7b`.
+
 `DeviceThread` runs a long-lived loop against removable hardware. USB devices get
 unplugged mid-read, `hidraw` returns `EBUSY` or `EIO`, and the device rejects
 commands while a preset operation holds an internal lock. The loop has to survive

@@ -8,6 +8,8 @@ decision-makers: Maximilian Zettler
 
 ## Context and Problem Statement
 
+Written after the fact from the commit history; the decision was made in `ea601d6`.
+
 The manufacturer's editor stores configurations in `.unt` files: a fixed 13,010-byte
 binary format holding 30 preset slots. Supporting them means users can move
 configurations between this application and the official software, and gives
