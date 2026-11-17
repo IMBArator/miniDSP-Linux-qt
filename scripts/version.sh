@@ -44,7 +44,7 @@ confirm_explicit() {
 
 # --- 1. preconditions --------------------------------------------------------
 
-for cmd in git uv sed; do
+for cmd in git uv sed awk; do
     command -v "$cmd" >/dev/null 2>&1 || die "$cmd is required on PATH"
 done
 
