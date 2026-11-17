@@ -16,9 +16,11 @@ exercised without a display server or a real Plasma session.
 
 from __future__ import annotations
 
-import pytest
+from typing import cast
 
+import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 
 from minidspqt.theme import DARK_THEME, LIGHT_THEME, ThemeManager
 
@@ -48,7 +50,7 @@ class _FakeStyleHints:
     # ThemeManager.bind_to_app connects to this; a plain attribute with a
     # no-op `connect` is enough for the resolution tests.
     class _Signal:
-        def connect(self, _slot) -> None:  # noqa: ANN001
+        def connect(self, _slot) -> None:
             pass
 
     colorSchemeChanged = _Signal()
@@ -65,7 +67,7 @@ class _FakeApp:
     def styleHints(self) -> _FakeStyleHints:
         return self._hints
 
-    def setPalette(self, palette) -> None:  # noqa: ANN001
+    def setPalette(self, palette) -> None:
         self.palette = palette
 
     def setStyleSheet(self, sheet: str) -> None:
@@ -80,7 +82,8 @@ def kde_dark_app() -> _FakeApp:
 
 def _bind(app: _FakeApp) -> ThemeManager:
     tm = ThemeManager()
-    tm.bind_to_app(app)
+    # The fake duck-types the QApplication surface ThemeManager uses.
+    tm.bind_to_app(cast(QApplication, app))
     return tm
 
 

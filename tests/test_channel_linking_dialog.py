@@ -10,7 +10,6 @@ from minidspqt.views.channel_linking_dialog import (
     link_flags_from_targets,
 )
 
-
 # ------------------------------------------------------------------ #
 # link_flags_from_targets — pure helper (no Qt needed)
 # ------------------------------------------------------------------ #

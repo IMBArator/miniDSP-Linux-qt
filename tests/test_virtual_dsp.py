@@ -134,6 +134,7 @@ def test_read_config_returns_deep_copy():
 def test_poll_levels():
     dsp = VirtualDSP()
     levels = dsp.poll_levels()
+    assert levels is not None
     assert levels["inputs"] == [0, 0, 0, 0]
     assert levels["outputs"] == [0, 0, 0, 0]
 
@@ -375,6 +376,7 @@ def test_prepare_link_unlink_does_not_copy():
 def test_offline_startup_seeded_from_blank_yields_factory_defaults():
     """End-to-end offline startup: the empty .unt file → factory defaults remain."""
     from minidsp.defaults import load_factory_defaults
+
     from minidspqt.blank_seed import seed_virtual_dsp_from_blank
 
     dsp = VirtualDSP()

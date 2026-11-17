@@ -12,16 +12,16 @@ from __future__ import annotations
 import math
 
 import pytest
+from minidsp.protocol import SLOPE_BW6, SLOPE_BW24, SLOPE_LR24
 
-from minidsp.protocol import SLOPE_BW24, SLOPE_BW6, SLOPE_LR24
 from minidspqt.model import CrossoverState, OutputChannelState
 from minidspqt.views.panels import XoverPanel
 from minidspqt.widgets.freq_response_graph import (
+    _FS_HZ,
     CrossoverData,
     FreqResponseGraph,
     _biquad_magnitude_db,
     _crossover_biquads,
-    _FS_HZ,
 )
 
 

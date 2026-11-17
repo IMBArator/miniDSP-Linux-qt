@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from minidsp.protocol import (
     SINE_FREQ_1KHZ,
     SINE_FREQ_20HZ,
@@ -14,7 +13,7 @@ from minidsp.protocol import (
 )
 
 from minidspqt.model import DeviceState, TestToneState
-from minidspqt.views.test_tone_dialog import TestToneDialog, _FREQ_LABELS
+from minidspqt.views.test_tone_dialog import _FREQ_LABELS, TestToneDialog
 
 
 def _state(mode: int = TONE_OFF, freq_index: int = 0) -> DeviceState:

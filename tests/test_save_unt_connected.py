@@ -140,7 +140,9 @@ def test_include_live_changes_writes_the_live_values(fake_dsp):
 
     include_live_changes(unt, slot, live)
 
-    assert unt.slot_params(slot)["gains"][0] == live["gains"][0]
+    params = unt.slot_params(slot)
+    assert params is not None
+    assert params["gains"][0] == live["gains"][0]
     assert unt.slot_name(slot) == name
 
 
@@ -257,7 +259,9 @@ def test_unsaved_edit_prompt_choices(
     window._on_unt_exported(unt, live)
 
     assert asked == [slot]
-    saved = UntFile.read(out).slot_params(slot)["gains"][0]
+    saved_params = UntFile.read(out).slot_params(slot)
+    assert saved_params is not None
+    saved = saved_params["gains"][0]
     assert saved == (stored_gain + 1 if expect_live_gain else stored_gain)
 
 
@@ -373,10 +377,10 @@ class _ButtonLayoutStyle(QProxyStyle):
         super().__init__("Fusion")
         self._layout = layout
 
-    def styleHint(self, hint, option=None, widget=None, return_data=None):
+    def styleHint(self, hint, option=None, widget=None, returnData=None):
         if hint == QStyle.StyleHint.SH_DialogButtonLayout:
             return int(self._layout.value)
-        return super().styleHint(hint, option, widget, return_data)
+        return super().styleHint(hint, option, widget, returnData)
 
 
 def _shown_order(box, layout) -> list[str]:

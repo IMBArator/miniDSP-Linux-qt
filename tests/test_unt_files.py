@@ -64,7 +64,9 @@ def test_stored_gain_edit_changes_only_its_slot():
     active = original.active_slot
 
     dsp.set_gain(0, dsp.read_config()["gains"][0] + 1)
-    dsp.store_preset(active, original.slot_name(active))
+    name = original.slot_name(active)
+    assert name is not None
+    dsp.store_preset(active, name)
     saved = dsp.export_unt().to_bytes()
 
     slot_start = 0x32 + (active - 1) * 432
@@ -88,7 +90,9 @@ def test_stored_mute_edit_round_trips():
     dsp.store_preset(active, "Muted")
 
     reread = dsp.export_unt()
-    assert reread.slot_params(active)["mutes"][0] is True
+    params = reread.slot_params(active)
+    assert params is not None
+    assert params["mutes"][0] is True
     assert reread.slot_name(active) == "Muted"
 
 
@@ -123,7 +127,9 @@ def test_seeded_active_slot_is_exported():
 
     assert unt.active_slot == 5
     assert unt.filled_slots() == [5]
-    assert unt.slot_params(5)["gains"] == [123] * 8
+    params = unt.slot_params(5)
+    assert params is not None
+    assert params["gains"] == [123] * 8
     assert unt.slot_name(5) == "Name05"
 
 

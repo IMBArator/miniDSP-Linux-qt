@@ -5,8 +5,8 @@ from __future__ import annotations
 import math
 
 import pytest
-
 from minidsp.protocol import comp_threshold_to_db
+
 from minidspqt.widgets.compressor_graph import COMP_RATIO_VALUES, CompressorGraph
 
 

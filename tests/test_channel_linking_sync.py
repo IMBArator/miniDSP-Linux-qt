@@ -66,7 +66,7 @@ def test_master_gate_edit_fans_out_to_device(window, monkeypatch):
     window._on_detail_gate_params(0, attack=10, release=20, hold=30, threshold=120)
 
     assert {c[0] for c in calls} == {0, 1}
-    for ch, attack, release, hold, threshold in calls:
+    for _ch, attack, release, hold, threshold in calls:
         assert (attack, release, hold, threshold) == (10, 20, 30, 120)
 
     # And the model must reflect the same on both channels
@@ -86,7 +86,7 @@ def test_master_peq_band_edit_fans_out_to_device(window, monkeypatch):
     chans = sorted({c[0] for c in calls})
     assert chans == [4, 5, 6]
     # All three carry the same band payload
-    for ch, band, gain_raw, freq_raw, q_raw, filter_type, bypass in calls:
+    for _ch, band, gain_raw, freq_raw, q_raw, filter_type, bypass in calls:
         assert (band, gain_raw, freq_raw, q_raw, filter_type, bypass) == (
             2,
             160,
@@ -109,7 +109,7 @@ def test_master_peq_channel_bypass_fans_out(window, monkeypatch):
     window._on_detail_peq_channel_bypass(4, bypass=True)
 
     assert sorted(c[0] for c in calls) == [4, 5, 6]
-    for ch, bypass in calls:
+    for _ch, bypass in calls:
         assert bypass is True
     for out_idx in (0, 1, 2):
         assert window._state.outputs[out_idx].peq_channel_bypass is True
@@ -152,9 +152,9 @@ def test_xover_bypass_is_sent_to_device(window, monkeypatch):
 
     assert sorted(c[0] for c in hp_calls) == [4, 5, 6]
     assert sorted(c[0] for c in lp_calls) == [4, 5, 6]
-    for ch, freq, slope in hp_calls:
+    for _ch, _freq, slope in hp_calls:
         assert slope == 0
-    for ch, freq, slope in lp_calls:
+    for _ch, _freq, slope in lp_calls:
         assert slope == 0
 
 
@@ -309,7 +309,7 @@ def test_compressor_panel_edit_fans_out(window, monkeypatch):
     panel._knob_threshold.setValue(150)  # any control change fires the signal
 
     assert sorted(c[0] for c in calls) == [4, 5, 6]
-    for ch, ratio, knee, attack, release, threshold in calls:
+    for _ch, ratio, knee, attack, release, threshold in calls:
         assert (ratio, knee, attack, release, threshold) == (0, 0, 49, 499, 150)
     for out_idx in (0, 1, 2):
         assert window._state.outputs[out_idx].compressor.threshold == 150
@@ -356,7 +356,7 @@ def test_delay_panel_edit_fans_out(window, monkeypatch):
     panel._knob.setValue(960)  # 20 ms
 
     assert sorted(c[0] for c in calls) == [4, 5, 6]
-    for ch, samples in calls:
+    for _ch, samples in calls:
         assert samples == 960
     for out_idx in (0, 1, 2):
         assert window._state.outputs[out_idx].delay_samples == 960

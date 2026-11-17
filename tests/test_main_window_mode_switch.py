@@ -19,7 +19,6 @@ from PySide6.QtWidgets import QMessageBox
 
 from minidspqt.virtual_dsp import VirtualDSP
 
-
 # ---------------------------------------------------------------------------
 # VirtualDSP.seed_from_config
 # ---------------------------------------------------------------------------

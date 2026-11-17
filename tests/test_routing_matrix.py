@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import pytest
-
 from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QApplication
 
 from minidspqt.widgets.routing_matrix import (
-    _point_to_segment_dist,
     RoutingMatrix,
+    _point_to_segment_dist,
 )
 
 

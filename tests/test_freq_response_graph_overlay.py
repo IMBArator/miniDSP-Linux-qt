@@ -13,9 +13,9 @@ import pytest
 from minidspqt.model import PEQBand
 from minidspqt.theme import theme_manager
 from minidspqt.widgets.freq_response_graph import (
+    _NUM_SAMPLES,
     CrossoverData,
     FreqResponseGraph,
-    _NUM_SAMPLES,
 )
 
 

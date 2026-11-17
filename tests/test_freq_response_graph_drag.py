@@ -12,10 +12,6 @@ its tests live in the second half of the file.
 from __future__ import annotations
 
 import pytest
-
-from PySide6.QtCore import QPoint, QPointF, Qt
-from PySide6.QtGui import QMouseEvent, QWheelEvent
-
 from minidsp.protocol import (
     PEQ_TYPE_HIGH_PASS,
     PEQ_TYPE_PEAK,
@@ -24,6 +20,8 @@ from minidsp.protocol import (
     freq_raw_to_hz,
     peq_gain_to_raw,
 )
+from PySide6.QtCore import QPoint, QPointF, Qt
+from PySide6.QtGui import QMouseEvent, QWheelEvent
 
 from minidspqt.model import PEQBand
 from minidspqt.widgets.freq_response_graph import CrossoverData, FreqResponseGraph

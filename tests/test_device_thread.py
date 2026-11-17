@@ -7,7 +7,6 @@ which is faster and more deterministic than spinning up the real QThread.
 from __future__ import annotations
 
 import pytest
-
 from minidsp.device import DeviceClosedError, DeviceLockedError
 
 # Imported from our module rather than minidsp.device so the test binds to

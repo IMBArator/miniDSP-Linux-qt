@@ -27,13 +27,13 @@ def controls(qtbot):
     layout = QHBoxLayout(host)
     graph = FreqResponseGraph(feature="peq")
     ctrl = install_overlay_controls(layout, graph)
-    # Keep the host (parent of the checkboxes) alive for the test's lifetime;
-    # qtbot tracks it for cleanup but we anchor it to the returned graph too.
-    graph._keepalive_host = host
     qtbot.addWidget(host)
     host.show()
     qtbot.waitExposed(host)
-    return ctrl, graph
+    # Yield rather than return: the fixture's frame keeps the host (parent of
+    # the checkboxes) alive for the test's lifetime, because qtbot only holds
+    # a weak reference to it for cleanup.
+    yield ctrl, graph
 
 
 def _band() -> PEQBand:

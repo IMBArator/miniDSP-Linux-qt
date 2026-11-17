@@ -4,8 +4,8 @@ slave lock, and graph wiring."""
 from __future__ import annotations
 
 import pytest
-
 from minidsp.protocol import COMP_RATIO_NAMES, comp_threshold_to_db
+
 from minidspqt.views.panels import CompressorPanel
 
 

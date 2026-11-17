@@ -16,12 +16,14 @@ from __future__ import annotations
 import importlib.util
 import struct
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
 _BUILD_PY = Path(__file__).resolve().parents[1] / "packaging" / "windows" / "build.py"
 _spec = importlib.util.spec_from_file_location("windows_build", _BUILD_PY)
+assert _spec is not None and _spec.loader is not None
 wb = importlib.util.module_from_spec(_spec)
 sys.modules["windows_build"] = wb
 _spec.loader.exec_module(wb)
@@ -284,7 +286,7 @@ def test_check_dll_closure_passes_for_a_closed_tree(tmp_path):
 # --- PE import reader -----------------------------------------------------------------
 
 
-def _fake_pe(imports: list[str], delay: list[str] = ()) -> bytes:
+def _fake_pe(imports: list[str], delay: Sequence[str] = ()) -> bytes:
     """Build a minimal PE32+ image with import and delay-import directories."""
     sec_rva, sec_off = 0x1000, 0x200
     blob = bytearray()

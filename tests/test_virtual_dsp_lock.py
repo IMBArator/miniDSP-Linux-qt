@@ -7,8 +7,8 @@ DeviceThread drives it identically in offline mode.
 from __future__ import annotations
 
 import pytest
-
 from minidsp.device import DeviceLockedError
+
 from minidspqt.virtual_dsp import VirtualDSP
 
 
