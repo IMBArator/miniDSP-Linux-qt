@@ -49,6 +49,7 @@ import urllib.request
 import zipfile
 from collections.abc import Callable, Iterable
 from pathlib import Path
+from typing import NoReturn
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -143,7 +144,7 @@ def warn(msg: str) -> None:
     print(f"\033[1;33m!!\033[0m  {msg}", file=sys.stderr, flush=True)
 
 
-def fail(msg: str) -> None:
+def fail(msg: str) -> NoReturn:
     """Abort the build with a message on stderr."""
     raise BuildError(msg)
 
@@ -157,7 +158,7 @@ def need_cmd(name: str) -> str:
     path = shutil.which(name)
     if path is None:
         fail(f"missing command: {name} (run packaging/windows/init_environment.sh)")
-    return path  # type: ignore[return-value]
+    return path
 
 
 def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
