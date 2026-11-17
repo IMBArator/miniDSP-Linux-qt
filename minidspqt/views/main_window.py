@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import copy
 import logging
-from importlib.metadata import PackageNotFoundError
-from importlib.metadata import version as _app_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -600,11 +598,6 @@ class MainWindow(QMainWindow):
         Returns:
             The HTML markup passed to :meth:`QMessageBox.about`.
         """
-        try:
-            app_version = _app_version("minidsp-linux-qt")
-        except PackageNotFoundError:
-            app_version = __version__
-
         if self._state.firmware_model:
             device_block = (
                 "<p><b>Device:</b> "
@@ -617,7 +610,7 @@ class MainWindow(QMainWindow):
             device_block = f'<p style="color:gray">{status}</p>'
 
         return (
-            f"<h3>DSP 4x4 Mini <span style='color:gray'>v{app_version}</span></h3>"
+            f"<h3>DSP 4x4 Mini <span style='color:gray'>v{__version__}</span></h3>"
             "<p>Qt graphical interface for the t.racks DSP 4x4 Mini.</p>"
             f"{device_block}"
             '<p><a href="https://github.com/IMBArator/miniDSP-Linux-qt">'
