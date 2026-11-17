@@ -1,62 +1,72 @@
 # Development
 
-Setup, testing, packaging, and release workflow for contributors.
+How to work on miniDSP-Linux-qt from a checkout: set it up, run it, test,
+check and build it, and package it for Linux and Windows. `make help` lists
+every target. How changes get in is in [CONTRIBUTING.md](../CONTRIBUTING.md);
+how the code is built inside, and why, is in [architecture.md](architecture.md).
 
 ## Requirements
 
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) — manages the virtual environment and dependencies
-- [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) — protocol library (installed automatically from the pinned upstream release wheel)
+- Python 3.11 or newer, and [uv](https://docs.astral.sh/uv/), which manages
+  the virtual environment and the dependencies. On Windows,
+  `winget install astral-sh.uv` installs it, and uv provisions Python itself.
+- GNU make: the targets are the way to set up, test, check and build. On
+  Windows: `winget install ezwinports.make`.
+- For a real device on Linux, read and write access to `/dev/hidraw*` (see
+  [Permissions](../README.md#permissions) in the README). Windows needs no
+  driver and no set-up.
 
-The protocol library picks its HID transport by platform, so nothing in this
-repository branches on the operating system (see
-[ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md)).
+The [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol
+library is installed from the release wheel pinned in `pyproject.toml`
+([ADR-0003](decisions/0003-pin-the-protocol-library-to-a-release-wheel-via-pep-508.md)).
+On Windows it brings hidapi along, through a platform marker, so the same
+`make sync` sets up both platforms.
 
-Per-channel clip indication, the 24-bit meter feed and the bench-verified level
-calibration come from the protocol library — `LEVEL_CLIP_LEVEL24`,
-`level24_is_clipping()`, `level24_to_dbu()` and the `inputs24` / `outputs24` /
-`clipping` payload keys — and need its **v1.4.0 or newer**, which is the pinned
-release. `minidspqt/levels.py` is the single import point for those symbols (see
-[ADR-0032](decisions/0032-meter-from-24-bit-levels-and-decide-clip-on-the-raw-sample.md)).
-
-Reading and writing `.unt` files goes through the protocol library's
-`minidsp.unt` module (`UntFile`), and saving while connected uses
-`DSPmini.export_unt()`. Both need the library's **v1.5.0 or newer**, which is the
-pinned release (see the amendment in
-[ADR-0016](decisions/0016-preserve-unknown-unt-bytes-with-field-level-overwrites.md)).
-
-### Linux
-
-- Kernel HID driver — communicates via `/dev/hidraw*`
-- Read/write access to `/dev/hidraw*` (see [Permissions](https://github.com/IMBArator/miniDSP-Linux-qt#permissions))
-
-### Windows
-
-- No driver installation and no udev equivalent — Windows binds its built-in HID
-  driver to the DSP automatically
-- `hidapi` is pulled in by the protocol library through a platform marker, so it
-  is installed on Windows only
-- The pinned release wheel carries the Windows transport since the library's
-  v1.3.0, so a plain `uv sync` is all a Windows checkout needs
-  (see [ADR-0030](decisions/0030-support-windows-by-delegating-transport-selection-to-the-protocol-library.md))
-- The downloadable Windows build (installer + portable zip) is assembled on
-  Linux, not on Windows — see [Building the Windows distribution](#building-the-windows-distribution)
-
-## Development environment
+## Setting up
 
 ```bash
 git clone https://github.com/IMBArator/miniDSP-Linux-qt.git
 cd miniDSP-Linux-qt
-uv sync              # creates .venv, installs dependencies
-uv sync --extra dev  # also installs pytest for development
+make sync            # .venv with all dependencies, including the dev tools
 ```
 
-On Windows the same commands run unchanged in PowerShell — install uv with
-`winget install astral-sh.uv` first; it provisions Python itself. A sibling
-checkout of the protocol library (`../miniDSP-Linux`) is optional on every
-platform: it is what [Developing against a local protocol library](#developing-against-a-local-protocol-library)
+On Windows the same commands run in PowerShell. A sibling checkout of the
+protocol library (`../miniDSP-Linux`) is optional on every platform: it is what
+[Developing against a local protocol library](#developing-against-a-local-protocol-library)
 installs on top of the pinned wheel, and it supplies the real `.unt` fixture the
 round-trip tests use, which they skip when it is absent.
+
+## Running from the checkout
+
+```bash
+uv run minidspqt              # connect to the DSP
+uv run minidspqt --offline    # virtual DSP, no hardware needed
+uv run minidspqt -vv          # debug logging, including the USB frame traces
+```
+
+In VS Code, `.vscode/launch.json` has the same two ways to start, connected
+and offline, under the debugger.
+
+## Tests and checks
+
+```bash
+make test            # the test suite
+make check           # ruff (lint) and ty (types); also make check-ruff, make check-ty
+make fix-ruff        # apply ruff's safe automatic fixes
+```
+
+No hardware is needed: the tests drive `FakeDSPmini`, which is built on the
+offline mode's `VirtualDSP`. `tests/conftest.py` sets `QT_QPA_PLATFORM=offscreen`
+before Qt loads, so the widgets always run headless, without a display server
+and the same on every platform. It uses `os.environ.setdefault`, so if you
+export `QT_QPA_PLATFORM=xcb` yourself, you can watch a test drive a real
+window. The suite also switches Qt's standard paths to test mode, so your own
+settings, such as the theme you picked, stay untouched.
+
+If ty reports that it can't resolve the `PySide6` modules, the environment has
+lost files of PySide6-Essentials, which happens when an environment that once
+had the full `PySide6` package uninstalls it. Remove `.venv` and run
+`make sync` again.
 
 ### Developing against a local protocol library
 
@@ -84,43 +94,14 @@ silently ignored.
 The override is reverted by the next `uv sync` / `uv lock` (or any plain
 `uv run`). Re-run the reinstall whenever you want to test fresh local changes.
 
-## Running tests
-
-The suite uses `pytest` and `pytest-qt`, which ship in the `dev`
-optional-dependency group. Install them once with:
+## Building
 
 ```bash
-make sync            # runs `uv sync --extra dev`
+make build           # wheel and sdist into dist/
+make docs            # the docs site into site/ (MkDocs Material)
+make docs-serve      # live preview at http://127.0.0.1:8000
+make clean           # remove the build output; make docs-clean removes site/
 ```
-
-Then run the tests:
-
-```bash
-make test            # uv run pytest -v
-```
-
-`tests/conftest.py` sets `QT_QPA_PLATFORM=offscreen` before importing PySide6, so
-the Qt widgets always run headless — no display server required, which makes the
-suite safe for CI and identical on every platform. It uses `os.environ.setdefault`,
-so exporting `QT_QPA_PLATFORM=xcb` yourself still wins when you want to watch a
-test drive a real window. Because the variable is no longer a POSIX `VAR=x cmd`
-prefix in the recipe, `make test` needs no POSIX shell.
-
-### GNU make on Windows (optional)
-
-`make` is not part of a Windows install. It is not required — every target that
-matters day to day is a one-line `uv` invocation you can type directly
-(`uv sync --extra dev`, `uv run pytest -v`, `uv build`, `uv run mkdocs build`).
-If you prefer the targets, install GNU make (for example
-`winget install ezwinports.make`); `sync`, `install`, `test`, `build`, `docs`,
-and `docs-serve` are shell-agnostic and work as-is.
-
-`version`, `publish`, and `appimage` shell out to bash scripts, `windows` needs
-`makensis` and a mingw-w64 cross-compiler, and `clean`, `docs-clean`,
-`appimage-clean`, and `windows-clean` use `rm -rf`, so those remain Linux-only —
-or Git Bash, which ships with Git for Windows.
-
-The suite covers the device thread, model, virtual DSP, preset picker, routing matrix, PEQ panel, crossover panel, the "show other outputs" graph overlay, the About dialog, compressor panel + graph, delay panel + graph, channel-linking dialog, channel-linking sync (master → slave fan-out), runtime offline-mode switching, param knob widget, and .unt read/write round-trip.
 
 ## Building the AppImage
 
@@ -259,7 +240,7 @@ else. To try unreleased library changes in a bundle, point the build at a wheel
 built from the sibling checkout instead:
 
 ```bash
-(cd ../miniDSP-Linux && uv build)
+make -C ../miniDSP-Linux build
 make windows MINIDSP_LINUX_WHEEL=../miniDSP-Linux/dist/minidsp_linux-<version>-py3-none-any.whl
 ```
 
@@ -275,18 +256,18 @@ podman run --rm -v "$PWD":/src -w /src -v ~/.cache/uv:/root/.cache/uv \
 
 The build then prints an **UNLOCKED DEV BUILD** warning: that one requirement and
 its dependencies come from outside `uv.lock`. Such a build is for trying things
-out on a Windows machine — never publish it.
+out on a Windows machine.
 
 ### What the build checks, and what it cannot
 
 On Linux every build verifies its own output: the interpreter search-path check
 (every stdlib `.pyd`, the stdlib zip and `site-packages` reachable from the
-`._pth`), the DLL import-closure check after pruning, and a layout check of the zip (launcher, interpreter, `._pth`,
-a stylesheet from the package data, the hidapi extension, Qt's `qwindows.dll`, the project's
-`.dist-info` — and none of the pruned trees). If `wine` is on `PATH`, the script
-additionally runs `--help` and boots the offline mode under Qt's offscreen
-platform, the same two-pass smoke test the AppImage gets. That step is optional
-and is not a release gate.
+`._pth`), the DLL import-closure check after pruning, and a layout check of the
+zip (launcher, interpreter, `._pth`, a stylesheet from the package data, the
+hidapi extension, Qt's `qwindows.dll`, the project's `.dist-info` — and none of
+the pruned trees). If `wine` is on `PATH`, the script additionally runs `--help`
+and boots the offline mode under Qt's offscreen platform, the same two-pass
+smoke test the AppImage gets. That step is optional.
 
 What Linux cannot check is the real thing: before a release that ships Windows
 artifacts, the maintainer walks through the
@@ -298,3 +279,14 @@ Neither the launcher nor the installer is signed, hence the SmartScreen dialog
 on first start. `osslsigncode` can sign both from Linux once a code-signing
 certificate exists; until then the README documents the click-through.
 
+## Windows notes
+
+`sync`, `install`, `test`, `check`, `check-ruff`, `check-ty`, `fix-ruff`,
+`build`, `docs` and `docs-serve` work in PowerShell as they are. `version`,
+`publish` and `appimage` run bash scripts, `windows` needs `makensis` and a
+mingw-w64 cross-compiler, and `clean`, `docs-clean`, `appimage-clean` and
+`windows-clean` use `rm -rf`; those need Linux, or for the scripts and `rm` a
+POSIX shell such as Git Bash, which comes with Git for Windows.
+
+The downloadable Windows build is assembled on Linux, not on Windows; see
+[Building the Windows distribution](#building-the-windows-distribution).

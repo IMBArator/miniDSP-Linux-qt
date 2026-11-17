@@ -740,7 +740,8 @@ Graph backgrounds are intentionally a **soft tinted off-white** in light mode ra
 ### Application crashes on startup
 
 - Ensure Python 3.11+ is installed: `python3 --version`
-- Reinstall dependencies: `uv sync --reinstall`
+- Reinstall: download the AppImage or the Windows build again; from a source
+  checkout, run `make sync`
 - Run with debug logging: `minidspqt -vv`
 
 ### Controls don't update the device

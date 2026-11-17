@@ -12,8 +12,8 @@
 #                                 uv is already the project tool (ADR-0026)
 #
 # It does NOT install Wine. The optional Wine smoke test in build.py runs only
-# when `wine` happens to be on PATH; the Windows 11 checklist in
-# docs/development.md is the real verification.
+# when `wine` happens to be on PATH; the Windows 11 check in CONTRIBUTING.md
+# is the real verification.
 
 set -euo pipefail
 

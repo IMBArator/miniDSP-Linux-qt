@@ -4,8 +4,6 @@
 
 > 📖 **New here?** Read the [**User Guide**](docs/user-guide.md) — a full walkthrough of every panel, dialog, and workflow.
 
-> 🛠 **Contributing or building from source?** See the [**Development Guide**](docs/development.md).
-
 A full-featured Qt graphical interface for the **t.racks DSP 4x4 Mini** audio processor, built on top of the [miniDSP-Linux](https://github.com/IMBArator/miniDSP-Linux) protocol library. Covers the complete DSP signal chain — gain, routing, noise gate, parametric EQ, crossover, compressor, delay — plus preset management, channel linking, a test tone generator, device lock / PIN, light/dark theming, and an offline mode for editing without hardware.
 
 ## Home View
@@ -48,7 +46,7 @@ Download one of the two Windows files from the [Releases page](https://github.co
 
 The builds are not code-signed, so the first start shows Windows' SmartScreen dialog ("Windows protected your PC") — choose **More info → Run anyway**. Command-line flags work as on Linux (`minidspqt.exe --offline`). Because the program runs without a console, its log goes to `%LOCALAPPDATA%\miniDSP\minidspqt\minidspqt.log`; for a bug report, run `minidspqt-debug.cmd` next to the exe, which opens a console with debug output.
 
-> Windows downloads appear from the first release that ships them; earlier releases are Linux-only. The build is produced on Linux — see [Building the Windows distribution](docs/development.md#building-the-windows-distribution) and [ADR-0031](docs/decisions/0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md). Running from a source checkout on Windows is described in the [Development Guide](docs/development.md#windows).
+> Windows downloads appear from the first release that ships them; earlier releases are Linux-only. The build is produced on Linux — see [Building the Windows distribution](docs/development.md#building-the-windows-distribution) and [ADR-0031](docs/decisions/0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md). Running from a source checkout on Windows is described in the [Development Guide](docs/development.md#windows-notes).
 
 ## Usage
 
@@ -207,6 +205,13 @@ Click the **Gate** button on any input strip — or the **PEQ** / **Xover** / **
 | Feature | Library API | What's missing |
 |---------|-------------|----------------|
 | Delay display unit (ms/m/ft) | `cmd_set_delay_unit` | Dropdown in delay view |
+
+## Development
+
+To set up a checkout, run the tests and checks, and build the AppImage or the
+Windows installer, see the [developer guide](docs/development.md). How changes
+get in is described in [CONTRIBUTING.md](CONTRIBUTING.md), and how the
+application is built inside in [docs/architecture.md](docs/architecture.md).
 
 ## Related projects
 
