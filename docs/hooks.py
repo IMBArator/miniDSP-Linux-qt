@@ -26,12 +26,15 @@ _TRANSCLUDED_PAGES = {
     "index.md",
     "changelog.md",
     "user-guide.md",
+    "contributing.md",
     "architecture.md",
+    "development.md",
 }
 
 _LINK_MAP = {
     "../LICENSE": "https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/LICENSE",
     "../CHANGELOG.md": "changelog.md",
+    "../CONTRIBUTING.md": "contributing.md",
     "../README.md": "index.md",
 }
 

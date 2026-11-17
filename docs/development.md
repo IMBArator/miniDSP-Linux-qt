@@ -288,24 +288,9 @@ additionally runs `--help` and boots the offline mode under Qt's offscreen
 platform, the same two-pass smoke test the AppImage gets. That step is optional
 and is not a release gate.
 
-What Linux cannot check is the real thing. Before a release that ships Windows
-artifacts, walk through this on a Windows 11 machine:
-
-1. Run the installer: SmartScreen → **More info → Run anyway**; licence page;
-   install lands in `%LOCALAPPDATA%\Programs\minidspqt`; a Start Menu entry
-   appears.
-2. Start it from the Start Menu, and `minidspqt.exe --offline` from a terminal:
-   the window appears, the theme switches, a `.unt` loads and saves.
-3. Connect the DSP: config read, level meters move, a gain edit reaches the
-   device.
-4. Start a second instance while the first is connected: it shows
-   **Device busy**; closing the first makes the second connect.
-5. `minidspqt-debug.cmd` opens a console with `-vv` output;
-   `%LOCALAPPDATA%\miniDSP\minidspqt\minidspqt.log` exists after a normal start.
-6. Uninstall via *Settings → Apps → Installed apps*: program folder and shortcut
-   are gone.
-7. Extract the portable zip from the Downloads folder (so Mark-of-the-Web
-   applies) and double-click `minidspqt.exe`.
+What Linux cannot check is the real thing: before a release that ships Windows
+artifacts, the maintainer walks through the
+[Windows check](../CONTRIBUTING.md#windows-check) on a Windows 11 machine.
 
 ### Code signing
 
@@ -313,51 +298,3 @@ Neither the launcher nor the installer is signed, hence the SmartScreen dialog
 on first start. `osslsigncode` can sign both from Linux once a code-signing
 certificate exists; until then the README documents the click-through.
 
-## Releasing
-
-A release ships both platforms: `publish.sh` requires the wheel, sdist, AppImage
-and the two Windows artifacts, and refuses otherwise. `SKIP_WINDOWS=1 make publish`
-is the deliberate exception for a Linux-only release. A Windows build made with
-`MINIDSP_LINUX_WHEEL` is an unlocked dev build and must not be published.
-
-The release flow uses two helper scripts under [`scripts/`](https://github.com/IMBArator/miniDSP-Linux-qt/tree/main/scripts), wired into the Makefile:
-
-```bash
-# 1. Bump version in pyproject.toml, regenerate CHANGELOG.md (git-cliff),
-#    commit `chore(release): vX.Y.Z`, tag vX.Y.Z, optionally push.
-make version VERSION=X.Y.Z
-
-# 2. Push the commit + tag if you skipped the prompt above.
-git push && git push origin vX.Y.Z
-
-# 3. Build the artifacts that publish.sh will attach.
-make build           # wheel + sdist
-make appimage        # AppImage (requires Ubuntu 20.04 build env or container)
-make windows         # Windows installer + portable zip (requires nsis +
-                     # mingw-w64, or a Debian container)
-
-# 4. Create the GitHub Release, upload wheel + sdist + AppImage (+ .zsync
-#    if present) + the two Windows artifacts, and deploy docs to GitHub
-#    Pages. Needs GITHUB_TOKEN (PAT with `repo` scope) in the environment.
-#    SKIP_WINDOWS=1 publishes a Linux-only release.
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-make publish         # or: make publish VERSION=X.Y.Z
-```
-
-Release notes are extracted from the `## [X.Y.Z]` section of the [Changelog](changelog.md), which `make version` regenerates from Conventional Commits via [`cliff.toml`](https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/cliff.toml). Tags matching `-rc`, `-beta`, or `-alpha` are auto-flagged as prereleases.
-
-## Architecture decisions
-
-Design decisions with lasting consequences are recorded as
-[architecture decision records](decisions/index.md) in
-[MADR](https://adr.github.io/madr/) format, one file per decision under
-`docs/decisions/`.
-
-Read them before changing behaviour in an area they cover — several document a
-position the project actively abandoned, so the record explains why the obvious
-alternative was already tried and rejected. The
-[index](decisions/index.md#decisions-that-reversed-an-earlier-position) lists
-those reversals separately.
-
-When you make a decision worth recording, copy `docs/decisions/adr-template.md`
-to the next number and add it to the index.

@@ -196,8 +196,8 @@ synthetic PE32+ image, and the zip layout check. `tests/test_headless_logging.py
 drives both logging paths by swapping `sys.stderr`. Every real build enforces the
 closure check and the zip layout check on itself, and `grep` for `sys.platform`,
 `fcntl` and `/dev/` under `minidspqt/` must stay empty. Before a release the
-Windows 11 checklist in [Building the Windows distribution](../development.md#building-the-windows-distribution)
-is walked through by hand.
+Windows 11 checklist (today the "Windows check" in CONTRIBUTING.md) is walked
+through by hand.
 
 ## Pros and Cons of the Options
 

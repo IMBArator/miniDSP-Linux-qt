@@ -134,7 +134,8 @@ before any commit or tag is created.
 
 * `bd61f58` — the scripts and `make` targets; `6509c99` — the commit conventions in
   the agent working notes of the time (`CLAUDE.md`); [cliff.toml](https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/cliff.toml) — the type mapping
-* [Releasing](../development.md#releasing)
+* The release steps: CONTRIBUTING.md, section "The device, the protocol
+  library and releases"
 * Related: ADR-0026 (`make` targets), ADR-0027 (the AppImage asset),
   ADR-0029 (changelog transclusion)
 * Amended by [ADR-0031](0031-build-the-windows-distribution-on-linux-from-embeddable-cpython-and-wheels.md):

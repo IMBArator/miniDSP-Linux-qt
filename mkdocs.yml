@@ -83,6 +83,7 @@ nav:
   - User Guide: user-guide.md
   - Architecture: architecture.md
   - Development: development.md
+  - Contributing: contributing.md
   - UI Concepts: concepts.md
   - Decisions: decisions/
   - API Reference: api/
