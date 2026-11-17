@@ -16,6 +16,8 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-qt>=4.4",
+    "ruff>=0.6",
+    "ty>=0.0.104",
 ]
 docs = [
     "mkdocs>=1.6,<2.0",
@@ -42,3 +44,16 @@ artifacts = ["minidspqt/resources/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# pyflakes + pycodestyle + isort + pyupgrade + bugbear
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]  # long lines are a formatting matter; the formatter is not enforced
+
+[tool.ruff.lint.isort]
+# Every module starts with the future import; ruff adds it where it is missing.
+required-imports = ["from __future__ import annotations"]

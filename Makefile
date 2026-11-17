@@ -12,6 +12,20 @@ install: sync   ## alias kept for muscle memory
 test:
 	$(UV) run pytest -v
 
+check: check-ruff check-ty
+
+# Lint (ruff: pyflakes, pycodestyle, isort, pyupgrade, bugbear; config in pyproject.toml)
+check-ruff:
+	$(UV) run ruff check minidspqt tests packaging
+
+# Type check (ty, Astral's checker; Python version from requires-python)
+check-ty:
+	$(UV) run ty check minidspqt tests packaging
+
+# Apply ruff's safe automatic fixes (import order, future import, pyupgrade)
+fix-ruff:
+	$(UV) run ruff check --fix minidspqt tests packaging
+
 # Build the package (sdist and wheel into dist/)
 build:
 	$(UV) build
