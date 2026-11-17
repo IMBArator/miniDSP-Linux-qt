@@ -17,10 +17,17 @@ from __future__ import annotations
 
 import re
 
-# Pages that transclude an upstream Markdown file and therefore need
-# their relative links rewritten. Any page not listed here is passed
+# Pages whose relative links point at source files outside docs/ and
+# therefore need rewriting: pages that transclude an upstream Markdown
+# file, and pages such as architecture.md that link the sources directly
+# so the links also work on GitHub. Any page not listed here is passed
 # through unchanged.
-_TRANSCLUDED_PAGES = {"index.md", "changelog.md", "user-guide.md"}
+_TRANSCLUDED_PAGES = {
+    "index.md",
+    "changelog.md",
+    "user-guide.md",
+    "architecture.md",
+}
 
 _LINK_MAP = {
     "../LICENSE": "https://github.com/IMBArator/miniDSP-Linux-qt/blob/main/LICENSE",
