@@ -1,11 +1,43 @@
 UV := uv
 
-.PHONY: sync install test build version publish clean docs docs-serve docs-clean appimage appimage-clean windows windows-clean
+.DEFAULT_GOAL := build
+
+.PHONY: sync install test check check-ruff check-ty fix-ruff build clean version publish help \
+        appimage appimage-clean windows windows-clean docs docs-serve docs-clean
+
+help:
+	@echo "Usage: make [target] [VAR=value]"
+	@echo ""
+	@echo "Build"
+	@echo "  build                   Build sdist and wheel (default)"
+	@echo "  version VERSION=X.Y.Z   Bump version, generate changelog, tag"
+	@echo "  publish [VERSION=X.Y.Z] Create GitHub Release + deploy docs (prompts if VERSION omitted)"
+	@echo "  clean                   Remove build artifacts (dist/, build/, *.egg-info)"
+	@echo ""
+	@echo "Development"
+	@echo "  sync                    Install all dependencies (incl. dev extras)"
+	@echo "  install                 Alias for sync"
+	@echo "  test                    Run test suite with pytest"
+	@echo "  check                   check-ruff and check-ty"
+	@echo "  check-ruff              Lint the code base with ruff"
+	@echo "  check-ty                Type-check the code base with ty"
+	@echo "  fix-ruff                Apply ruff's automatic fixes"
+	@echo ""
+	@echo "Packaging  (both need the wheel from 'make build')"
+	@echo "  appimage                Build the AppImage into dist/"
+	@echo "  appimage-clean          Remove AppImage build output (keeps the download cache)"
+	@echo "  windows                 Build the Windows installer and portable zip into dist/"
+	@echo "  windows-clean           Remove Windows build output (keeps the download cache)"
+	@echo ""
+	@echo "Documentation"
+	@echo "  docs                    Build HTML docs into site/ (MkDocs Material)"
+	@echo "  docs-serve              Live-reload docs preview at http://127.0.0.1:8000"
+	@echo "  docs-clean              Remove generated site/ directory"
 
 sync:
 	$(UV) sync --extra dev
 
-install: sync   ## alias kept for muscle memory
+install: sync
 
 # Run the test suite (headless: tests/conftest.py sets QT_QPA_PLATFORM=offscreen,
 # so this recipe needs no POSIX env prefix and works under Windows GNU make too)
@@ -26,9 +58,12 @@ check-ty:
 fix-ruff:
 	$(UV) run ruff check --fix minidspqt tests packaging
 
-# Build the package (sdist and wheel into dist/)
 build:
 	$(UV) build
+
+# Remove build artifacts (sdist/wheel, AppImage and Windows output, download caches)
+clean:
+	rm -rf dist build *.egg-info
 
 # Create a release (usage: make version VERSION=X.Y.Z)
 version:
@@ -65,10 +100,6 @@ windows:
 # Remove only Windows artifacts (keeps the embeddable-Python download cache).
 windows-clean:
 	rm -rf build/windows dist/*-win_amd64.zip dist/*-win_amd64-setup.exe
-
-# Remove all build artifacts (sdist/wheel + AppImage + Windows + caches)
-clean:
-	rm -rf dist build *.egg-info
 
 # Build HTML documentation (MkDocs Material) into site/
 docs:
