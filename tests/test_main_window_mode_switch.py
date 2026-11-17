@@ -19,10 +19,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from minidspqt.virtual_dsp import VirtualDSP
 
-# ---------------------------------------------------------------------------
-# VirtualDSP.seed_from_config
-# ---------------------------------------------------------------------------
-
+# --- VirtualDSP.seed_from_config ---
 
 def test_seed_from_config_round_trips(preset_cfg):
     """Seeding a fresh VirtualDSP with a config dict mirrors every slot key."""
@@ -59,10 +56,7 @@ def test_seed_from_config_is_deep_copy(preset_cfg):
     assert cfg["gains"][0] == preset_cfg["gains"][0]
 
 
-# ---------------------------------------------------------------------------
-# MainWindow mode switching
-# ---------------------------------------------------------------------------
-
+# --- MainWindow mode switching ---
 
 def _stop_worker(window, qtbot):
     """Stop the worker thread and drain any queued signals.

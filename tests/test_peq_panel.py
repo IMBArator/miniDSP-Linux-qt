@@ -14,6 +14,7 @@ from minidspqt.views.detail_view import DetailView
 from minidspqt.views.panels import PEQPanel
 from minidspqt.views.panels.peq_panel import _parse_freq
 
+# --- Fixtures and helpers ---
 
 @pytest.fixture
 def panel(qtbot):
@@ -28,6 +29,8 @@ def _default_bands() -> list[PEQBand]:
         for _ in range(7)
     ]
 
+
+# --- Silent setters ---
 
 class TestSilentSetters:
     def test_set_bands_silently_does_not_emit(self, panel, qtbot):
@@ -61,6 +64,8 @@ class TestSilentSetters:
         assert sig.args[1] == 150
 
 
+# --- Atomic emit ---
+
 class TestAtomicEmit:
     def test_one_knob_change_emits_full_band(self, panel, qtbot):
         panel.set_bands_silently(_default_bands(), False)
@@ -89,6 +94,8 @@ class TestAtomicEmit:
         assert sig.args[5] is True
 
 
+# --- Marker drag ---
+
 class TestMarkerDrag:
     """The graph's band_dragged signal feeds the knobs and re-emits once."""
 
@@ -113,6 +120,8 @@ class TestMarkerDrag:
         assert panel._freq_knobs[0].value() == 170
 
 
+# --- Marker wheel Q ---
+
 class TestMarkerWheelQ:
     def test_wheel_delta_raises_q_and_emits_once(self, panel, qtbot):
         panel.set_bands_silently(_default_bands(), False)  # q_raw 16, Peak
@@ -136,6 +145,8 @@ class TestMarkerWheelQ:
         assert panel._q_knobs[2].value() == 16
 
 
+# --- Marker double-click bypass ---
+
 class TestMarkerDoubleClickBypass:
     def test_double_click_toggles_band_bypass(self, panel, qtbot):
         panel.set_bands_silently(_default_bands(), False)
@@ -158,6 +169,8 @@ class TestMarkerDoubleClickBypass:
             panel._on_marker_bypass_toggled(0)
         assert panel._bypass_toggles[0].isChecked() is False
 
+
+# --- Frequency parsing regression ---
 
 class TestParseFreqRegression:
     """_parse_freq now delegates to the shared freq_hz_to_raw helper."""
@@ -188,6 +201,8 @@ class TestParseFreqRegression:
             assert _parse_freq(f"{freq_raw_to_hz(raw)} Hz") == raw
 
 
+# --- Channel bypass ---
+
 class TestChannelBypass:
     def test_channel_toggle_emits_only_channel_signal(self, panel, qtbot):
         panel.set_bands_silently(_default_bands(), False)
@@ -196,6 +211,8 @@ class TestChannelBypass:
                 panel._channel_bypass.setChecked(True)
         assert sig.args[0] is True
 
+
+# --- Feature availability ---
 
 class TestFeatureAvailability:
     @pytest.fixture
@@ -224,6 +241,8 @@ class TestFeatureAvailability:
         assert detail._feature_available("Bogus", True) is False
         assert detail._feature_available("Bogus", False) is False
 
+
+# --- PEQ active ---
 
 class TestPEQActive:
     """The output strip's PEQ button reflects whether any band is shaping signal."""
@@ -284,6 +303,8 @@ class TestPEQActive:
         strip.set_peq_active(False)
         assert peq_btn.property("peq_active") is False
 
+
+# --- Per-type Q range ---
 
 class TestPerTypeQRange:
     """Shelf and pass filters cap Q at raw 35 (Q ≈ 3.0); Peak and Allpass keep
@@ -349,6 +370,8 @@ class TestPerTypeQRange:
         assert panel._q_knobs[2].value() == 35
 
 
+# --- Output strip PEQ navigation ---
+
 class TestOutputStripPEQNavigation:
     """The output strip's PEQ button is wired as a momentary nav button."""
 
@@ -365,6 +388,8 @@ class TestOutputStripPEQNavigation:
         assert sig.args == ["peq", True]
         assert peq_btn.isChecked() is False  # auto-unchecks
 
+
+# --- MainWindow integration ---
 
 class TestMainWindowIntegration:
     """End-to-end: home view PEQ click navigates to the PEQ detail panel."""
@@ -473,6 +498,8 @@ class TestMainWindowIntegration:
             is window._detail_view.gate_panel
         )
 
+
+# --- Overlay sources ---
 
 class TestOverlaySources:
     """The PEQ panel forwards overlay sources to its shared OverlayControls."""

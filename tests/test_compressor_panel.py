@@ -16,10 +16,7 @@ def panel(qtbot):
     return p
 
 
-# ------------------------------------------------------------------ #
-# Ratio combo
-# ------------------------------------------------------------------ #
-
+# --- Ratio combo ---
 
 def test_ratio_combo_lists_all_16_names(panel):
     """All 16 protocol ratio names must appear in order."""
@@ -28,10 +25,7 @@ def test_ratio_combo_lists_all_16_names(panel):
         assert panel._ratio_combo.itemText(raw) == COMP_RATIO_NAMES[raw]
 
 
-# ------------------------------------------------------------------ #
-# Silent setter
-# ------------------------------------------------------------------ #
-
+# --- Silent setter ---
 
 class TestSilentSetter:
     def test_set_params_silently_does_not_emit(self, panel, qtbot):
@@ -66,10 +60,7 @@ class TestSilentSetter:
         )
 
 
-# ------------------------------------------------------------------ #
-# Signal emission
-# ------------------------------------------------------------------ #
-
+# --- Signal emission ---
 
 class TestSignalEmission:
     def test_threshold_change_emits_all_five_values(self, panel, qtbot):
@@ -105,10 +96,7 @@ class TestSignalEmission:
         assert sig.args == [3, 8, 120, 2000, 180]
 
 
-# ------------------------------------------------------------------ #
-# Graph wiring
-# ------------------------------------------------------------------ #
-
+# --- Graph wiring ---
 
 def test_graph_threshold_reflects_knob(panel):
     panel._knob_threshold.setValue(150)
@@ -133,10 +121,7 @@ def test_graph_limit_ratio_is_infinite(panel):
     assert math.isinf(panel._graph._ratio)
 
 
-# ------------------------------------------------------------------ #
-# Slave lock
-# ------------------------------------------------------------------ #
-
+# --- Slave lock ---
 
 def test_slave_lock_disables_all_controls(panel):
     panel.set_linked_slave(True, "Out1")

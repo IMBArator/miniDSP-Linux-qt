@@ -16,6 +16,7 @@ from minidspqt.views.detail_view import DetailView
 from minidspqt.views.home_view import HomeView
 from minidspqt.views.main_window import MainWindow
 
+# --- Fixtures and helpers ---
 
 @pytest.fixture
 def home(qtbot):
@@ -43,6 +44,8 @@ def view(request, home, detail):
     """Both views in turn — their chip behaviour is specified to be identical."""
     return home if request.param == "home" else detail
 
+
+# --- Chip rendering ---
 
 class TestChipRendering:
     def test_busy_shows_labelled_chip_with_help(self, view):
@@ -89,6 +92,8 @@ class TestChipRendering:
         # strip widget itself, so the gain knob is what to look at.
         assert not any(s._knob.isEnabled() for s in home._all_strips())
 
+
+# --- MainWindow mediation ---
 
 class TestMainWindowMediation:
     """ADR-0006: the window filters worker signals; the views stay passive."""

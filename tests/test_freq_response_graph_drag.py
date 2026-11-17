@@ -347,10 +347,7 @@ class TestCrossoverIsInert:
                 g.mouseDoubleClickEvent(_double_click(start))
 
 
-# ------------------------------------------------------------------ #
-# Crossover marker dragging (feature == "xover")
-# ------------------------------------------------------------------ #
-
+# --- Crossover marker dragging (feature == "xover") ---
 
 class TestXoverHitTesting:
     def test_hits_hp_marker(self, xover_graph):

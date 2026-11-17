@@ -17,10 +17,7 @@ def graph(qtbot):
     return g
 
 
-# ------------------------------------------------------------------ #
-# Parameter binding
-# ------------------------------------------------------------------ #
-
+# --- Parameter binding ---
 
 def test_default_state_is_identity(graph):
     """Defaults (threshold +20 dB, ratio 1:1.0, knee 0) collapse to identity."""
@@ -50,10 +47,7 @@ def test_set_params_clamps_out_of_range_ratio(graph):
     assert graph._ratio == COMP_RATIO_VALUES[15]
 
 
-# ------------------------------------------------------------------ #
-# Static transfer function
-# ------------------------------------------------------------------ #
-
+# --- Static transfer function ---
 
 class TestCurveMath:
     def test_baseline_below_threshold_is_identity(self, graph):

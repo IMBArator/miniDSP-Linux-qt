@@ -16,6 +16,8 @@ from minidsp.unt import UNT_SIZE, UntFile, UntParseError
 
 from minidspqt.virtual_dsp import VirtualDSP
 
+# --- Test data ---
+
 # Files saved by the manufacturer's editor, kept in a sibling checkout of the
 # protocol library. Located relative to this file so they resolve on any
 # machine; the tests skip when the checkout is absent.
@@ -26,6 +28,8 @@ EDITOR_FILES = [
     "miniDSP current settings 261026.unt",
 ]
 
+
+# --- Helpers ---
 
 def _editor_file(name: str) -> Path:
     """Return the path of an editor-saved fixture, or skip if it is missing."""
@@ -43,6 +47,8 @@ def _loaded(path: Path) -> tuple[VirtualDSP, bytes]:
     return dsp, raw
 
 
+# --- Byte-identical round trips ---
+
 @pytest.mark.parametrize("name", EDITOR_FILES)
 def test_load_then_export_is_byte_identical(name):
     dsp, raw = _loaded(_editor_file(name))
@@ -56,6 +62,8 @@ def test_double_round_trip_is_byte_identical(name):
     again.load_from_unt(dsp.export_unt())
     assert again.export_unt().to_bytes() == raw
 
+
+# --- Edits and export ---
 
 def test_stored_gain_edit_changes_only_its_slot():
     path = _editor_file("miniDSP current settings 261026.unt")
@@ -96,6 +104,8 @@ def test_stored_mute_edit_round_trips():
     assert reread.slot_name(active) == "Muted"
 
 
+# --- Active slot and factory state ---
+
 def test_f00_active_file_loads_with_factory_working_config():
     path = _editor_file("miniDSP current settings 261026.unt")
     unt = UntFile.read(path)
@@ -132,6 +142,8 @@ def test_seeded_active_slot_is_exported():
     assert params["gains"] == [123] * 8
     assert unt.slot_name(5) == "Name05"
 
+
+# --- Isolation and errors ---
 
 def test_load_does_not_share_state_with_the_callers_file():
     dsp, raw = _loaded(_editor_file("miniDSP current settings 261026.unt"))

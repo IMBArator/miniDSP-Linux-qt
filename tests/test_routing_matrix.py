@@ -12,6 +12,7 @@ from minidspqt.widgets.routing_matrix import (
     _point_to_segment_dist,
 )
 
+# --- Helpers ---
 
 def _mouse_event(
     etype,
@@ -21,6 +22,8 @@ def _mouse_event(
 ) -> QMouseEvent:
     return QMouseEvent(etype, pos, pos, button, button, modifiers)
 
+
+# --- Point-to-segment distance ---
 
 class TestPointToSegmentDist:
     def test_point_on_segment(self):
@@ -43,6 +46,8 @@ class TestPointToSegmentDist:
         a = b = QPointF(50, 50)
         assert _point_to_segment_dist(QPointF(50, 60), a, b) == pytest.approx(10)
 
+
+# --- Routing matrix signals ---
 
 class TestRoutingMatrixSignals:
     def test_drag_emits_routing_changed(self, qtbot):
@@ -162,6 +167,8 @@ class TestRoutingMatrixSignals:
 
         assert widget._masks[1] == 0x03
 
+
+# --- Routing matrix hit detection ---
 
 class TestRoutingMatrixHitDetection:
     def test_hit_node_on_point(self):

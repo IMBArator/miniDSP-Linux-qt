@@ -11,6 +11,7 @@ import pytest
 
 from minidspqt.views.main_window import MainWindow
 
+# --- Helpers ---
 
 def _stop_worker(window, qtbot):
     """Stop the background device thread so teardown is clean."""
@@ -18,6 +19,8 @@ def _stop_worker(window, qtbot):
     window._thread.wait(2000)
     qtbot.wait(50)
 
+
+# --- Fixtures ---
 
 @pytest.fixture
 def offline_window(qtbot):
@@ -34,6 +37,8 @@ def online_window(qtbot, fake_dsp):
     _stop_worker(w, qtbot)
     return w
 
+
+# --- About HTML ---
 
 class TestAboutHtml:
     def test_app_version_always_shown(self, offline_window):

@@ -129,10 +129,7 @@ def test_set_field_with_links_out_of_range(preset_cfg):
     assert state.set_field_with_links(99, "muted", True) == []
 
 
-# ---------------------------------------------------------------------------
-# mutate_with_links — generic linked mutator for nested-param fan-out
-# ---------------------------------------------------------------------------
-
+# --- mutate_with_links — generic linked mutator for nested-param fan-out ---
 
 def test_mutate_with_links_gate_propagates(preset_cfg):
     """Setting gate threshold on a master should mirror to every slave.
@@ -211,10 +208,7 @@ def test_mutate_with_links_out_of_range(preset_cfg):
     assert state.mutate_with_links(99, lambda obj: None) == []
 
 
-# ---------------------------------------------------------------------------
-# comp_active property
-# ---------------------------------------------------------------------------
-
+# --- comp_active property ---
 
 def test_comp_active_ratio_zero_is_inactive(preset_cfg):
     """Raw ratio 0 = 1:1.0 = no compression -> indicator stays dark."""
@@ -232,10 +226,7 @@ def test_comp_active_ratio_nonzero_is_active(preset_cfg):
     assert state.outputs[0].comp_active is True
 
 
-# ---------------------------------------------------------------------------
-# delay_active property
-# ---------------------------------------------------------------------------
-
+# --- delay_active property ---
 
 def test_delay_active_zero_is_inactive(preset_cfg):
     """No delay (0 samples) -> indicator stays dark."""

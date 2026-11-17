@@ -10,10 +10,7 @@ from minidspqt.views.channel_linking_dialog import (
     link_flags_from_targets,
 )
 
-# ------------------------------------------------------------------ #
-# link_flags_from_targets — pure helper (no Qt needed)
-# ------------------------------------------------------------------ #
-
+# --- link_flags_from_targets — pure helper (no Qt needed) ---
 
 class TestLinkFlagsFromTargets:
     def test_all_standalone(self):
@@ -49,10 +46,7 @@ class TestLinkFlagsFromTargets:
         assert link_flags_from_targets([0, 1, 1, 1]) == [0x01, 0x0E, 0x00, 0x00]
 
 
-# ------------------------------------------------------------------ #
-# Dialog UI integration (needs qtbot)
-# ------------------------------------------------------------------ #
-
+# --- Dialog UI integration (needs qtbot) ---
 
 def _state_with_link_flags(flags: list[int]) -> DeviceState:
     """Build a minimal DeviceState carrying the given link_flags list."""

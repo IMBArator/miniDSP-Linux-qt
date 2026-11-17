@@ -14,10 +14,7 @@ def graph(qtbot):
     return g
 
 
-# ------------------------------------------------------------------ #
-# Defaults
-# ------------------------------------------------------------------ #
-
+# --- Defaults ---
 
 def test_default_state(graph):
     assert graph._samples == [0, 0, 0, 0]
@@ -25,10 +22,7 @@ def test_default_state(graph):
     assert graph._names == ["Out1", "Out2", "Out3", "Out4"]
 
 
-# ------------------------------------------------------------------ #
-# set_delays
-# ------------------------------------------------------------------ #
-
+# --- set_delays ---
 
 def test_set_delays_stores_values(graph):
     graph.set_delays([10, 20, 30, 40])
@@ -53,10 +47,7 @@ def test_set_delays_idempotent(graph):
     assert graph._samples == before
 
 
-# ------------------------------------------------------------------ #
-# set_active_row
-# ------------------------------------------------------------------ #
-
+# --- set_active_row ---
 
 def test_set_active_row(graph):
     graph.set_active_row(2)
@@ -70,10 +61,7 @@ def test_set_active_row_clamps(graph):
     assert graph._active_row == 0
 
 
-# ------------------------------------------------------------------ #
-# set_channel_names
-# ------------------------------------------------------------------ #
-
+# --- set_channel_names ---
 
 def test_set_channel_names(graph):
     graph.set_channel_names(["Sub L", "Sub R", "Top L", "Top R"])
@@ -85,10 +73,7 @@ def test_set_channel_names_wrong_length_is_no_op(graph):
     assert graph._names == ["Out1", "Out2", "Out3", "Out4"]
 
 
-# ------------------------------------------------------------------ #
-# Dynamic axis range
-# ------------------------------------------------------------------ #
-
+# --- Dynamic axis range ---
 
 class TestAxisRange:
     def test_all_zero_uses_minimum_range(self, graph):

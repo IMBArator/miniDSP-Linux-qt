@@ -18,6 +18,7 @@ from minidspqt.widgets.freq_response_graph import (
     FreqResponseGraph,
 )
 
+# --- Fixtures and helpers ---
 
 @pytest.fixture
 def graph(qtbot):
@@ -31,6 +32,8 @@ def _active_band() -> PEQBand:
     # +4 dB peak at ~1 kHz, not bypassed → a non-flat response.
     return PEQBand(gain_raw=160, freq_raw=170, q_raw=30, filter_type=0, bypass=False)
 
+
+# --- Set overlays ---
 
 class TestSetOverlays:
     def test_set_overlays_stores_entries(self, graph):
@@ -49,6 +52,8 @@ class TestSetOverlays:
         src.clear()
         assert len(graph._overlays) == 1
 
+
+# --- Response polyline ---
 
 class TestResponsePolyline:
     def test_active_band_yields_full_polyline(self, graph):
@@ -79,6 +84,8 @@ class TestResponsePolyline:
         assert poly is not None
         assert poly.count() == _NUM_SAMPLES
 
+
+# --- Overlay colour ---
 
 class TestOverlayColour:
     def test_overlay_palette_has_four_distinct_colours(self):

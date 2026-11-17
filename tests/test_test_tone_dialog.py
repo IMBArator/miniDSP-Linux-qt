@@ -15,6 +15,7 @@ from minidsp.protocol import (
 from minidspqt.model import DeviceState, TestToneState
 from minidspqt.views.test_tone_dialog import _FREQ_LABELS, TestToneDialog
 
+# --- Fixtures and helpers ---
 
 def _state(mode: int = TONE_OFF, freq_index: int = 0) -> DeviceState:
     """Build a minimal DeviceState carrying a specific tone configuration.
@@ -33,6 +34,8 @@ def dialog(qtbot):
     qtbot.addWidget(dlg)
     return dlg
 
+
+# --- Initial state ---
 
 class TestInitialState:
     def test_31_freq_labels(self):
@@ -80,6 +83,8 @@ class TestInitialState:
             assert dlg._stop_btn.isEnabled(), f"mode={mode}"
 
 
+# --- Apply ---
+
 class TestApply:
     def test_apply_emits_mode_and_freq(self, dialog, qtbot):
         # Pick Sine + 1 kHz.
@@ -113,6 +118,8 @@ class TestApply:
         assert caught.args == [TONE_OFF, SINE_FREQ_1KHZ]
 
 
+# --- Panic button ---
+
 class TestPanicButton:
     def test_disable_emits_signal(self, qtbot):
         dlg = TestToneDialog(None, _state(TONE_PINK))
@@ -144,6 +151,8 @@ class TestPanicButton:
         qtbot.wait(20)
         assert received == []
 
+
+# --- Refresh ---
 
 class TestRefresh:
     def test_refresh_snaps_back_to_device_state(self, dialog):

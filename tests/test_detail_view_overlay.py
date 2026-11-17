@@ -18,6 +18,7 @@ from minidspqt.model import (
 )
 from minidspqt.views.detail_view import DetailView
 
+# --- Fixtures and helpers ---
 
 @pytest.fixture
 def detail(qtbot):
@@ -46,6 +47,8 @@ def _state(out0_gain=160) -> DeviceState:
         )
     return DeviceState(connected=True, inputs=inputs, outputs=outputs)
 
+
+# --- Overlay source push ---
 
 class TestOverlaySourcePush:
     def test_selecting_output_pushes_three_siblings(self, detail):

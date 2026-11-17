@@ -6,6 +6,7 @@ import pytest
 
 from minidspqt.views.preset_picker import PresetPickerDialog
 
+# --- Preset picker dialogs ---
 
 @pytest.mark.qt_no_exception_capture
 def test_recall_dialog_selects_slot(qtbot):

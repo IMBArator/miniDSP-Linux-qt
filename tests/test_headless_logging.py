@@ -20,6 +20,7 @@ import pytest
 
 from minidspqt.app import LOG_FILE_NAME, configure_logging
 
+# --- Fixtures ---
 
 @pytest.fixture
 def attached_handlers():
@@ -31,6 +32,8 @@ def attached_handlers():
         root.removeHandler(handler)
         handler.close()
 
+
+# --- Log destination ---
 
 def test_with_console_logs_to_stderr(attached_handlers):
     handler = configure_logging(logging.INFO)
@@ -57,6 +60,8 @@ def test_without_console_logs_to_file(monkeypatch, tmp_path, attached_handlers):
     assert "hello from the test" in text
     assert "WARN" in text
 
+
+# --- Excepthook and log directory ---
 
 def test_without_console_uncaught_exceptions_reach_the_file(
     monkeypatch, tmp_path, attached_handlers

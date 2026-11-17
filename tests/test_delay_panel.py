@@ -18,10 +18,7 @@ def panel(qtbot):
     return p
 
 
-# ------------------------------------------------------------------ #
-# Format / parse helpers
-# ------------------------------------------------------------------ #
-
+# --- Format / parse helpers ---
 
 class TestFormatDelay:
     def test_zero(self):
@@ -65,10 +62,7 @@ class TestParseDelay:
         assert _parse_delay("99999 samples") == 32640
 
 
-# ------------------------------------------------------------------ #
-# Silent setter
-# ------------------------------------------------------------------ #
-
+# --- Silent setter ---
 
 class TestSilentSetter:
     def test_set_delays_silently_does_not_emit(self, panel, qtbot):
@@ -90,10 +84,7 @@ class TestSilentSetter:
         assert panel._graph._samples == [0, 0, 0, 0]
 
 
-# ------------------------------------------------------------------ #
-# set_active_channel
-# ------------------------------------------------------------------ #
-
+# --- set_active_channel ---
 
 class TestSetActiveChannel:
     def test_updates_label_and_graph_row(self, panel):
@@ -111,10 +102,7 @@ class TestSetActiveChannel:
         assert panel._graph._samples[3] == 1234
 
 
-# ------------------------------------------------------------------ #
-# Signal emission
-# ------------------------------------------------------------------ #
-
+# --- Signal emission ---
 
 def test_knob_change_emits_signal(panel, qtbot):
     panel.set_active_channel(0, "Out1", 0)
@@ -138,10 +126,7 @@ def test_knob_change_only_touches_active_row(panel):
     assert panel._graph._samples == [100, 200, 500, 400]
 
 
-# ------------------------------------------------------------------ #
-# Slave lock
-# ------------------------------------------------------------------ #
-
+# --- Slave lock ---
 
 def test_slave_lock_disables_knob_only(panel):
     panel.set_linked_slave(True, "Out1")
@@ -159,10 +144,7 @@ def test_unlock_re_enables_knob(panel):
     assert panel._link_banner.isHidden()
 
 
-# ------------------------------------------------------------------ #
-# Channel names propagation
-# ------------------------------------------------------------------ #
-
+# --- Channel names propagation ---
 
 def test_set_channel_names_forwards_to_graph(panel):
     panel.set_channel_names(["Sub L", "Sub R", "Top L", "Top R"])

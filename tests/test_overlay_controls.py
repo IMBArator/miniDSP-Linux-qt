@@ -15,6 +15,7 @@ from minidspqt.model import PEQBand
 from minidspqt.views.panels._overlay_controls import install_overlay_controls
 from minidspqt.widgets.freq_response_graph import CrossoverData, FreqResponseGraph
 
+# --- Fixtures and helpers ---
 
 @pytest.fixture
 def controls(qtbot):
@@ -49,6 +50,8 @@ def _sources_excluding(active_idx: int):
     ]
 
 
+# --- Visibility and labels ---
+
 class TestVisibilityAndLabels:
     def test_active_box_hidden_others_shown(self, controls):
         ctrl, _ = controls
@@ -71,6 +74,8 @@ class TestVisibilityAndLabels:
         assert ctrl._checks[2].isHidden()
         assert not ctrl._checks[0].isHidden()
 
+
+# --- Overlay push ---
 
 class TestOverlayPush:
     def test_checking_box_pushes_that_source(self, controls):
@@ -114,6 +119,8 @@ class TestOverlayPush:
         assert graph._overlays[0][1][0].gain_raw == 200
 
 
+# --- Reset on switch ---
+
 class TestResetOnSwitch:
     def test_switch_clears_selections(self, controls):
         ctrl, graph = controls
@@ -131,6 +138,8 @@ class TestResetOnSwitch:
         assert ctrl._checks[2].isChecked()
         assert len(graph._overlays) == 1
 
+
+# --- Always interactive ---
 
 class TestAlwaysInteractive:
     def test_boxes_enabled_by_default(self, controls):

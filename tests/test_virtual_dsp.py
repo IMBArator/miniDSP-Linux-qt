@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from minidspqt.virtual_dsp import VirtualDSP
 
+# --- Setters that persist ---
 
 def test_set_gain_persists():
     dsp = VirtualDSP()
@@ -65,6 +66,8 @@ def test_set_compressor_persists():
     }
 
 
+# --- Presets ---
+
 def test_store_then_load_roundtrip():
     dsp = VirtualDSP()
     dsp.set_gain(0, 250)
@@ -124,6 +127,8 @@ def test_store_preset_invalid_slot():
     assert dsp.store_preset(31, "bad") is False
 
 
+# --- Config reads, levels and session ---
+
 def test_read_config_returns_deep_copy():
     dsp = VirtualDSP()
     cfg1 = dsp.read_config()
@@ -144,6 +149,8 @@ def test_open_close_noop():
     dsp.open()
     dsp.close()
 
+
+# --- .unt import and export ---
 
 def test_load_from_unt():
     from minidsp.unt import UntFile
@@ -200,6 +207,8 @@ def test_export_unt():
     assert unt.slot_name(3) == "ExportTest"
 
 
+# --- Channel names and filters ---
+
 def test_set_channel_name():
     dsp = VirtualDSP()
     dsp.set_channel_name(4, "Left")
@@ -216,6 +225,8 @@ def test_set_hipass_lopass():
     assert cfg["crossovers"][0]["lopass_freq"] == 200
     assert cfg["crossovers"][0]["lopass_slope"] == 5
 
+
+# --- Factory defaults ---
 
 def test_default_config_matches_factory_defaults():
     """A fresh VirtualDSP must mirror the lib's F00 factory values."""
@@ -238,6 +249,8 @@ def test_default_config_matches_factory_defaults():
     ):
         assert cfg[key] == factory[key], f"{key} diverges from factory defaults"
 
+
+# --- Channel linking ---
 
 def test_prepare_link_copies_master_params_to_slave():
     """Linking an input pair must replicate the device firmware's master→slave copy.
@@ -372,6 +385,8 @@ def test_prepare_link_unlink_does_not_copy():
     assert cfg["gains"][0] == 99
     assert cfg["gains"][1] == 250
 
+
+# --- Offline startup ---
 
 def test_offline_startup_seeded_from_blank_yields_factory_defaults():
     """End-to-end offline startup: the empty .unt file → factory defaults remain."""

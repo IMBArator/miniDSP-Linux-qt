@@ -11,6 +11,7 @@ from minidsp.device import DeviceLockedError
 
 from minidspqt.virtual_dsp import VirtualDSP
 
+# --- Device lock ---
 
 def test_fresh_virtual_dsp_is_unlocked():
     dsp = VirtualDSP()

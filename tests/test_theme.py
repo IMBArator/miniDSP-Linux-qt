@@ -24,6 +24,7 @@ from PySide6.QtWidgets import QApplication
 
 from minidspqt.theme import DARK_THEME, LIGHT_THEME, ThemeManager
 
+# --- Fakes ---
 
 class _FakeStyleHints:
     """Stand-in for ``QStyleHints`` that mimics KDE's behaviour.
@@ -74,6 +75,8 @@ class _FakeApp:
         self.stylesheet = sheet
 
 
+# --- Fixtures and helpers ---
+
 @pytest.fixture
 def kde_dark_app() -> _FakeApp:
     """A fake app emulating KDE Plasma stuck on a dark system scheme."""
@@ -86,6 +89,8 @@ def _bind(app: _FakeApp) -> ThemeManager:
     tm.bind_to_app(cast(QApplication, app))
     return tm
 
+
+# --- Explicit preference ---
 
 def test_explicit_light_overrides_kde_dark_report(kde_dark_app):
     """Picking Light wins even though Plasma keeps reporting Dark."""
@@ -110,6 +115,8 @@ def test_explicit_dark_on_kde_light_report():
     assert app.styleHints().requested == Qt.ColorScheme.Dark
 
 
+# --- System preference ---
+
 def test_system_preference_follows_reported_scheme(kde_dark_app):
     """With 'system', we DO follow Qt's reported scheme."""
     tm = _bind(kde_dark_app)
@@ -128,6 +135,8 @@ def test_system_follows_light_report():
 
     assert tm.current is LIGHT_THEME
 
+
+# --- Switching ---
 
 def test_switch_back_and_forth(kde_dark_app):
     """Light -> Dark -> Light all take effect under the KDE quirk."""

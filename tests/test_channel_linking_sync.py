@@ -53,10 +53,7 @@ def window(qtbot, preset_cfg):
     yield w
 
 
-# ---------------------------------------------------------------------------
-# MainWindow live-edit fan-out
-# ---------------------------------------------------------------------------
-
+# --- MainWindow live-edit fan-out ---
 
 def test_master_gate_edit_fans_out_to_device(window, monkeypatch):
     """Editing the master's gate should send request_gate for master + slaves."""
@@ -176,10 +173,7 @@ def test_active_state_propagates_to_slave_strips(window):
         assert btn.property("peq_active") is True
 
 
-# ---------------------------------------------------------------------------
-# DetailView link awareness
-# ---------------------------------------------------------------------------
-
+# --- DetailView link awareness ---
 
 def test_detail_view_shows_link_indicator_for_slave(window):
     """Opening detail view on a slave must reveal the link emoji + tooltip."""
@@ -249,10 +243,7 @@ def test_detail_view_nav_to_slave_updates_link_indicator(window):
     assert not out_strip._link_label.isHidden()
 
 
-# ---------------------------------------------------------------------------
-# Compressor / Delay panels
-# ---------------------------------------------------------------------------
-
+# --- Compressor / Delay panels ---
 
 def test_compressor_panel_available_on_output_detail(window):
     """Clicking 'Comp' on an output strip lands on the new placeholder panel."""
@@ -333,10 +324,7 @@ def test_compressor_active_propagates_to_slave_strips(window):
         assert btn.property("comp_active") is False
 
 
-# ---------------------------------------------------------------------------
-# Delay
-# ---------------------------------------------------------------------------
-
+# --- Delay ---
 
 def test_delay_panel_edit_fans_out(window, monkeypatch):
     """Driving the real DelayPanel must reach all linked channels.

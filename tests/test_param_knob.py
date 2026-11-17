@@ -82,10 +82,7 @@ def _key(key, modifier=Qt.KeyboardModifier.NoModifier):
     )
 
 
-# ------------------------------------------------------------------ #
-# Construction
-# ------------------------------------------------------------------ #
-
+# --- Construction ---
 
 class TestConstruction:
     def test_defaults(self, qtbot):
@@ -123,10 +120,7 @@ class TestConstruction:
         assert k._value_edit.text() == "42"
 
 
-# ------------------------------------------------------------------ #
-# setValue / value
-# ------------------------------------------------------------------ #
-
+# --- setValue / value ---
 
 class TestSetValue:
     def test_basic_set(self, knob):
@@ -160,10 +154,7 @@ class TestSetValue:
         assert knob.value() == 33
 
 
-# ------------------------------------------------------------------ #
-# setValueSilently
-# ------------------------------------------------------------------ #
-
+# --- setValueSilently ---
 
 class TestSetValueSilently:
     def test_updates_value(self, knob):
@@ -183,10 +174,7 @@ class TestSetValueSilently:
         assert knob.value() == 100
 
 
-# ------------------------------------------------------------------ #
-# setRange
-# ------------------------------------------------------------------ #
-
+# --- setRange ---
 
 class TestSetRange:
     def test_updates_range(self, knob):
@@ -211,10 +199,7 @@ class TestSetRange:
         assert sig.args == [50]
 
 
-# ------------------------------------------------------------------ #
-# Wheel interaction
-# ------------------------------------------------------------------ #
-
+# --- Wheel interaction ---
 
 class TestWheelEvent:
     def test_scroll_up_increments(self, knob):
@@ -245,10 +230,7 @@ class TestWheelEvent:
         assert sig.args == [51]
 
 
-# ------------------------------------------------------------------ #
-# Keyboard interaction
-# ------------------------------------------------------------------ #
-
+# --- Keyboard interaction ---
 
 class TestKeyEvent:
     def test_up_arrow_increments(self, knob):
@@ -283,10 +265,7 @@ class TestKeyEvent:
         assert sig.args == [51]
 
 
-# ------------------------------------------------------------------ #
-# Mouse drag
-# ------------------------------------------------------------------ #
-
+# --- Mouse drag ---
 
 class TestMouseDrag:
     def test_drag_up_increases(self, knob):
@@ -318,10 +297,7 @@ class TestMouseDrag:
         assert knob._drag_anchor_y is None
 
 
-# ------------------------------------------------------------------ #
-# Double-click to reset to default
-# ------------------------------------------------------------------ #
-
+# --- Double-click to reset to default ---
 
 class TestDoubleClick:
     def test_double_click_resets_to_default(self, knob, qtbot):
@@ -382,10 +358,7 @@ class TestDoubleClick:
         assert k.value() == 50
 
 
-# ------------------------------------------------------------------ #
-# Text input (_apply_edit)
-# ------------------------------------------------------------------ #
-
+# --- Text input (_apply_edit) ---
 
 class TestApplyEdit:
     def test_valid_input(self, knob):
@@ -406,10 +379,7 @@ class TestApplyEdit:
         assert k.value() == 33
 
 
-# ------------------------------------------------------------------ #
-# Highlight / blink
-# ------------------------------------------------------------------ #
-
+# --- Highlight / blink ---
 
 class TestHighlight:
     def test_highlight_starts_timer(self, knob):
@@ -442,10 +412,7 @@ class TestHighlight:
         assert knob._highlighted is False
 
 
-# ------------------------------------------------------------------ #
-# Edge cases
-# ------------------------------------------------------------------ #
-
+# --- Edge cases ---
 
 class TestEdgeCases:
     def test_zero_span_range(self, qtbot):
@@ -474,10 +441,7 @@ class TestEdgeCases:
         assert all(t is int for t in received)
 
 
-# ------------------------------------------------------------------ #
-# CTRL + fast-edit (range-adaptive multiplier)
-# ------------------------------------------------------------------ #
-
+# --- CTRL + fast-edit (range-adaptive multiplier) ---
 
 class TestCtrlStep:
     def test_minimum_step_for_small_range(self, qtbot):

@@ -32,10 +32,7 @@ def panel(qtbot):
     return p
 
 
-# ------------------------------------------------------------------ #
-# Silent setter
-# ------------------------------------------------------------------ #
-
+# --- Silent setter ---
 
 class TestSilentSetter:
     def test_set_params_silently_does_not_emit(self, panel, qtbot):
@@ -60,10 +57,7 @@ class TestSilentSetter:
         assert hp_slope == SLOPE_BW24
 
 
-# ------------------------------------------------------------------ #
-# Signal emission
-# ------------------------------------------------------------------ #
-
+# --- Signal emission ---
 
 class TestSignalEmission:
     def test_freq_knob_change_emits(self, panel, qtbot):
@@ -98,10 +92,7 @@ class TestSignalEmission:
         assert panel._hp_last_slope == 10
 
 
-# ------------------------------------------------------------------ #
-# Bypass
-# ------------------------------------------------------------------ #
-
+# --- Bypass ---
 
 class TestBypass:
     def test_bypass_toggle_sends_slope_zero(self, panel, qtbot):
@@ -124,10 +115,7 @@ class TestBypass:
         assert panel.is_xover_active() is True
 
 
-# ------------------------------------------------------------------ #
-# Model: xover_active property
-# ------------------------------------------------------------------ #
-
+# --- Model: xover_active property ---
 
 class TestXoverActiveProperty:
     def test_default_inactive(self):
@@ -149,10 +137,7 @@ class TestXoverActiveProperty:
         assert state.xover_active is False
 
 
-# ------------------------------------------------------------------ #
-# Strip: xover_active indicator
-# ------------------------------------------------------------------ #
-
+# --- Strip: xover_active indicator ---
 
 class TestStripIndicator:
     def test_set_xover_active(self, qtbot):
@@ -182,10 +167,7 @@ class TestStripIndicator:
         assert btn.isChecked() is False
 
 
-# ------------------------------------------------------------------ #
-# Crossover biquad math
-# ------------------------------------------------------------------ #
-
+# --- Crossover biquad math ---
 
 class TestCrossoverBiquads:
     def test_bypassed_returns_empty(self):
@@ -249,10 +231,7 @@ class TestCrossoverBiquads:
         assert abs(db) < 0.5
 
 
-# ------------------------------------------------------------------ #
-# FreqResponseGraph: set_data / set_crossover / set_bands
-# ------------------------------------------------------------------ #
-
+# --- FreqResponseGraph: set_data / set_crossover / set_bands ---
 
 class TestFreqResponseGraph:
     def test_set_crossover_stores_data(self, qtbot):
@@ -286,10 +265,7 @@ class TestFreqResponseGraph:
         assert g._crossover.lopass_freq == 200
 
 
-# ------------------------------------------------------------------ #
-# Graph-driven slots (_on_marker_*)
-# ------------------------------------------------------------------ #
-
+# --- Graph-driven slots (_on_marker_*) ---
 
 class TestMarkerDraggedSlot:
     def test_hp_drag_sets_knob_and_emits_once(self, panel, qtbot):
